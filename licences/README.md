@@ -1,0 +1,1 @@
+The licenses in this folder are only provided for reference. Refer to [here](../LICENSE.md)
