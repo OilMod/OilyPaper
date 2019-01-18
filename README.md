@@ -5,10 +5,9 @@ This is an unfinished implementation of the OilMod api based on PaperMc 1.12.2
 ## How to set up dev environment ##
 - Download repository with e.g. IntelliJ IDEA
 - Open bash window
-- `git submodule update --init`
-- `./concrete up`
-- `./concrete patch`
-- ` git checkout --recurse-submodules`
+- `./concrete init-sm` - downloads and initialises submodules
+- `./concrete up` - decompiles minecraft, sets up paper
+- `./concrete patch` - adds our patches, creates OilyPaper code, creates correct local git structure
 
 ## Pushing ##
 - Agree to our terms of contribution

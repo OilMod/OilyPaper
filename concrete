@@ -67,6 +67,9 @@ case "$1" in
 	"s" | "server")
 		cd "$basedir/OilyPaper-Server"
 	;;
+	"ism" | "init-sm" | "init-submodules")
+		scripts/init-submodules.sh "$basedir"
+	;;
 	"setup")
 		if [[ -f ~/.bashrc ]] ; then
 			NAME="ec"
@@ -87,8 +90,9 @@ case "$1" in
 		echo "  * rb, rebuild  | Rebuild patches, can be called from anywhere."
 		echo "  * p, patch     | Apply all patches to top of Paper without building it. Can be run from anywhere."
 		echo "  * up, upstream | Build Paper upstream, pass arg up to update paper. Can be run from anywhere."
-		echo "  * b, build    | Build API and Server but no deploy. Can be ran anywhere."
+		echo "  * b, build     | Build API and Server but no deploy. Can be ran anywhere."
 		echo "  * d, deploy    | Build and Deploy API jar and build Server. Can be ran anywhere."
+		echo "  * ism, init-sm | alias: init-submodules  Initialises submodules. Run this before anything else. "
 		echo ""
 		echo " These commands require the setup command before use:"
 		echo "  * r, root      | Change directory to the root of the project."
