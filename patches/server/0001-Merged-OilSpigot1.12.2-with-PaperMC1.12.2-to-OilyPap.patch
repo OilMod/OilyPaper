@@ -1,9 +1,486 @@
-From c0c4ecd1af293c02ce2fe11648986dcbf098a49f Mon Sep 17 00:00:00 2001
+From bc50fdad18d1f36e366b4f8b7141021c6d19cbfd Mon Sep 17 00:00:00 2001
 From: sirati97 <TheSirati97@gmail.com>
-Date: Thu, 17 Jan 2019 22:59:55 +0000
-Subject: [PATCH] All of OilMod Really fucking big commit. i am sorry. trying
- to fix git structure
+Date: Fri, 18 Jan 2019 03:19:17 +0000
+Subject: [PATCH] Merged OilSpigot1.12.2 with PaperMC1.12.2 to OilyPaper. yay
+ awesome name
 
+---
+ ImportedNMSClasses.md                              |  67 ++
+ README.md                                          |  68 +-
+ TODO                                               |  14 +
+ pom.xml                                            |  69 +-
+ .../spigot/optimisation/ItemStackFreeze.java       |  64 ++
+ src/main/java/nbt/YBase.java                       |  51 ++
+ src/main/java/nbt/YByte.java                       |  27 +
+ src/main/java/nbt/YByteArray.java                  |  31 +
+ src/main/java/nbt/YCtor.java                       |   8 +
+ src/main/java/nbt/YDouble.java                     |  27 +
+ src/main/java/nbt/YFloat.java                      |  27 +
+ src/main/java/nbt/YInt.java                        |  27 +
+ src/main/java/nbt/YIntArray.java                   |  33 +
+ src/main/java/nbt/YList.java                       |  42 ++
+ src/main/java/nbt/YLong.java                       |  27 +
+ src/main/java/nbt/YShort.java                      |  27 +
+ src/main/java/nbt/YUtil.java                       |  91 +++
+ .../net/minecraft/server/AdvancementRewards.java   |   8 +-
+ src/main/java/net/minecraft/server/AutoRecipe.java | 241 ++++++
+ .../minecraft/server/AutoRecipeStackManager.java   | 323 ++++++++
+ src/main/java/net/minecraft/server/Block.java      |  63 ++
+ .../java/net/minecraft/server/BlockJukeBox.java    |   3 +-
+ .../java/net/minecraft/server/BlockPackedIce.java  |  16 +
+ src/main/java/net/minecraft/server/BlockSnow.java  |   2 +-
+ .../java/net/minecraft/server/BlockTallPlant.java  |   8 +-
+ .../java/net/minecraft/server/BlockTripwire.java   |   4 +-
+ src/main/java/net/minecraft/server/BlockVine.java  |   4 +-
+ .../net/minecraft/server/BukkitIInventory.java     |  10 +
+ .../java/net/minecraft/server/CommandGamemode.java |  81 +-
+ .../java/net/minecraft/server/CommandGive.java     |  93 +++
+ .../java/net/minecraft/server/CommandRecipe.java   | 104 +++
+ src/main/java/net/minecraft/server/CommandTp.java  |   4 +
+ src/main/java/net/minecraft/server/Container.java  | 738 +++++++++++-------
+ .../java/net/minecraft/server/ContainerAnvil.java  | 169 ++++-
+ .../java/net/minecraft/server/ContainerBeacon.java |  10 +-
+ .../minecraft/server/ContainerBrewingStand.java    |  57 +-
+ .../java/net/minecraft/server/ContainerChest.java  |  14 +-
+ .../net/minecraft/server/ContainerDispenser.java   |   4 +-
+ .../minecraft/server/ContainerEnchantTable.java    |  64 +-
+ .../net/minecraft/server/ContainerFurnace.java     |  36 +-
+ .../java/net/minecraft/server/ContainerHopper.java |  14 +-
+ .../java/net/minecraft/server/ContainerHorse.java  |   8 +-
+ .../net/minecraft/server/ContainerMerchant.java    |  14 +-
+ .../java/net/minecraft/server/ContainerPlayer.java |  49 +-
+ .../net/minecraft/server/ContainerShulkerBox.java  |   6 +-
+ .../java/net/minecraft/server/ContainerUtil.java   |  56 ++
+ .../net/minecraft/server/ContainerWorkbench.java   |  73 +-
+ .../java/net/minecraft/server/CraftingManager.java | 316 +++++++-
+ .../server/CriterionTriggerRecipeUnlocked.java     | 142 ++++
+ .../java/net/minecraft/server/DedicatedServer.java |  19 +-
+ .../net/minecraft/server/EnchantmentManager.java   |  13 +-
+ src/main/java/net/minecraft/server/Entity.java     |  14 +-
+ .../net/minecraft/server/EntityArmorStand.java     |  16 +-
+ .../java/net/minecraft/server/EntityFireworks.java |   3 +-
+ .../net/minecraft/server/EntityHorseAbstract.java  |   3 +-
+ .../server/EntityHorseChestedAbstract.java         |   3 +-
+ .../net/minecraft/server/EntityInsentient.java     |   6 +-
+ src/main/java/net/minecraft/server/EntityItem.java |  12 +-
+ .../java/net/minecraft/server/EntityItemFrame.java |   3 +-
+ .../java/net/minecraft/server/EntityLiving.java    |  40 +-
+ .../net/minecraft/server/EntityMushroomCow.java    |   4 +-
+ .../java/net/minecraft/server/EntityPlayer.java    |  26 +-
+ .../java/net/minecraft/server/EntityPotion.java    |   3 +-
+ .../java/net/minecraft/server/EntitySheep.java     |  13 +-
+ .../java/net/minecraft/server/EntitySnowman.java   |   5 +-
+ .../java/net/minecraft/server/EntityVillager.java  |   2 +-
+ src/main/java/net/minecraft/server/IRecipe.java    |  24 +-
+ .../net/minecraft/server/InventoryCraftResult.java |   3 +-
+ .../net/minecraft/server/InventoryCrafting.java    |  94 ++-
+ .../net/minecraft/server/InventoryEnderChest.java  |   2 +-
+ .../java/net/minecraft/server/InventoryUtils.java  |  62 ++
+ src/main/java/net/minecraft/server/Item.java       | 831 +++++++++++++++++++++
+ src/main/java/net/minecraft/server/ItemAxe.java    |  36 +
+ .../net/minecraft/server/ItemKnowledgeBook.java    |  55 ++
+ .../java/net/minecraft/server/ItemPickaxe.java     |  39 +
+ src/main/java/net/minecraft/server/ItemShears.java |  46 ++
+ src/main/java/net/minecraft/server/ItemSpade.java  |  65 ++
+ src/main/java/net/minecraft/server/ItemStack.java  | 314 ++++++--
+ src/main/java/net/minecraft/server/ItemSword.java  |  73 ++
+ src/main/java/net/minecraft/server/Material.java   | 159 ++++
+ .../java/net/minecraft/server/MerchantRecipe.java  |   9 +-
+ .../java/net/minecraft/server/MinecraftKey.java    | 112 +++
+ .../java/net/minecraft/server/MinecraftServer.java |   2 +-
+ .../net/minecraft/server/PacketDataSerializer.java |  90 ++-
+ .../minecraft/server/PacketPlayInAutoRecipe.java   |  42 ++
+ .../server/PacketPlayInRecipeDisplayed.java        |  69 ++
+ .../minecraft/server/PacketPlayOutAutoRecipe.java  |  32 +
+ .../net/minecraft/server/PacketPlayOutRecipes.java |  92 +++
+ .../net/minecraft/server/PlayerConnection.java     |  55 +-
+ .../minecraft/server/PlayerInteractManager.java    |  69 +-
+ .../java/net/minecraft/server/PlayerInventory.java |   7 +-
+ src/main/java/net/minecraft/server/PlayerList.java |   8 +
+ .../java/net/minecraft/server/RecipeArmorDye.java  |  13 +
+ src/main/java/net/minecraft/server/RecipeBook.java |  61 ++
+ .../java/net/minecraft/server/RecipeBookClone.java |  22 +-
+ .../net/minecraft/server/RecipeBookServer.java     |  32 +-
+ .../java/net/minecraft/server/RecipeFireworks.java |   8 +-
+ .../java/net/minecraft/server/RecipeItemStack.java | 111 +++
+ .../java/net/minecraft/server/RecipeMapClone.java  |  24 +-
+ .../java/net/minecraft/server/RecipeMapExtend.java |  78 ++
+ .../java/net/minecraft/server/RecipeRepair.java    |  31 +-
+ .../net/minecraft/server/RecipeTippedArrow.java    |  19 +-
+ .../java/net/minecraft/server/RecipiesShield.java  |  19 +-
+ .../java/net/minecraft/server/ShapedRecipes.java   |  79 +-
+ .../net/minecraft/server/ShapelessRecipes.java     |  69 +-
+ src/main/java/net/minecraft/server/Slot.java       |  84 +++
+ .../net/minecraft/server/SlotFurnaceResult.java    |   7 +-
+ src/main/java/net/minecraft/server/SlotResult.java |  85 +++
+ .../java/net/minecraft/server/StatisticList.java   | 288 +++++++
+ .../net/minecraft/server/TileEntityBanner.java     |   8 +
+ .../net/minecraft/server/TileEntityFurnace.java    |  20 +-
+ .../java/net/minecraft/server/TileEntitySkull.java |   2 +-
+ src/main/java/net/minecraft/server/World.java      |   1 +
+ .../java/net/minecraft/server/WorldManager.java    |  20 +-
+ .../server/oilmod/ICraftingContainer.java          |   6 +
+ .../server/oilmod/IInventoryCraftResult.java       |  11 +
+ .../server/oilmod/IInventoryCrafting.java          |  42 ++
+ .../java/org/bukkit/craftbukkit/CraftServer.java   |   8 +-
+ .../org/bukkit/craftbukkit/block/CraftBlock.java   |   4 +-
+ .../bukkit/craftbukkit/block/CraftFlowerPot.java   |   3 +-
+ .../craftbukkit/entity/CraftAbstractHorse.java     |   1 +
+ .../org/bukkit/craftbukkit/entity/CraftEntity.java |   1 +
+ .../craftbukkit/entity/CraftHumanEntity.java       |  20 +-
+ .../bukkit/craftbukkit/entity/CraftItemFrame.java  |   2 +-
+ .../craftbukkit/entity/CraftThrownPotion.java      |  12 +-
+ .../craftbukkit/event/CraftEventFactory.java       |  38 +-
+ .../inventory/CraftEntityEquipment.java            |   2 +-
+ .../inventory/CraftInventoryCrafting.java          |  26 +-
+ .../craftbukkit/inventory/CraftItemStack.java      |  57 +-
+ .../craftbukkit/inventory/CraftMerchantRecipe.java |  11 +-
+ .../craftbukkit/inventory/CraftShapedRecipe.java   |   5 +-
+ .../inventory/CraftShapelessRecipe.java            |   6 +-
+ .../craftbukkit/inventory/InventoryWrapper.java    |   2 +-
+ .../craftbukkit/inventory/RecipeIterator.java      |  19 +-
+ src/main/java/org/oilmod/ApiOilMod.java            |  16 +
+ .../org/oilmod/oilclient/ConnectionManager.java    |  51 ++
+ .../java/org/oilmod/oilclient/IOHandlerPlayer.java |  40 +
+ .../java/org/oilmod/oilclient/OilConnection.java   |  13 +
+ src/main/java/org/oilmod/spigot/OilMain.java       | 102 +++
+ .../org/oilmod/spigot/block/RealBlockType.java     | 150 ++++
+ .../oilmod/spigot/block/RealBlockTypeHelper.java   |  94 +++
+ .../org/oilmod/spigot/block/RealNMSMaterial.java   |  53 ++
+ .../org/oilmod/spigot/block/RealOilBlockState.java |  38 +
+ .../oilmod/spigot/bukkit/stubs/OilBlockStub.java   | 265 +++++++
+ .../spigot/bukkit/stubs/OilStubMetadatable.java    |  30 +
+ .../java/org/oilmod/spigot/config/ConfigUtil.java  |  63 ++
+ .../spigot/config/DeserializationMethod.java       |  15 +
+ .../spigot/config/MappedMemoryConfiguration.java   |  34 +
+ .../oilmod/spigot/config/nbttag/NBTCompound.java   | 303 ++++++++
+ .../oilmod/spigot/config/nbttag/NBTDataList.java   | 166 ++++
+ .../oilmod/spigot/config/yaml/YamlCompound.java    | 465 ++++++++++++
+ .../oilmod/spigot/config/yaml/YamlDataList.java    | 155 ++++
+ .../enchantments/CustomCraftBukkitEnchantment.java |  20 +
+ .../spigot/enchantments/CustomEnchantment.java     |  55 ++
+ .../org/oilmod/spigot/inventory/ApiItemFilter.java |  21 +
+ .../oilmod/spigot/inventory/FilteredInventory.java |  10 +
+ .../org/oilmod/spigot/inventory/IItemFilter.java   |  10 +
+ .../oilmod/spigot/inventory/ItemStackDataImpl.java |  56 ++
+ .../org/oilmod/spigot/inventory/NoItemFilter.java  |  13 +
+ .../inventory/OilBukkitCraftInventoryFurnace.java  |  50 ++
+ .../OilBukkitCraftInventoryPortableCrafting.java   |  29 +
+ .../oilmod/spigot/inventory/OilContainerChest.java |  38 +
+ .../spigot/inventory/OilContainerFurnace.java      |  43 ++
+ .../spigot/inventory/OilContainerHopper.java       |  39 +
+ .../inventory/OilContainerPortableCrafting.java    |  61 ++
+ .../spigot/inventory/OilCraftResultInventory.java  | 156 ++++
+ .../org/oilmod/spigot/inventory/OilIInventory.java |  15 +
+ .../oilmod/spigot/inventory/OilInventoryBase.java  | 284 +++++++
+ .../oilmod/spigot/inventory/OilInventoryChest.java |  44 ++
+ .../spigot/inventory/OilInventoryFurnace.java      | 350 +++++++++
+ .../inventory/OilInventoryPortableCrafting.java    | 237 ++++++
+ .../java/org/oilmod/spigot/inventory/OilSlot.java  |  21 +
+ .../spigot/inventory/OilSlotFurnaceFuel.java       |  21 +
+ .../spigot/inventory/OilSlotFurnaceResult.java     |  74 ++
+ .../inventory/OilSlotPortableCraftingResult.java   |  14 +
+ .../spigot/inventory/RealInventoryFactory.java     |  57 ++
+ .../inventory/creative/OilContainerCreative.java   | 198 +++++
+ .../inventory/creative/OilCreativeActionSlot.java  |  63 ++
+ .../creative/OilCreativeEmptyActionSlot.java       |  26 +
+ .../inventory/creative/OilCreativeInventory.java   | 123 +++
+ .../creative/OilCreativeModInventoryCommand.java   |  28 +
+ .../creative/OilCreativeMoveActionSlot.java        |  35 +
+ .../spigot/inventory/creative/OilCreativeSlot.java |  19 +
+ .../inventory/creative/OilInvCreativeSlot.java     |  51 ++
+ .../spigot/inventory/custom/ClickExtraData.java    |  37 +
+ .../spigot/inventory/custom/ISingleSlot.java       |  22 +
+ .../custom/api/NMSFixedSizePanelImpl.java          |  39 +
+ .../inventory/custom/api/OilElementWrapper.java    |  96 +++
+ .../custom/api/OilInteractableElementWrapper.java  |  70 ++
+ .../inventory/custom/api/OilPanelWrapper.java      |  54 ++
+ .../spigot/inventory/custom/api/RealUIHelper.java  |  77 ++
+ .../inventory/custom/api/UIChestContainer.java     |  75 ++
+ .../spigot/inventory/custom/api/WrappedPanel.java  |  10 +
+ .../custom/bukkit/BukkitInventoryView.java         |  78 ++
+ .../spigot/inventory/custom/nms/MultiSlot.java     |  83 ++
+ .../custom/nms/SettableSlotInventorySnapshot.java  | 187 +++++
+ .../spigot/inventory/custom/nms/ViewContainer.java | 783 +++++++++++++++++++
+ .../spigot/inventory/custom/nms/ViewInventory.java | 100 +++
+ .../spigot/inventory/custom/slot/IViewSlot.java    |  16 +
+ .../custom/slot/OilInventoryViewSlot.java          |  47 ++
+ .../inventory/custom/slot/SettableViewSlot.java    |  17 +
+ .../custom/slot/SettableViewSlotBase.java          |  53 ++
+ .../spigot/inventory/custom/slot/ViewSlotBase.java |  55 ++
+ .../inventory/custom/slot/ViewSlotResult.java      | 151 ++++
+ .../custom/view/HumanInventorySlotView.java        |  99 +++
+ .../spigot/inventory/custom/view/ISlotView.java    |  13 +
+ .../spigot/inventory/custom/view/NullSlotView.java |  24 +
+ .../inventory/custom/view/ScalableSlotView.java    |  33 +
+ .../inventory/custom/view/ScrollableSlotView.java  | 117 +++
+ .../spigot/inventory/custom/view/SlotView.java     |  40 +
+ .../spigot/inventory/custom/view/SlotViewBase.java |  18 +
+ .../inventory/custom/view/SplittedSlotView.java    |  26 +
+ .../custom/view/StaticSplittedSlotView.java        |  32 +
+ .../org/oilmod/spigot/items/ItemStackCreator.java  |  18 +
+ .../org/oilmod/spigot/items/ItemStackRegistry.java |  42 ++
+ .../java/org/oilmod/spigot/items/ItemUtil.java     |  34 +
+ .../oilmod/spigot/items/RealCraftItemStack.java    |  94 +++
+ .../java/org/oilmod/spigot/items/RealItem.java     | 145 ++++
+ .../org/oilmod/spigot/items/RealItemClassMap.java  |  35 +
+ .../org/oilmod/spigot/items/RealItemFactory.java   |  20 +
+ .../spigot/items/RealItemRegistryHelper.java       |  35 +
+ .../org/oilmod/spigot/items/RealItemStack.java     | 317 ++++++++
+ .../oilmod/spigot/items/RealItemStackFreeze.java   |  23 +
+ .../oilmod/spigot/items/RealItemTypeHelper.java    |  18 +
+ .../spigot/items/RealSpecificItemStackFactory.java |  21 +
+ .../spigot/items/SpecificItemStackFactory.java     |  10 +
+ .../crafting/BukkitCraftingIngredient.java         |  39 +
+ .../crafting/BukkitCraftingResultFactory.java      |  28 +
+ .../ItemStackCraftingInventoryReference.java       |  27 +
+ .../crafting/NMSCraftingIngredient.java            |  16 +
+ .../crafting/NMSCraftingResultFactory.java         |  13 +
+ .../items/itemstackimpl/crafting/OilRecipe.java    | 128 ++++
+ .../itemstackimpl/crafting/OilShapedRecipe.java    | 167 +++++
+ .../itemstackimpl/crafting/OilShapelessRecipe.java | 137 ++++
+ .../crafting/RealItemCraftingFactory.java          |  50 ++
+ .../itemstackimpl/crafting/help/CHCollection.java  |  25 +
+ .../itemstackimpl/crafting/help/CHCommand.java     |  57 ++
+ .../itemstackimpl/crafting/help/CHContainer.java   |  24 +
+ .../crafting/help/CHDisplaySlotView.java           | 163 ++++
+ .../crafting/help/CHSelectorSlotView.java          |  34 +
+ .../items/itemstackimpl/crafting/help/CHView.java  |  54 ++
+ .../itemstackimpl/crafting/help/OilCHView.java     |  30 +
+ .../itemstackimpl/crafting/help/ShapedCHView.java  |  47 ++
+ .../crafting/help/ShapelessCHView.java             |  45 ++
+ .../crafting/help/VanillaArmorDyeChView.java       |  97 +++
+ .../crafting/help/VanillaBannerAddCHView.java      | 129 ++++
+ .../help/VanillaBannerDuplicateCHView.java         |  62 ++
+ .../itemstackimpl/crafting/help/VanillaCHView.java |  55 ++
+ .../crafting/help/VanillaFireworksCHView.java      |  26 +
+ .../crafting/help/VanillaRepairCHView.java         |  54 ++
+ .../crafting/help/VanillaShapedCHView.java         |  24 +
+ .../crafting/help/VanillaShapelessCHView.java      |  24 +
+ .../crafting/help/VanillaShieldBannerCHView.java   |  51 ++
+ .../crafting/help/VanillaTippedArrowCHView.java    |  62 ++
+ .../itemstackimpl/crafting/nms/NMS_OilRecipe.java  |  11 +
+ .../crafting/nms/NMS_OilShapedRecipe.java          |  24 +
+ .../crafting/nms/NMS_OilShapelessRecipe.java       |  33 +
+ .../internal/ItemStackDescription.java             |  57 ++
+ .../itemstackimpl/internal/ModCraftItemStack.java  |  89 +++
+ .../items/itemstackimpl/internal/ModItem.java      |  20 +
+ .../items/itemstackimpl/internal/ModItemStack.java | 257 +++++++
+ .../itemstackimpl/internal/ModItemStackFreeze.java |  38 +
+ .../itemstackimpl/internal/RealItemClassMap.java   |  35 +
+ .../itemstackimpl/internal/RealItemFactory.java    |  20 +
+ .../org/oilmod/spigot/items/itemtype/RealAxe.java  |  40 +
+ .../oilmod/spigot/items/itemtype/RealPickaxe.java  |  47 ++
+ .../oilmod/spigot/items/itemtype/RealShears.java   |  59 ++
+ .../oilmod/spigot/items/itemtype/RealShovel.java   |  52 ++
+ .../oilmod/spigot/items/itemtype/RealSword.java    |  46 ++
+ .../spigot/items/itemtype/RealTBBHelper.java       |  43 ++
+ .../oilmod/spigot/items/itemtype/RealTBBTool.java  |  52 ++
+ src/main/java/org/oilmod/spigot/ui/SlotState.java  |  43 ++
+ .../org/oilmod/spigot/ui/StorageSlotBehaviour.java |   5 +
+ .../oilmod/spigot/ui/UIInventoryGenericBukkit.java |  37 +
+ src/main/java/org/oilmod/spigot/ui/UIManager.java  |  31 +
+ .../org/oilmod/spigot/util/BetterNonNullList.java  |  32 +
+ .../java/org/oilmod/spigot/util/OilSpigotUtil.java | 219 ++++++
+ .../java/org/oilmod/spigot/util/RealOilUtil.java   | 470 ++++++++++++
+ src/main/java/org/spigotmc/Metrics.java            |   7 +-
+ src/main/java/org/spigotmc/SpigotConfig.java       |   7 +-
+ src/main/java/org/spigotmc/WatchdogThread.java     |   6 +-
+ .../org/oilmod/spigot/blocks/MaterialToolTest.java | 108 +++
+ .../org/oilmod/spigot/config/yaml/NBTYamlTest.java |  21 +
+ 283 files changed, 17734 insertions(+), 787 deletions(-)
+ create mode 100644 ImportedNMSClasses.md
+ create mode 100644 TODO
+ create mode 100644 src/main/java/de/sirati97/spigot/optimisation/ItemStackFreeze.java
+ create mode 100644 src/main/java/nbt/YBase.java
+ create mode 100644 src/main/java/nbt/YByte.java
+ create mode 100644 src/main/java/nbt/YByteArray.java
+ create mode 100644 src/main/java/nbt/YCtor.java
+ create mode 100644 src/main/java/nbt/YDouble.java
+ create mode 100644 src/main/java/nbt/YFloat.java
+ create mode 100644 src/main/java/nbt/YInt.java
+ create mode 100644 src/main/java/nbt/YIntArray.java
+ create mode 100644 src/main/java/nbt/YList.java
+ create mode 100644 src/main/java/nbt/YLong.java
+ create mode 100644 src/main/java/nbt/YShort.java
+ create mode 100644 src/main/java/nbt/YUtil.java
+ create mode 100644 src/main/java/net/minecraft/server/AutoRecipe.java
+ create mode 100644 src/main/java/net/minecraft/server/AutoRecipeStackManager.java
+ create mode 100644 src/main/java/net/minecraft/server/BlockPackedIce.java
+ create mode 100644 src/main/java/net/minecraft/server/BukkitIInventory.java
+ create mode 100644 src/main/java/net/minecraft/server/CommandGive.java
+ create mode 100644 src/main/java/net/minecraft/server/CommandRecipe.java
+ create mode 100644 src/main/java/net/minecraft/server/ContainerUtil.java
+ create mode 100644 src/main/java/net/minecraft/server/CriterionTriggerRecipeUnlocked.java
+ create mode 100644 src/main/java/net/minecraft/server/InventoryUtils.java
+ create mode 100644 src/main/java/net/minecraft/server/Item.java
+ create mode 100644 src/main/java/net/minecraft/server/ItemAxe.java
+ create mode 100644 src/main/java/net/minecraft/server/ItemKnowledgeBook.java
+ create mode 100644 src/main/java/net/minecraft/server/ItemPickaxe.java
+ create mode 100644 src/main/java/net/minecraft/server/ItemShears.java
+ create mode 100644 src/main/java/net/minecraft/server/ItemSpade.java
+ create mode 100644 src/main/java/net/minecraft/server/ItemSword.java
+ create mode 100644 src/main/java/net/minecraft/server/Material.java
+ create mode 100644 src/main/java/net/minecraft/server/MinecraftKey.java
+ create mode 100644 src/main/java/net/minecraft/server/PacketPlayInAutoRecipe.java
+ create mode 100644 src/main/java/net/minecraft/server/PacketPlayInRecipeDisplayed.java
+ create mode 100644 src/main/java/net/minecraft/server/PacketPlayOutAutoRecipe.java
+ create mode 100644 src/main/java/net/minecraft/server/PacketPlayOutRecipes.java
+ create mode 100644 src/main/java/net/minecraft/server/RecipeBook.java
+ create mode 100644 src/main/java/net/minecraft/server/RecipeItemStack.java
+ create mode 100644 src/main/java/net/minecraft/server/RecipeMapExtend.java
+ create mode 100644 src/main/java/net/minecraft/server/Slot.java
+ create mode 100644 src/main/java/net/minecraft/server/SlotResult.java
+ create mode 100644 src/main/java/net/minecraft/server/StatisticList.java
+ create mode 100644 src/main/java/net/minecraft/server/oilmod/ICraftingContainer.java
+ create mode 100644 src/main/java/net/minecraft/server/oilmod/IInventoryCraftResult.java
+ create mode 100644 src/main/java/net/minecraft/server/oilmod/IInventoryCrafting.java
+ create mode 100644 src/main/java/org/oilmod/ApiOilMod.java
+ create mode 100644 src/main/java/org/oilmod/oilclient/ConnectionManager.java
+ create mode 100644 src/main/java/org/oilmod/oilclient/IOHandlerPlayer.java
+ create mode 100644 src/main/java/org/oilmod/oilclient/OilConnection.java
+ create mode 100644 src/main/java/org/oilmod/spigot/OilMain.java
+ create mode 100644 src/main/java/org/oilmod/spigot/block/RealBlockType.java
+ create mode 100644 src/main/java/org/oilmod/spigot/block/RealBlockTypeHelper.java
+ create mode 100644 src/main/java/org/oilmod/spigot/block/RealNMSMaterial.java
+ create mode 100644 src/main/java/org/oilmod/spigot/block/RealOilBlockState.java
+ create mode 100644 src/main/java/org/oilmod/spigot/bukkit/stubs/OilBlockStub.java
+ create mode 100644 src/main/java/org/oilmod/spigot/bukkit/stubs/OilStubMetadatable.java
+ create mode 100644 src/main/java/org/oilmod/spigot/config/ConfigUtil.java
+ create mode 100644 src/main/java/org/oilmod/spigot/config/DeserializationMethod.java
+ create mode 100644 src/main/java/org/oilmod/spigot/config/MappedMemoryConfiguration.java
+ create mode 100644 src/main/java/org/oilmod/spigot/config/nbttag/NBTCompound.java
+ create mode 100644 src/main/java/org/oilmod/spigot/config/nbttag/NBTDataList.java
+ create mode 100644 src/main/java/org/oilmod/spigot/config/yaml/YamlCompound.java
+ create mode 100644 src/main/java/org/oilmod/spigot/config/yaml/YamlDataList.java
+ create mode 100644 src/main/java/org/oilmod/spigot/enchantments/CustomCraftBukkitEnchantment.java
+ create mode 100644 src/main/java/org/oilmod/spigot/enchantments/CustomEnchantment.java
+ create mode 100644 src/main/java/org/oilmod/spigot/inventory/ApiItemFilter.java
+ create mode 100644 src/main/java/org/oilmod/spigot/inventory/FilteredInventory.java
+ create mode 100644 src/main/java/org/oilmod/spigot/inventory/IItemFilter.java
+ create mode 100644 src/main/java/org/oilmod/spigot/inventory/ItemStackDataImpl.java
+ create mode 100644 src/main/java/org/oilmod/spigot/inventory/NoItemFilter.java
+ create mode 100644 src/main/java/org/oilmod/spigot/inventory/OilBukkitCraftInventoryFurnace.java
+ create mode 100644 src/main/java/org/oilmod/spigot/inventory/OilBukkitCraftInventoryPortableCrafting.java
+ create mode 100644 src/main/java/org/oilmod/spigot/inventory/OilContainerChest.java
+ create mode 100644 src/main/java/org/oilmod/spigot/inventory/OilContainerFurnace.java
+ create mode 100644 src/main/java/org/oilmod/spigot/inventory/OilContainerHopper.java
+ create mode 100644 src/main/java/org/oilmod/spigot/inventory/OilContainerPortableCrafting.java
+ create mode 100644 src/main/java/org/oilmod/spigot/inventory/OilCraftResultInventory.java
+ create mode 100644 src/main/java/org/oilmod/spigot/inventory/OilIInventory.java
+ create mode 100644 src/main/java/org/oilmod/spigot/inventory/OilInventoryBase.java
+ create mode 100644 src/main/java/org/oilmod/spigot/inventory/OilInventoryChest.java
+ create mode 100644 src/main/java/org/oilmod/spigot/inventory/OilInventoryFurnace.java
+ create mode 100644 src/main/java/org/oilmod/spigot/inventory/OilInventoryPortableCrafting.java
+ create mode 100644 src/main/java/org/oilmod/spigot/inventory/OilSlot.java
+ create mode 100644 src/main/java/org/oilmod/spigot/inventory/OilSlotFurnaceFuel.java
+ create mode 100644 src/main/java/org/oilmod/spigot/inventory/OilSlotFurnaceResult.java
+ create mode 100644 src/main/java/org/oilmod/spigot/inventory/OilSlotPortableCraftingResult.java
+ create mode 100644 src/main/java/org/oilmod/spigot/inventory/RealInventoryFactory.java
+ create mode 100644 src/main/java/org/oilmod/spigot/inventory/creative/OilContainerCreative.java
+ create mode 100644 src/main/java/org/oilmod/spigot/inventory/creative/OilCreativeActionSlot.java
+ create mode 100644 src/main/java/org/oilmod/spigot/inventory/creative/OilCreativeEmptyActionSlot.java
+ create mode 100644 src/main/java/org/oilmod/spigot/inventory/creative/OilCreativeInventory.java
+ create mode 100644 src/main/java/org/oilmod/spigot/inventory/creative/OilCreativeModInventoryCommand.java
+ create mode 100644 src/main/java/org/oilmod/spigot/inventory/creative/OilCreativeMoveActionSlot.java
+ create mode 100644 src/main/java/org/oilmod/spigot/inventory/creative/OilCreativeSlot.java
+ create mode 100644 src/main/java/org/oilmod/spigot/inventory/creative/OilInvCreativeSlot.java
+ create mode 100644 src/main/java/org/oilmod/spigot/inventory/custom/ClickExtraData.java
+ create mode 100644 src/main/java/org/oilmod/spigot/inventory/custom/ISingleSlot.java
+ create mode 100644 src/main/java/org/oilmod/spigot/inventory/custom/api/NMSFixedSizePanelImpl.java
+ create mode 100644 src/main/java/org/oilmod/spigot/inventory/custom/api/OilElementWrapper.java
+ create mode 100644 src/main/java/org/oilmod/spigot/inventory/custom/api/OilInteractableElementWrapper.java
+ create mode 100644 src/main/java/org/oilmod/spigot/inventory/custom/api/OilPanelWrapper.java
+ create mode 100644 src/main/java/org/oilmod/spigot/inventory/custom/api/RealUIHelper.java
+ create mode 100644 src/main/java/org/oilmod/spigot/inventory/custom/api/UIChestContainer.java
+ create mode 100644 src/main/java/org/oilmod/spigot/inventory/custom/api/WrappedPanel.java
+ create mode 100644 src/main/java/org/oilmod/spigot/inventory/custom/bukkit/BukkitInventoryView.java
+ create mode 100644 src/main/java/org/oilmod/spigot/inventory/custom/nms/MultiSlot.java
+ create mode 100644 src/main/java/org/oilmod/spigot/inventory/custom/nms/SettableSlotInventorySnapshot.java
+ create mode 100644 src/main/java/org/oilmod/spigot/inventory/custom/nms/ViewContainer.java
+ create mode 100644 src/main/java/org/oilmod/spigot/inventory/custom/nms/ViewInventory.java
+ create mode 100644 src/main/java/org/oilmod/spigot/inventory/custom/slot/IViewSlot.java
+ create mode 100644 src/main/java/org/oilmod/spigot/inventory/custom/slot/OilInventoryViewSlot.java
+ create mode 100644 src/main/java/org/oilmod/spigot/inventory/custom/slot/SettableViewSlot.java
+ create mode 100644 src/main/java/org/oilmod/spigot/inventory/custom/slot/SettableViewSlotBase.java
+ create mode 100644 src/main/java/org/oilmod/spigot/inventory/custom/slot/ViewSlotBase.java
+ create mode 100644 src/main/java/org/oilmod/spigot/inventory/custom/slot/ViewSlotResult.java
+ create mode 100644 src/main/java/org/oilmod/spigot/inventory/custom/view/HumanInventorySlotView.java
+ create mode 100644 src/main/java/org/oilmod/spigot/inventory/custom/view/ISlotView.java
+ create mode 100644 src/main/java/org/oilmod/spigot/inventory/custom/view/NullSlotView.java
+ create mode 100644 src/main/java/org/oilmod/spigot/inventory/custom/view/ScalableSlotView.java
+ create mode 100644 src/main/java/org/oilmod/spigot/inventory/custom/view/ScrollableSlotView.java
+ create mode 100644 src/main/java/org/oilmod/spigot/inventory/custom/view/SlotView.java
+ create mode 100644 src/main/java/org/oilmod/spigot/inventory/custom/view/SlotViewBase.java
+ create mode 100644 src/main/java/org/oilmod/spigot/inventory/custom/view/SplittedSlotView.java
+ create mode 100644 src/main/java/org/oilmod/spigot/inventory/custom/view/StaticSplittedSlotView.java
+ create mode 100644 src/main/java/org/oilmod/spigot/items/ItemStackCreator.java
+ create mode 100644 src/main/java/org/oilmod/spigot/items/ItemStackRegistry.java
+ create mode 100644 src/main/java/org/oilmod/spigot/items/ItemUtil.java
+ create mode 100644 src/main/java/org/oilmod/spigot/items/RealCraftItemStack.java
+ create mode 100644 src/main/java/org/oilmod/spigot/items/RealItem.java
+ create mode 100644 src/main/java/org/oilmod/spigot/items/RealItemClassMap.java
+ create mode 100644 src/main/java/org/oilmod/spigot/items/RealItemFactory.java
+ create mode 100644 src/main/java/org/oilmod/spigot/items/RealItemRegistryHelper.java
+ create mode 100644 src/main/java/org/oilmod/spigot/items/RealItemStack.java
+ create mode 100644 src/main/java/org/oilmod/spigot/items/RealItemStackFreeze.java
+ create mode 100644 src/main/java/org/oilmod/spigot/items/RealItemTypeHelper.java
+ create mode 100644 src/main/java/org/oilmod/spigot/items/RealSpecificItemStackFactory.java
+ create mode 100644 src/main/java/org/oilmod/spigot/items/SpecificItemStackFactory.java
+ create mode 100644 src/main/java/org/oilmod/spigot/items/itemstackimpl/crafting/BukkitCraftingIngredient.java
+ create mode 100644 src/main/java/org/oilmod/spigot/items/itemstackimpl/crafting/BukkitCraftingResultFactory.java
+ create mode 100644 src/main/java/org/oilmod/spigot/items/itemstackimpl/crafting/ItemStackCraftingInventoryReference.java
+ create mode 100644 src/main/java/org/oilmod/spigot/items/itemstackimpl/crafting/NMSCraftingIngredient.java
+ create mode 100644 src/main/java/org/oilmod/spigot/items/itemstackimpl/crafting/NMSCraftingResultFactory.java
+ create mode 100644 src/main/java/org/oilmod/spigot/items/itemstackimpl/crafting/OilRecipe.java
+ create mode 100644 src/main/java/org/oilmod/spigot/items/itemstackimpl/crafting/OilShapedRecipe.java
+ create mode 100644 src/main/java/org/oilmod/spigot/items/itemstackimpl/crafting/OilShapelessRecipe.java
+ create mode 100644 src/main/java/org/oilmod/spigot/items/itemstackimpl/crafting/RealItemCraftingFactory.java
+ create mode 100644 src/main/java/org/oilmod/spigot/items/itemstackimpl/crafting/help/CHCollection.java
+ create mode 100644 src/main/java/org/oilmod/spigot/items/itemstackimpl/crafting/help/CHCommand.java
+ create mode 100644 src/main/java/org/oilmod/spigot/items/itemstackimpl/crafting/help/CHContainer.java
+ create mode 100644 src/main/java/org/oilmod/spigot/items/itemstackimpl/crafting/help/CHDisplaySlotView.java
+ create mode 100644 src/main/java/org/oilmod/spigot/items/itemstackimpl/crafting/help/CHSelectorSlotView.java
+ create mode 100644 src/main/java/org/oilmod/spigot/items/itemstackimpl/crafting/help/CHView.java
+ create mode 100644 src/main/java/org/oilmod/spigot/items/itemstackimpl/crafting/help/OilCHView.java
+ create mode 100644 src/main/java/org/oilmod/spigot/items/itemstackimpl/crafting/help/ShapedCHView.java
+ create mode 100644 src/main/java/org/oilmod/spigot/items/itemstackimpl/crafting/help/ShapelessCHView.java
+ create mode 100644 src/main/java/org/oilmod/spigot/items/itemstackimpl/crafting/help/VanillaArmorDyeChView.java
+ create mode 100644 src/main/java/org/oilmod/spigot/items/itemstackimpl/crafting/help/VanillaBannerAddCHView.java
+ create mode 100644 src/main/java/org/oilmod/spigot/items/itemstackimpl/crafting/help/VanillaBannerDuplicateCHView.java
+ create mode 100644 src/main/java/org/oilmod/spigot/items/itemstackimpl/crafting/help/VanillaCHView.java
+ create mode 100644 src/main/java/org/oilmod/spigot/items/itemstackimpl/crafting/help/VanillaFireworksCHView.java
+ create mode 100644 src/main/java/org/oilmod/spigot/items/itemstackimpl/crafting/help/VanillaRepairCHView.java
+ create mode 100644 src/main/java/org/oilmod/spigot/items/itemstackimpl/crafting/help/VanillaShapedCHView.java
+ create mode 100644 src/main/java/org/oilmod/spigot/items/itemstackimpl/crafting/help/VanillaShapelessCHView.java
+ create mode 100644 src/main/java/org/oilmod/spigot/items/itemstackimpl/crafting/help/VanillaShieldBannerCHView.java
+ create mode 100644 src/main/java/org/oilmod/spigot/items/itemstackimpl/crafting/help/VanillaTippedArrowCHView.java
+ create mode 100644 src/main/java/org/oilmod/spigot/items/itemstackimpl/crafting/nms/NMS_OilRecipe.java
+ create mode 100644 src/main/java/org/oilmod/spigot/items/itemstackimpl/crafting/nms/NMS_OilShapedRecipe.java
+ create mode 100644 src/main/java/org/oilmod/spigot/items/itemstackimpl/crafting/nms/NMS_OilShapelessRecipe.java
+ create mode 100644 src/main/java/org/oilmod/spigot/items/itemstackimpl/internal/ItemStackDescription.java
+ create mode 100644 src/main/java/org/oilmod/spigot/items/itemstackimpl/internal/ModCraftItemStack.java
+ create mode 100644 src/main/java/org/oilmod/spigot/items/itemstackimpl/internal/ModItem.java
+ create mode 100644 src/main/java/org/oilmod/spigot/items/itemstackimpl/internal/ModItemStack.java
+ create mode 100644 src/main/java/org/oilmod/spigot/items/itemstackimpl/internal/ModItemStackFreeze.java
+ create mode 100644 src/main/java/org/oilmod/spigot/items/itemstackimpl/internal/RealItemClassMap.java
+ create mode 100644 src/main/java/org/oilmod/spigot/items/itemstackimpl/internal/RealItemFactory.java
+ create mode 100644 src/main/java/org/oilmod/spigot/items/itemtype/RealAxe.java
+ create mode 100644 src/main/java/org/oilmod/spigot/items/itemtype/RealPickaxe.java
+ create mode 100644 src/main/java/org/oilmod/spigot/items/itemtype/RealShears.java
+ create mode 100644 src/main/java/org/oilmod/spigot/items/itemtype/RealShovel.java
+ create mode 100644 src/main/java/org/oilmod/spigot/items/itemtype/RealSword.java
+ create mode 100644 src/main/java/org/oilmod/spigot/items/itemtype/RealTBBHelper.java
+ create mode 100644 src/main/java/org/oilmod/spigot/items/itemtype/RealTBBTool.java
+ create mode 100644 src/main/java/org/oilmod/spigot/ui/SlotState.java
+ create mode 100644 src/main/java/org/oilmod/spigot/ui/StorageSlotBehaviour.java
+ create mode 100644 src/main/java/org/oilmod/spigot/ui/UIInventoryGenericBukkit.java
+ create mode 100644 src/main/java/org/oilmod/spigot/ui/UIManager.java
+ create mode 100644 src/main/java/org/oilmod/spigot/util/BetterNonNullList.java
+ create mode 100644 src/main/java/org/oilmod/spigot/util/OilSpigotUtil.java
+ create mode 100644 src/main/java/org/oilmod/spigot/util/RealOilUtil.java
+ create mode 100644 src/test/java/org/oilmod/spigot/blocks/MaterialToolTest.java
+ create mode 100644 src/test/java/org/oilmod/spigot/config/yaml/NBTYamlTest.java
 
 diff --git a/ImportedNMSClasses.md b/ImportedNMSClasses.md
 new file mode 100644
@@ -316,36 +793,48 @@ index 00000000..a4b0e53d
 +- Dispenser
 +- Anvil Rename
 diff --git a/pom.xml b/pom.xml
-index e0b6eee4..ad40d5d2 100644
+index 13284388..e158005a 100644
 --- a/pom.xml
 +++ b/pom.xml
-@@ -1,12 +1,10 @@
+@@ -1,12 +1,11 @@
  <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
           xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
      <modelVersion>4.0.0</modelVersion>
--    <groupId>org.spigotmc</groupId>
--    <artifactId>spigot</artifactId>
-+    <artifactId>oilspigot</artifactId>
+-    <groupId>com.destroystokyo.paper</groupId>
+-    <artifactId>paper</artifactId>
++    <artifactId>OilyPaper-Server</artifactId>
      <packaging>jar</packaging>
      <version>1.12.2-R0.1-SNAPSHOT</version>
--    <name>Spigot</name>
--    <url>http://www.spigotmc.org</url>
-+    <name>OilSpigot</name>
+-    <name>Paper</name>
+-    <url>https://github.com/PaperMC/Paper</url>
++    <name>OilyPaper</name>
++    <url>https://github.com/OilMod/OilyPaper</url>
  
      <properties>
          <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-@@ -21,8 +19,8 @@
+@@ -21,8 +20,8 @@
      </properties>
  
      <parent>
--        <groupId>org.spigotmc</groupId>
--        <artifactId>spigot-parent</artifactId>
+-        <groupId>com.destroystokyo.paper</groupId>
+-        <artifactId>paper-parent</artifactId>
 +        <groupId>org.oilmod</groupId>
 +        <artifactId>oilmod-parent</artifactId>
          <version>dev-SNAPSHOT</version>
          <relativePath>../pom.xml</relativePath>
      </parent>
-@@ -77,6 +75,11 @@
+@@ -36,8 +35,8 @@
+             <scope>compile</scope>
+         </dependency>
+         <dependency>
+-            <groupId>com.destroystokyo.paper</groupId>
+-            <artifactId>paper-api</artifactId>
++            <groupId>org.oilmod</groupId>
++            <artifactId>OilyPaper-Bukkit-api</artifactId>
+             <version>${project.version}</version>
+             <scope>compile</scope>
+         </dependency>
+@@ -71,6 +70,11 @@
              <version>3.0.3</version>
              <scope>compile</scope>
          </dependency>
@@ -354,10 +843,10 @@ index e0b6eee4..ad40d5d2 100644
 +            <artifactId>oilmod-api</artifactId>
 +            <version>1.0-SNAPSHOT</version>
 +        </dependency>
-         <!-- testing -->
+ 
          <dependency>
-             <groupId>junit</groupId>
-@@ -92,13 +95,7 @@
+             <groupId>net.minecrell</groupId>
+@@ -133,13 +137,7 @@
          </dependency>
      </dependencies>
  
@@ -372,22 +861,22 @@ index e0b6eee4..ad40d5d2 100644
      <pluginRepositories>
          <pluginRepository>
              <id>spigotmc-public</id>
-@@ -117,7 +114,7 @@
-                     <execution>
-                         <id>ex-spigot</id>
-                         <configuration>
--                            <format>git-Spigot-%s</format>
-+                            <format>git-OilMod-OilSpigot-%s</format>
-                             <scmDirectory>../</scmDirectory>
-                             <descriptionProperty>spigot.desc</descriptionProperty>
-                         </configuration>
-@@ -148,12 +145,12 @@
+@@ -157,7 +155,7 @@
+                 <artifactId>gitdescribe-maven-plugin</artifactId>
+                 <version>1.3</version>
+                 <configuration>
+-                    <outputPrefix>git-Paper-</outputPrefix>
++                    <outputPrefix>git-OilMod-OilyPaper-</outputPrefix>
+                     <scmDirectory>..</scmDirectory>
+                 </configuration>
+                 <executions>
+@@ -178,12 +176,12 @@
                      <archive>
                          <manifestEntries>
                              <Main-Class>org.bukkit.craftbukkit.Main</Main-Class>
 -                            <Implementation-Title>CraftBukkit</Implementation-Title>
 +                            <Implementation-Title>OilSpigot</Implementation-Title>
-                             <Implementation-Version>${spigot.desc}${craftbukkit.desc}</Implementation-Version>
+                             <Implementation-Version>${describe}</Implementation-Version>
                              <Implementation-Vendor>${maven.build.timestamp}</Implementation-Vendor>
 -                            <Specification-Title>Bukkit</Specification-Title>
 +                            <Specification-Title>Bukkit/OilMod</Specification-Title>
@@ -397,9 +886,9 @@ index e0b6eee4..ad40d5d2 100644
                          </manifestEntries>
                          <manifestSections>
                              <manifestSection>
-@@ -219,6 +216,22 @@
-                                     <resource>META-INF/services/java.sql.Driver</resource>
+@@ -253,6 +251,22 @@
                                  </transformer>
+                                 <transformer implementation="com.github.edwgiz.mavenShadePlugin.log4j2CacheTransformer.PluginsCacheFileTransformer" />
                              </transformers>
 +                            <filters>
 +                                <filter>
@@ -420,7 +909,7 @@ index e0b6eee4..ad40d5d2 100644
                          </configuration>
                      </execution>
                  </executions>
-@@ -252,6 +265,23 @@
+@@ -281,6 +295,23 @@
                      </excludes>
                  </configuration>
              </plugin>
@@ -1609,7 +2098,7 @@ index 00000000..479f02b8
 +    }
 +}
 diff --git a/src/main/java/net/minecraft/server/Block.java b/src/main/java/net/minecraft/server/Block.java
-index 2dca6dbc..b063eb2f 100644
+index 3e2f5264..448fb687 100644
 --- a/src/main/java/net/minecraft/server/Block.java
 +++ b/src/main/java/net/minecraft/server/Block.java
 @@ -8,6 +8,10 @@ import java.util.List;
@@ -1623,7 +2112,7 @@ index 2dca6dbc..b063eb2f 100644
  public class Block {
  
      private static final MinecraftKey a = new MinecraftKey("air");
-@@ -342,6 +346,21 @@ public class Block {
+@@ -351,6 +355,21 @@ public class Block {
          this.dropNaturally(world, blockposition, iblockdata, 1.0F, i);
      }
  
@@ -1645,7 +2134,7 @@ index 2dca6dbc..b063eb2f 100644
      public void dropNaturally(World world, BlockPosition blockposition, IBlockData iblockdata, float f, int i) {
          if (!world.isClientSide) {
              int j = this.getDropCount(i, world.random);
-@@ -361,6 +380,12 @@ public class Block {
+@@ -370,6 +389,12 @@ public class Block {
      }
  
      public static void a(World world, BlockPosition blockposition, ItemStack itemstack) {
@@ -1658,7 +2147,7 @@ index 2dca6dbc..b063eb2f 100644
          if (!world.isClientSide && !itemstack.isEmpty() && world.getGameRules().getBoolean("doTileDrops")) {
              float f = 0.5F;
              double d0 = (double) (world.random.nextFloat() * 0.5F) + 0.25D;
-@@ -472,6 +497,13 @@ public class Block {
+@@ -481,6 +506,13 @@ public class Block {
  
      }
  
@@ -1672,7 +2161,7 @@ index 2dca6dbc..b063eb2f 100644
      protected boolean n() {
          return this.getBlockData().g() && !this.isTileEntity;
      }
-@@ -958,6 +990,23 @@ public class Block {
+@@ -967,6 +999,23 @@ public class Block {
              }
          }
  
@@ -1696,7 +2185,7 @@ index 2dca6dbc..b063eb2f 100644
      }
  
      // CraftBukkit start
-@@ -986,6 +1035,20 @@ public class Block {
+@@ -995,6 +1044,20 @@ public class Block {
      }
      // Spigot end
  
@@ -2190,7 +2679,7 @@ index aa8eb2ea..07549f10 100644
  
      public CommandTp() {}
 diff --git a/src/main/java/net/minecraft/server/Container.java b/src/main/java/net/minecraft/server/Container.java
-index 7d80b68b..3b3091d1 100644
+index 3a488ce2..2a86598b 100644
 --- a/src/main/java/net/minecraft/server/Container.java
 +++ b/src/main/java/net/minecraft/server/Container.java
 @@ -10,18 +10,27 @@ import javax.annotation.Nullable;
@@ -2308,7 +2797,7 @@ index 7d80b68b..3b3091d1 100644
 -                    this.d();
 -                }
 -            } else if (this.g == 1) {
--                Slot slot = (Slot) this.slots.get(i);
+-                Slot slot = i < this.slots.size() ? this.slots.get(i) : null; // Paper - Ensure drag in bounds
 -
 -                itemstack1 = playerinventory.getCarried();
 -                if (slot != null && a(slot, itemstack1, true) && slot.isAllowed(itemstack1) && (this.dragType == 2 || itemstack1.getCount() > this.h.size()) && this.b(slot)) {
@@ -2867,7 +3356,7 @@ index 7d80b68b..3b3091d1 100644
 +                this.d();
 +            }
 +        } else if (this.g == 1) {
-+            Slot slot = (Slot) this.slots.get(i);
++            Slot slot = i < this.slots.size() ? this.slots.get(i) : null; // Paper - Ensure drag in bounds
 +
 +            itemstack1 = playerinventory.getCarried();
 +            if (slot != null && a(slot, itemstack1, true) && slot.isAllowed(itemstack1) && (this.dragType == 2 || itemstack1.getCount() > this.h.size()) && this.b(slot)) {
@@ -3069,7 +3558,7 @@ index 7d80b68b..3b3091d1 100644
      }
  }
 diff --git a/src/main/java/net/minecraft/server/ContainerAnvil.java b/src/main/java/net/minecraft/server/ContainerAnvil.java
-index 175753c5..9fa33ae6 100644
+index 16ec6756..bb241d61 100644
 --- a/src/main/java/net/minecraft/server/ContainerAnvil.java
 +++ b/src/main/java/net/minecraft/server/ContainerAnvil.java
 @@ -10,6 +10,11 @@ import org.apache.logging.log4j.Logger;
@@ -3174,15 +3663,15 @@ index 175753c5..9fa33ae6 100644
 +                            this.d(); //OilSpigot - update levelCost for Client todo: d -> update
 +                            return;
 +                        }
-+
+ 
+-                    this.k = l;
 +                        for (l = 0; k > 0 && l < itemstack2.getCount(); ++l) {
 +                            i1 = itemstack1.i() - k;
 +                            itemstack1.setData(i1);
 +                            ++i;
 +                            k = Math.min(itemstack1.i(), itemstack1.k() / 4);
 +                        }
- 
--                    this.k = l;
++
 +                        this.k = l;
 +                    }//OilSpigot bracket
                  } else {
@@ -3324,7 +3813,7 @@ index 175753c5..9fa33ae6 100644
                  itemstack.g(this.renameText);
              }
          }
-@@ -368,21 +449,28 @@ public class ContainerAnvil extends Container {
+@@ -368,21 +449,29 @@ public class ContainerAnvil extends Container {
          this.e();
      }
  
@@ -3341,8 +3830,9 @@ index 175753c5..9fa33ae6 100644
 +    }
 +    //OilSpigot end
  
--            if (this.lastLevelCost != this.levelCost) {
+-            //if (this.lastLevelCost != this.levelCost) { // Paper - this was the wrong solution to this, fixing it correctly in CraftPlayer
 -                icrafting.setContainerData(this, 0, this.levelCost);
+-            //} // Paper
 +    //OilSpigot start - added level cost updating
 +    @Override
 +    public boolean update() {
@@ -3350,8 +3840,9 @@ index 175753c5..9fa33ae6 100644
 +        if (levelCost != lastLevelCost) {
 +            result = true;
 +            for (int j = 0; j < this.listeners.size(); ++j) {
++                //Same as in Paper
 +                ((ICrafting) this.listeners.get(j)).setContainerData(this, 0, this.levelCost);
-             }
++            }
          }
  
 +
@@ -4841,7 +5332,7 @@ index 00000000..4a616958
 +    }
 +}
 diff --git a/src/main/java/net/minecraft/server/DedicatedServer.java b/src/main/java/net/minecraft/server/DedicatedServer.java
-index 8c5361d6..322c445e 100644
+index 6a8292ce..0fcbda9d 100644
 --- a/src/main/java/net/minecraft/server/DedicatedServer.java
 +++ b/src/main/java/net/minecraft/server/DedicatedServer.java
 @@ -30,6 +30,10 @@ import org.bukkit.craftbukkit.util.Waitable;
@@ -4855,7 +5346,7 @@ index 8c5361d6..322c445e 100644
  public class DedicatedServer extends MinecraftServer implements IMinecraftServer {
  
      private static final Logger LOGGER = LogManager.getLogger();
-@@ -121,7 +125,9 @@ public class DedicatedServer extends MinecraftServer implements IMinecraftServer
+@@ -133,7 +137,9 @@ public class DedicatedServer extends MinecraftServer implements IMinecraftServer
  
          thread.setDaemon(true);
          thread.start();
@@ -4866,9 +5357,9 @@ index 8c5361d6..322c445e 100644
          if (Runtime.getRuntime().maxMemory() / 1024L / 1024L < 512L) {
              DedicatedServer.LOGGER.warn("To start the server with more ram, launch it as \"java -Xmx1024M -Xms1024M -jar minecraft_server.jar\"");
          }
-@@ -185,6 +191,10 @@ public class DedicatedServer extends MinecraftServer implements IMinecraftServer
-             org.spigotmc.SpigotConfig.registerCommands();
-             // Spigot end
+@@ -202,6 +208,10 @@ public class DedicatedServer extends MinecraftServer implements IMinecraftServer
+             com.destroystokyo.paper.VersionHistoryManager.INSTANCE.getClass(); // load version history now
+             // Paper end
  
 +            //OilSpigot start
 +            OilMain.registerCommands();
@@ -4877,7 +5368,7 @@ index 8c5361d6..322c445e 100644
              DedicatedServer.LOGGER.info("Generating keypair");
              this.a(MinecraftEncryption.b());
              DedicatedServer.LOGGER.info("Starting Minecraft server on {}:{}", this.getServerIp().isEmpty() ? "*" : this.getServerIp(), Integer.valueOf(this.P()));
-@@ -200,6 +210,13 @@ public class DedicatedServer extends MinecraftServer implements IMinecraftServer
+@@ -217,6 +227,13 @@ public class DedicatedServer extends MinecraftServer implements IMinecraftServer
              }
          }
  
@@ -4892,460 +5383,77 @@ index 8c5361d6..322c445e 100644
              // this.a((PlayerList) (new DedicatedPlayerList(this))); // Spigot - moved up
              server.loadPlugins();
 diff --git a/src/main/java/net/minecraft/server/EnchantmentManager.java b/src/main/java/net/minecraft/server/EnchantmentManager.java
-new file mode 100644
-index 00000000..0e1943be
---- /dev/null
+index f714dc32..259e93f8 100644
+--- a/src/main/java/net/minecraft/server/EnchantmentManager.java
 +++ b/src/main/java/net/minecraft/server/EnchantmentManager.java
-@@ -0,0 +1,428 @@
-+package net.minecraft.server;
-+
-+import com.google.common.collect.Lists;
-+import com.google.common.collect.Maps;
-+import java.util.ArrayList;
-+import java.util.Iterator;
-+import java.util.LinkedHashMap;
-+import java.util.List;
-+import java.util.Map;
-+import java.util.Random;
-+import java.util.Map.Entry;
-+
+@@ -10,6 +10,10 @@ import java.util.Map;
+ import java.util.Random;
+ import java.util.Map.Entry;
+ 
 +//OilSpigot start
 +import org.oilmod.spigot.items.itemstackimpl.internal.ModItemStack;
 +//OilSpigot end
 +
-+public class EnchantmentManager {
-+
-+    private static final EnchantmentManager.EnchantmentModifierProtection a = new EnchantmentManager.EnchantmentModifierProtection(null);
-+    private static final EnchantmentManager.EnchantmentModifierDamage b = new EnchantmentManager.EnchantmentModifierDamage(null);
-+    private static final EnchantmentManager.EnchantmentModifierThorns c = new EnchantmentManager.EnchantmentModifierThorns(null);
-+    private static final EnchantmentManager.EnchantmentModifierArthropods d = new EnchantmentManager.EnchantmentModifierArthropods(null);
-+
-+    public static int getEnchantmentLevel(Enchantment enchantment, ItemStack itemstack) {
-+        if (itemstack.isEmpty()) {
-+            return 0;
-+        } else {
-+            NBTTagList nbttaglist = itemstack.getEnchantments();
-+
-+            for (int i = 0; i < nbttaglist.size(); ++i) {
-+                NBTTagCompound nbttagcompound = nbttaglist.get(i);
-+                Enchantment enchantment1 = Enchantment.c(nbttagcompound.getShort("id"));
-+                short short0 = nbttagcompound.getShort("lvl");
-+
-+                if (enchantment1 == enchantment) {
-+                    return short0;
-+                }
-+            }
-+
-+            return 0;
-+        }
-+    }
-+
-+    public static Map<Enchantment, Integer> a(ItemStack itemstack) {
-+        LinkedHashMap linkedhashmap = Maps.newLinkedHashMap();
-+        NBTTagList nbttaglist = itemstack.getItem() == Items.ENCHANTED_BOOK ? ItemEnchantedBook.h(itemstack) : itemstack.getEnchantments();
-+
-+        for (int i = 0; i < nbttaglist.size(); ++i) {
-+            NBTTagCompound nbttagcompound = nbttaglist.get(i);
-+            Enchantment enchantment = Enchantment.c(nbttagcompound.getShort("id"));
-+            short short0 = nbttagcompound.getShort("lvl");
-+
-+            linkedhashmap.put(enchantment, Integer.valueOf(short0));
-+        }
-+
-+        return linkedhashmap;
-+    }
-+
-+    public static void a(Map<Enchantment, Integer> map, ItemStack itemstack) {
-+        NBTTagList nbttaglist = new NBTTagList();
-+        Iterator iterator = map.entrySet().iterator();
-+
-+        while (iterator.hasNext()) {
-+            Entry entry = (Entry) iterator.next();
-+            Enchantment enchantment = (Enchantment) entry.getKey();
-+
-+            if (enchantment != null) {
-+                int i = ((Integer) entry.getValue()).intValue();
-+                NBTTagCompound nbttagcompound = new NBTTagCompound();
-+
-+                nbttagcompound.setShort("id", (short) Enchantment.getId(enchantment));
-+                nbttagcompound.setShort("lvl", (short) i);
-+                nbttaglist.add(nbttagcompound);
-+                if (itemstack.getItem() == Items.ENCHANTED_BOOK) {
-+                    ItemEnchantedBook.a(itemstack, new WeightedRandomEnchant(enchantment, i));
-+                }
-+            }
-+        }
-+
-+        if (nbttaglist.isEmpty()) {
-+            if (itemstack.hasTag()) {
-+                itemstack.getTag().remove("ench");
-+            }
-+        } else if (itemstack.getItem() != Items.ENCHANTED_BOOK) {
-+            itemstack.a("ench", (NBTBase) nbttaglist);
-+        }
-+
-+    }
-+
-+    private static void a(EnchantmentManager.EnchantmentModifier enchantmentmanager_enchantmentmodifier, ItemStack itemstack) {
-+        if (!itemstack.isEmpty()) {
-+            NBTTagList nbttaglist = itemstack.getEnchantments();
-+
-+            for (int i = 0; i < nbttaglist.size(); ++i) {
-+                short short0 = nbttaglist.get(i).getShort("id");
-+                short short1 = nbttaglist.get(i).getShort("lvl");
-+
-+                if (Enchantment.c(short0) != null) {
-+                    enchantmentmanager_enchantmentmodifier.a(Enchantment.c(short0), short1);
-+                }
-+            }
-+
-+        }
-+    }
-+
-+    private static void a(EnchantmentManager.EnchantmentModifier enchantmentmanager_enchantmentmodifier, Iterable<ItemStack> iterable) {
-+        Iterator iterator = iterable.iterator();
-+
-+        while (iterator.hasNext()) {
-+            ItemStack itemstack = (ItemStack) iterator.next();
-+
-+            a(enchantmentmanager_enchantmentmodifier, itemstack);
-+        }
-+
-+    }
-+
-+    public static int a(Iterable<ItemStack> iterable, DamageSource damagesource) {
-+        EnchantmentManager.a.a = 0;
-+        EnchantmentManager.a.b = damagesource;
-+        a((EnchantmentManager.EnchantmentModifier) EnchantmentManager.a, iterable);
-+        return EnchantmentManager.a.a;
-+    }
-+
-+    public static float a(ItemStack itemstack, EnumMonsterType enummonstertype) {
-+        EnchantmentManager.b.a = 0.0F;
-+        EnchantmentManager.b.b = enummonstertype;
-+        a((EnchantmentManager.EnchantmentModifier) EnchantmentManager.b, itemstack);
-+        return EnchantmentManager.b.a;
-+    }
-+
-+    public static float a(EntityLiving entityliving) {
-+        int i = a(Enchantments.r, entityliving);
-+
-+        return i > 0 ? EnchantmentSweeping.e(i) : 0.0F;
-+    }
-+
-+    public static void a(EntityLiving entityliving, Entity entity) {
-+        EnchantmentManager.c.b = entity;
-+        EnchantmentManager.c.a = entityliving;
-+        if (entityliving != null) {
-+            a((EnchantmentManager.EnchantmentModifier) EnchantmentManager.c, entityliving.aQ());
-+        }
-+
-+        if (entity instanceof EntityHuman) {
-+            a((EnchantmentManager.EnchantmentModifier) EnchantmentManager.c, entityliving.getItemInMainHand());
-+        }
-+
-+    }
-+
-+    public static void b(EntityLiving entityliving, Entity entity) {
-+        EnchantmentManager.d.a = entityliving;
-+        EnchantmentManager.d.b = entity;
-+        if (entityliving != null) {
-+            a((EnchantmentManager.EnchantmentModifier) EnchantmentManager.d, entityliving.aQ());
-+        }
-+
-+        if (entityliving instanceof EntityHuman) {
-+            a((EnchantmentManager.EnchantmentModifier) EnchantmentManager.d, entityliving.getItemInMainHand());
-+        }
-+
-+    }
-+
-+    public static int a(Enchantment enchantment, EntityLiving entityliving) {
-+        List list = enchantment.a(entityliving);
-+
-+        if (list == null) {
-+            return 0;
-+        } else {
-+            int i = 0;
-+            Iterator iterator = list.iterator();
-+
-+            while (iterator.hasNext()) {
-+                ItemStack itemstack = (ItemStack) iterator.next();
-+                int j = getEnchantmentLevel(enchantment, itemstack);
-+
-+                if (j > i) {
-+                    i = j;
-+                }
-+            }
-+
-+            return i;
-+        }
-+    }
-+
-+    public static int b(EntityLiving entityliving) {
-+        return a(Enchantments.KNOCKBACK, entityliving);
-+    }
-+
-+    public static int getFireAspectEnchantmentLevel(EntityLiving entityliving) {
-+        return a(Enchantments.FIRE_ASPECT, entityliving);
-+    }
-+
-+    public static int getOxygenEnchantmentLevel(EntityLiving entityliving) {
-+        return a(Enchantments.OXYGEN, entityliving);
-+    }
-+
-+    public static int e(EntityLiving entityliving) {
-+        return a(Enchantments.DEPTH_STRIDER, entityliving);
-+    }
-+
-+    public static int getDigSpeedEnchantmentLevel(EntityLiving entityliving) {
-+        return a(Enchantments.DIG_SPEED, entityliving);
-+    }
-+
-+    public static int b(ItemStack itemstack) {
-+        return getEnchantmentLevel(Enchantments.LUCK, itemstack);
-+    }
-+
-+    public static int c(ItemStack itemstack) {
-+        return getEnchantmentLevel(Enchantments.LURE, itemstack);
-+    }
-+
-+    public static int g(EntityLiving entityliving) {
-+        return a(Enchantments.LOOT_BONUS_MOBS, entityliving);
-+    }
-+
-+    public static boolean h(EntityLiving entityliving) {
-+        return a(Enchantments.WATER_WORKER, entityliving) > 0;
-+    }
-+
-+    public static boolean i(EntityLiving entityliving) {
-+        return a(Enchantments.j, entityliving) > 0;
-+    }
-+
-+    public static boolean d(ItemStack itemstack) {
-+        return getEnchantmentLevel(Enchantments.k, itemstack) > 0;
-+    }
-+
-+    public static boolean shouldNotDrop(ItemStack itemstack) {
-+        return getEnchantmentLevel(Enchantments.D, itemstack) > 0;
-+    }
-+
-+    public static ItemStack b(Enchantment enchantment, EntityLiving entityliving) {
-+        List list = enchantment.a(entityliving);
-+
-+        if (list.isEmpty()) {
-+            return ItemStack.a;
-+        } else {
-+            ArrayList arraylist = Lists.newArrayList();
-+            Iterator iterator = list.iterator();
-+
-+            while (iterator.hasNext()) {
-+                ItemStack itemstack = (ItemStack) iterator.next();
-+
-+                if (!itemstack.isEmpty() && getEnchantmentLevel(enchantment, itemstack) > 0) {
-+                    arraylist.add(itemstack);
-+                }
-+            }
-+
-+            return arraylist.isEmpty() ? ItemStack.a : (ItemStack) arraylist.get(entityliving.getRandom().nextInt(arraylist.size()));
-+        }
-+    }
-+
-+    public static int a(Random random, int i, int j, ItemStack itemstack) {
-+        Item item = itemstack.getItem();
+ public class EnchantmentManager {
+ 
+     private static final EnchantmentManager.EnchantmentModifierProtection a = new EnchantmentManager.EnchantmentModifierProtection(null);
+@@ -250,7 +254,7 @@ public class EnchantmentManager {
+ 
+     public static int a(Random random, int i, int j, ItemStack itemstack) {
+         Item item = itemstack.getItem();
+-        int k = item.c();
 +        int k = (itemstack instanceof ModItemStack)?((ModItemStack) itemstack).getEnchantSelectModifier():item.c(); //OilSpigot added support for ModItems - this the enchantabilty value
-+
-+        if (k <= 0) {
-+            return 0;
-+        } else {
-+            if (j > 15) {
-+                j = 15;
-+            }
-+
-+            int l = random.nextInt(8) + 1 + (j >> 1) + random.nextInt(j + 1);
-+
-+            return i == 0 ? Math.max(l / 3, 1) : (i == 1 ? l * 2 / 3 + 1 : Math.max(l, j * 2));
-+        }
-+    }
-+
-+    public static ItemStack a(Random random, ItemStack itemstack, int i, boolean flag) {
-+        List list = b(random, itemstack, i, flag);
-+        boolean flag1 = itemstack.getItem() == Items.BOOK;
-+
-+        if (flag1) {
-+            itemstack = new ItemStack(Items.ENCHANTED_BOOK);
-+        }
-+
-+        Iterator iterator = list.iterator();
-+
-+        while (iterator.hasNext()) {
-+            WeightedRandomEnchant weightedrandomenchant = (WeightedRandomEnchant) iterator.next();
-+
-+            if (flag1) {
-+                ItemEnchantedBook.a(itemstack, weightedrandomenchant);
-+            } else {
-+                itemstack.addEnchantment(weightedrandomenchant.enchantment, weightedrandomenchant.level);
-+            }
-+        }
-+
-+        return itemstack;
-+    }
-+
-+    public static List<WeightedRandomEnchant> b(Random random, ItemStack itemstack, int i, boolean flag) {
-+        ArrayList arraylist = Lists.newArrayList();
-+        Item item = itemstack.getItem();
+ 
+         if (k <= 0) {
+             return 0;
+@@ -291,7 +295,7 @@ public class EnchantmentManager {
+     public static List<WeightedRandomEnchant> b(Random random, ItemStack itemstack, int i, boolean flag) {
+         ArrayList arraylist = Lists.newArrayList();
+         Item item = itemstack.getItem();
+-        int j = item.c();
 +        int j = (itemstack instanceof ModItemStack)?((ModItemStack) itemstack).getEnchantSelectModifier():item.c(); //OilSpigot added support for ModItems
-+
-+        if (j <= 0) {
-+            return arraylist;
-+        } else {
-+            i += 1 + random.nextInt(j / 4 + 1) + random.nextInt(j / 4 + 1);
-+            float f = (random.nextFloat() + random.nextFloat() - 1.0F) * 0.15F;
-+
-+            i = MathHelper.clamp(Math.round((float) i + (float) i * f), 1, Integer.MAX_VALUE);
-+            List list = a(i, itemstack, flag);
-+
-+            if (!list.isEmpty()) {
-+                arraylist.add(WeightedRandom.a(random, list));
-+
-+                while (random.nextInt(50) <= i) {
-+                    a(list, (WeightedRandomEnchant) SystemUtils.a(arraylist));
-+                    if (list.isEmpty()) {
-+                        break;
-+                    }
-+
-+                    arraylist.add(WeightedRandom.a(random, list));
-+                    i /= 2;
-+                }
-+            }
-+
-+            return arraylist;
-+        }
-+    }
-+
-+    public static void a(List<WeightedRandomEnchant> list, WeightedRandomEnchant weightedrandomenchant) {
-+        Iterator iterator = list.iterator();
-+
-+        while (iterator.hasNext()) {
-+            if (!weightedrandomenchant.enchantment.c(((WeightedRandomEnchant) iterator.next()).enchantment)) {
-+                iterator.remove();
-+            }
-+        }
-+
-+    }
-+
-+    public static List<WeightedRandomEnchant> a(int i, ItemStack itemstack, boolean flag) {
-+        ArrayList arraylist = Lists.newArrayList();
-+        Item item = itemstack.getItem();
-+        boolean isBook = itemstack.getItem() == Items.BOOK;
-+        Iterator iterator = Enchantment.enchantments.iterator();
-+
-+        while (iterator.hasNext()) {
-+            Enchantment enchantment = (Enchantment) iterator.next();
-+
+ 
+         if (j <= 0) {
+             return arraylist;
+@@ -334,13 +338,14 @@ public class EnchantmentManager {
+     public static List<WeightedRandomEnchant> a(int i, ItemStack itemstack, boolean flag) {
+         ArrayList arraylist = Lists.newArrayList();
+         Item item = itemstack.getItem();
+-        boolean flag1 = itemstack.getItem() == Items.BOOK;
++        boolean isBook = itemstack.getItem() == Items.BOOK; //OilSpigot renamed
+         Iterator iterator = Enchantment.enchantments.iterator();
+ 
+         while (iterator.hasNext()) {
+             Enchantment enchantment = (Enchantment) iterator.next();
+ 
+-            if ((!enchantment.isTreasure() || flag) && (enchantment.itemTarget.canEnchant(item) || flag1)) {
 +            //OilSpigot add support for moditems if needed
 +            if ((!enchantment.isTreasure() || flag) && ((itemstack instanceof ModItemStack)?((ModItemStack) itemstack).canEnchant(enchantment):(enchantment.itemTarget.canEnchant(item) || isBook))) {
-+                for (int j = enchantment.getMaxLevel(); j > enchantment.getStartLevel() - 1; --j) {
-+                    if (i >= enchantment.a(j) && i <= enchantment.b(j)) {
-+                        arraylist.add(new WeightedRandomEnchant(enchantment, j));
-+                        break;
-+                    }
-+                }
-+            }
-+        }
-+
-+        return arraylist;
-+    }
-+
-+    static final class EnchantmentModifierArthropods implements EnchantmentManager.EnchantmentModifier {
-+
-+        public EntityLiving a;
-+        public Entity b;
-+
-+        private EnchantmentModifierArthropods() {}
-+
-+        public void a(Enchantment enchantment, int i) {
-+            enchantment.a(this.a, this.b, i);
-+        }
-+
-+        EnchantmentModifierArthropods(Object object) {
-+            this();
-+        }
-+    }
-+
-+    static final class EnchantmentModifierThorns implements EnchantmentManager.EnchantmentModifier {
-+
-+        public EntityLiving a;
-+        public Entity b;
-+
-+        private EnchantmentModifierThorns() {}
-+
-+        public void a(Enchantment enchantment, int i) {
-+            enchantment.b(this.a, this.b, i);
-+        }
-+
-+        EnchantmentModifierThorns(Object object) {
-+            this();
-+        }
-+    }
-+
-+    static final class EnchantmentModifierDamage implements EnchantmentManager.EnchantmentModifier {
-+
-+        public float a;
-+        public EnumMonsterType b;
-+
-+        private EnchantmentModifierDamage() {}
-+
-+        public void a(Enchantment enchantment, int i) {
-+            this.a += enchantment.a(i, this.b);
-+        }
-+
-+        EnchantmentModifierDamage(Object object) {
-+            this();
-+        }
-+    }
-+
-+    static final class EnchantmentModifierProtection implements EnchantmentManager.EnchantmentModifier {
-+
-+        public int a;
-+        public DamageSource b;
-+
-+        private EnchantmentModifierProtection() {}
-+
-+        public void a(Enchantment enchantment, int i) {
-+            this.a += enchantment.a(i, this.b);
-+        }
-+
-+        EnchantmentModifierProtection(Object object) {
-+            this();
-+        }
-+    }
-+
-+    interface EnchantmentModifier {
-+
-+        void a(Enchantment enchantment, int i);
-+    }
-+}
+                 for (int j = enchantment.getMaxLevel(); j > enchantment.getStartLevel() - 1; --j) {
+                     if (i >= enchantment.a(j) && i <= enchantment.b(j)) {
+                         arraylist.add(new WeightedRandomEnchant(enchantment, j));
 diff --git a/src/main/java/net/minecraft/server/Entity.java b/src/main/java/net/minecraft/server/Entity.java
-index 2688558b..01d896cd 100644
+index 74bbba01..5acd3420 100644
 --- a/src/main/java/net/minecraft/server/Entity.java
 +++ b/src/main/java/net/minecraft/server/Entity.java
-@@ -41,7 +41,14 @@ import org.bukkit.event.entity.EntityPortalEvent;
+@@ -42,7 +42,15 @@ import org.bukkit.event.entity.EntityPortalEvent;
  import org.bukkit.plugin.PluginManager;
  // CraftBukkit end
  
--public abstract class Entity implements ICommandListener {
+-public abstract class Entity implements ICommandListener, KeyedObject { // Paper
 +//OilSpigot start
 +import org.oilmod.api.entity.NMSEntity;
 +//OilSpigot end
 +
 +
 +//OilSpigot start
-+public abstract class Entity implements ICommandListener, NMSEntity {//OilSpigot - now implements NMSEntity
++// Paper - KeyedObject
++public abstract class Entity implements ICommandListener, NMSEntity, KeyedObject {//OilSpigot - now implements NMSEntity
 +    //OilSpigot end
  
      // CraftBukkit start
      private static final int CURRENT_LEVEL = 2;
-@@ -1761,7 +1768,9 @@ public abstract class Entity implements ICommandListener {
+@@ -1888,7 +1896,9 @@ public abstract class Entity implements ICommandListener, KeyedObject { // Paper
          } else {
              // CraftBukkit start - Capture drops for death event
              if (this instanceof EntityLiving && !((EntityLiving) this).forceDrops) {
@@ -5357,10 +5465,10 @@ index 2688558b..01d896cd 100644
              }
              // CraftBukkit end
 diff --git a/src/main/java/net/minecraft/server/EntityArmorStand.java b/src/main/java/net/minecraft/server/EntityArmorStand.java
-index c9054fc9..8908c9a7 100644
+index 90749924..a29225a8 100644
 --- a/src/main/java/net/minecraft/server/EntityArmorStand.java
 +++ b/src/main/java/net/minecraft/server/EntityArmorStand.java
-@@ -221,7 +221,8 @@ public class EntityArmorStand extends EntityLiving {
+@@ -225,7 +225,8 @@ public class EntityArmorStand extends EntityLiving {
              nbttaglist = nbttagcompound.getList("ArmorItems", 10);
  
              for (i = 0; i < this.bz.size(); ++i) {
@@ -5370,7 +5478,7 @@ index c9054fc9..8908c9a7 100644
              }
          }
  
-@@ -229,7 +230,8 @@ public class EntityArmorStand extends EntityLiving {
+@@ -233,7 +234,8 @@ public class EntityArmorStand extends EntityLiving {
              nbttaglist = nbttagcompound.getList("HandItems", 10);
  
              for (i = 0; i < this.by.size(); ++i) {
@@ -5380,7 +5488,7 @@ index c9054fc9..8908c9a7 100644
              }
          }
  
-@@ -504,7 +506,9 @@ public class EntityArmorStand extends EntityLiving {
+@@ -512,7 +514,9 @@ public class EntityArmorStand extends EntityLiving {
      }
  
      private void E() {
@@ -5391,7 +5499,7 @@ index c9054fc9..8908c9a7 100644
          this.F();
      }
  
-@@ -517,7 +521,8 @@ public class EntityArmorStand extends EntityLiving {
+@@ -525,7 +529,8 @@ public class EntityArmorStand extends EntityLiving {
          for (i = 0; i < this.by.size(); ++i) {
              itemstack = (ItemStack) this.by.get(i);
              if (!itemstack.isEmpty()) {
@@ -5401,7 +5509,7 @@ index c9054fc9..8908c9a7 100644
                  this.by.set(i, ItemStack.a);
              }
          }
-@@ -525,7 +530,8 @@ public class EntityArmorStand extends EntityLiving {
+@@ -533,7 +538,8 @@ public class EntityArmorStand extends EntityLiving {
          for (i = 0; i < this.bz.size(); ++i) {
              itemstack = (ItemStack) this.bz.get(i);
              if (!itemstack.isEmpty()) {
@@ -5412,10 +5520,10 @@ index c9054fc9..8908c9a7 100644
              }
          }
 diff --git a/src/main/java/net/minecraft/server/EntityFireworks.java b/src/main/java/net/minecraft/server/EntityFireworks.java
-index 48cdef5d..5adc136e 100644
+index bd0ec95f..e9ce820c 100644
 --- a/src/main/java/net/minecraft/server/EntityFireworks.java
 +++ b/src/main/java/net/minecraft/server/EntityFireworks.java
-@@ -212,7 +212,8 @@ public class EntityFireworks extends Entity {
+@@ -220,7 +220,8 @@ public class EntityFireworks extends Entity {
          NBTTagCompound nbttagcompound1 = nbttagcompound.getCompound("FireworksItem");
  
          if (nbttagcompound1 != null) {
@@ -5426,7 +5534,7 @@ index 48cdef5d..5adc136e 100644
              if (!itemstack.isEmpty()) {
                  this.datawatcher.set(EntityFireworks.FIREWORK_ITEM, itemstack);
 diff --git a/src/main/java/net/minecraft/server/EntityHorseAbstract.java b/src/main/java/net/minecraft/server/EntityHorseAbstract.java
-index 46d1ea21..813b10dd 100644
+index dcc39236..7a0cf628 100644
 --- a/src/main/java/net/minecraft/server/EntityHorseAbstract.java
 +++ b/src/main/java/net/minecraft/server/EntityHorseAbstract.java
 @@ -766,7 +766,8 @@ public abstract class EntityHorseAbstract extends EntityAnimal implements IInven
@@ -5454,10 +5562,10 @@ index 6c520496..08e88330 100644
              }
          }
 diff --git a/src/main/java/net/minecraft/server/EntityInsentient.java b/src/main/java/net/minecraft/server/EntityInsentient.java
-index 3c48d946..cb82d61a 100644
+index d6a1933a..3a657166 100644
 --- a/src/main/java/net/minecraft/server/EntityInsentient.java
 +++ b/src/main/java/net/minecraft/server/EntityInsentient.java
-@@ -406,7 +406,8 @@ public abstract class EntityInsentient extends EntityLiving {
+@@ -407,7 +407,8 @@ public abstract class EntityInsentient extends EntityLiving {
              nbttaglist = nbttagcompound.getList("ArmorItems", 10);
  
              for (i = 0; i < this.by.size(); ++i) {
@@ -5467,7 +5575,7 @@ index 3c48d946..cb82d61a 100644
              }
          }
  
-@@ -414,7 +415,8 @@ public abstract class EntityInsentient extends EntityLiving {
+@@ -415,7 +416,8 @@ public abstract class EntityInsentient extends EntityLiving {
              nbttaglist = nbttagcompound.getList("HandItems", 10);
  
              for (i = 0; i < this.bx.size(); ++i) {
@@ -5478,21 +5586,21 @@ index 3c48d946..cb82d61a 100644
          }
  
 diff --git a/src/main/java/net/minecraft/server/EntityItem.java b/src/main/java/net/minecraft/server/EntityItem.java
-index 4d3aef96..798a7f36 100644
+index 099bc755..78aa51a9 100644
 --- a/src/main/java/net/minecraft/server/EntityItem.java
 +++ b/src/main/java/net/minecraft/server/EntityItem.java
-@@ -9,6 +9,10 @@ import org.bukkit.event.entity.EntityPickupItemEvent;
- import org.bukkit.event.player.PlayerPickupItemEvent;
- // CraftBukkit end
+@@ -11,6 +11,10 @@ import org.bukkit.event.player.PlayerPickupItemEvent;
+ import org.bukkit.event.player.PlayerAttemptPickupItemEvent; // Paper
+ import com.destroystokyo.paper.HopperPusher; // Paper
  
 +//OilSpigot start
 +import org.oilmod.spigot.items.itemstackimpl.internal.ModItemStack;
 +//OilSpigot end
 +
- public class EntityItem extends Entity {
- 
-     private static final Logger b = LogManager.getLogger();
-@@ -306,7 +310,9 @@ public class EntityItem extends Entity {
+ // Paper start - implement HopperPusher
+ public class EntityItem extends Entity implements HopperPusher {
+     @Override
+@@ -322,7 +326,9 @@ public class EntityItem extends Entity implements HopperPusher {
  
          NBTTagCompound nbttagcompound1 = nbttagcompound.getCompound("Item");
  
@@ -5503,7 +5611,7 @@ index 4d3aef96..798a7f36 100644
          if (this.getItemStack().isEmpty()) {
              this.die();
          }
-@@ -362,7 +368,9 @@ public class EntityItem extends Entity {
+@@ -405,7 +411,9 @@ public class EntityItem extends Entity implements HopperPusher {
      }
  
      public String getName() {
@@ -5515,10 +5623,10 @@ index 4d3aef96..798a7f36 100644
  
      public boolean bd() {
 diff --git a/src/main/java/net/minecraft/server/EntityItemFrame.java b/src/main/java/net/minecraft/server/EntityItemFrame.java
-index 8b806c30..756b4760 100644
+index f0d6d6b8..7b1a7eee 100644
 --- a/src/main/java/net/minecraft/server/EntityItemFrame.java
 +++ b/src/main/java/net/minecraft/server/EntityItemFrame.java
-@@ -178,7 +178,8 @@ public class EntityItemFrame extends EntityHanging {
+@@ -182,7 +182,8 @@ public class EntityItemFrame extends EntityHanging {
          NBTTagCompound nbttagcompound1 = nbttagcompound.getCompound("Item");
  
          if (nbttagcompound1 != null && !nbttagcompound1.isEmpty()) {
@@ -5529,10 +5637,10 @@ index 8b806c30..756b4760 100644
              if (nbttagcompound.hasKeyOfType("ItemDropChance", 99)) {
                  this.e = nbttagcompound.getFloat("ItemDropChance");
 diff --git a/src/main/java/net/minecraft/server/EntityLiving.java b/src/main/java/net/minecraft/server/EntityLiving.java
-index 0026f29d..4f2ef678 100644
+index ed5bb2d3..231a4092 100644
 --- a/src/main/java/net/minecraft/server/EntityLiving.java
 +++ b/src/main/java/net/minecraft/server/EntityLiving.java
-@@ -31,6 +31,10 @@ import org.bukkit.event.entity.EntityTeleportEvent;
+@@ -32,6 +32,10 @@ import org.bukkit.event.entity.EntityTeleportEvent;
  import org.bukkit.event.player.PlayerItemConsumeEvent;
  // CraftBukkit end
  
@@ -5540,10 +5648,10 @@ index 0026f29d..4f2ef678 100644
 +import de.sirati97.spigot.optimisation.ItemStackFreeze;
 +//OilSpigot end
 +
- import org.bukkit.craftbukkit.SpigotTimings; // Spigot
+ import co.aikar.timings.MinecraftTimings; // Paper
  
  public abstract class EntityLiving extends Entity {
-@@ -46,8 +50,10 @@ public abstract class EntityLiving extends Entity {
+@@ -47,8 +51,10 @@ public abstract class EntityLiving extends Entity {
      private AttributeMapBase attributeMap;
      public CombatTracker combatTracker = new CombatTracker(this);
      public final Map<MobEffectList, MobEffect> effects = Maps.newHashMap();
@@ -5556,7 +5664,7 @@ index 0026f29d..4f2ef678 100644
      public boolean au;
      public EnumHand av;
      public int aw;
-@@ -136,8 +142,8 @@ public abstract class EntityLiving extends Entity {
+@@ -138,8 +144,8 @@ public abstract class EntityLiving extends Entity {
  
      public EntityLiving(World world) {
          super(world);
@@ -5567,7 +5675,7 @@ index 0026f29d..4f2ef678 100644
          this.maxNoDamageTicks = 20;
          this.aR = 0.02F;
          this.updateEffects = true;
-@@ -1891,15 +1897,18 @@ public abstract class EntityLiving extends Entity {
+@@ -1963,15 +1969,18 @@ public abstract class EntityLiving extends Entity {
  
              for (int k = 0; k < j; ++k) {
                  EnumItemSlot enumitemslot = aenumitemslot[k];
@@ -5589,13 +5697,19 @@ index 0026f29d..4f2ef678 100644
                      break;
  
                  default:
-@@ -1908,10 +1917,11 @@ public abstract class EntityLiving extends Entity {
+@@ -1980,7 +1989,8 @@ public abstract class EntityLiving extends Entity {
  
                  ItemStack itemstack1 = this.getEquipment(enumitemslot);
  
 -                if (!ItemStack.matches(itemstack1, itemstack)) {
 +                //OilSpigot start
 +                if (!ItemStackFreeze.matches(freeze, itemstack1)) {
+                     // Paper start - PlayerArmorChangeEvent
+                     if (this instanceof EntityPlayer && enumitemslot.getType() == EnumItemSlot.Function.ARMOR && !itemstack.getItem().equals(itemstack1.getItem())) {
+                         final org.bukkit.inventory.ItemStack oldItem = CraftItemStack.asBukkitCopy(itemstack);
+@@ -1989,8 +1999,8 @@ public abstract class EntityLiving extends Entity {
+                     }
+                     // Paper end
                      ((WorldServer) this.world).getTracker().a((Entity) this, (Packet) (new PacketPlayOutEntityEquipment(this.getId(), enumitemslot, itemstack1)));
 -                    if (!itemstack.isEmpty()) {
 -                        this.getAttributeMap().a(itemstack.a(enumitemslot));
@@ -5604,7 +5718,7 @@ index 0026f29d..4f2ef678 100644
                      }
  
                      if (!itemstack1.isEmpty()) {
-@@ -1920,12 +1930,14 @@ public abstract class EntityLiving extends Entity {
+@@ -1999,12 +2009,14 @@ public abstract class EntityLiving extends Entity {
  
                      switch (enumitemslot.a()) {
                      case HAND:
@@ -5621,7 +5735,7 @@ index 0026f29d..4f2ef678 100644
                  }
              }
  
-@@ -2388,7 +2400,9 @@ public abstract class EntityLiving extends Entity {
+@@ -2461,7 +2473,9 @@ public abstract class EntityLiving extends Entity {
              // CraftBukkit start - fire PlayerItemConsumeEvent
              ItemStack itemstack;
              if (this instanceof EntityPlayer) {
@@ -5629,7 +5743,7 @@ index 0026f29d..4f2ef678 100644
 +                /*/OilSpigot start*/
 +                org.bukkit.inventory.ItemStack craftItem = CraftItemStack.asCraftMirror(this.activeItem); //OilSpigot - use asCraftMirror
 +                /*/OilSpigot end*/
-                 PlayerItemConsumeEvent event = new PlayerItemConsumeEvent((Player) this.getBukkitEntity(), craftItem);
+                 event = new PlayerItemConsumeEvent((Player) this.getBukkitEntity(), craftItem); // Paper
                  world.getServer().getPluginManager().callEvent(event);
  
 diff --git a/src/main/java/net/minecraft/server/EntityMushroomCow.java b/src/main/java/net/minecraft/server/EntityMushroomCow.java
@@ -5655,10 +5769,10 @@ index 5b0f8a98..226a0e77 100644
              PlayerShearEntityEvent event = new PlayerShearEntityEvent((org.bukkit.entity.Player) entityhuman.getBukkitEntity(), this.getBukkitEntity());
              this.world.getServer().getPluginManager().callEvent(event);
 diff --git a/src/main/java/net/minecraft/server/EntityPlayer.java b/src/main/java/net/minecraft/server/EntityPlayer.java
-index 730acd97..9f1d4f8f 100644
+index c1a2ddcf..5191302b 100644
 --- a/src/main/java/net/minecraft/server/EntityPlayer.java
 +++ b/src/main/java/net/minecraft/server/EntityPlayer.java
-@@ -80,6 +80,10 @@ public class EntityPlayer extends EntityHuman implements ICrafting {
+@@ -97,6 +97,10 @@ public class EntityPlayer extends EntityHuman implements ICrafting {
      public boolean sentListPacket = false;
      // CraftBukkit end
  
@@ -5669,7 +5783,7 @@ index 730acd97..9f1d4f8f 100644
      public EntityPlayer(MinecraftServer minecraftserver, WorldServer worldserver, GameProfile gameprofile, PlayerInteractManager playerinteractmanager) {
          super(worldserver, gameprofile);
          playerinteractmanager.player = this;
-@@ -994,7 +998,7 @@ public class EntityPlayer extends EntityHuman implements ICrafting {
+@@ -1057,7 +1061,7 @@ public class EntityPlayer extends EntityHuman implements ICrafting {
          }
      }
  
@@ -5678,7 +5792,7 @@ index 730acd97..9f1d4f8f 100644
          this.cr.a(list, this);
      }
  
-@@ -1006,19 +1010,23 @@ public class EntityPlayer extends EntityHuman implements ICrafting {
+@@ -1069,19 +1073,23 @@ public class EntityPlayer extends EntityHuman implements ICrafting {
          for (int j = 0; j < i; ++j) {
              MinecraftKey minecraftkey = aminecraftkey1[j];
  
@@ -5709,7 +5823,7 @@ index 730acd97..9f1d4f8f 100644
          this.cr.b(list, this);
      }
  
-@@ -1323,6 +1331,8 @@ public class EntityPlayer extends EntityHuman implements ICrafting {
+@@ -1409,6 +1417,8 @@ public class EntityPlayer extends EntityHuman implements ICrafting {
      }
  
      public void a(EnumHand enumhand) {
@@ -5799,7 +5913,7 @@ index f8a2273c..09f1ece2 100644
              PlayerShearEntityEvent event = new PlayerShearEntityEvent((org.bukkit.entity.Player) entityhuman.getBukkitEntity(), this.getBukkitEntity());
              this.world.getServer().getPluginManager().callEvent(event);
 diff --git a/src/main/java/net/minecraft/server/EntityVillager.java b/src/main/java/net/minecraft/server/EntityVillager.java
-index 87ed31b2..8a767dab 100644
+index a9c4ab10..6f10f73c 100644
 --- a/src/main/java/net/minecraft/server/EntityVillager.java
 +++ b/src/main/java/net/minecraft/server/EntityVillager.java
 @@ -270,7 +270,7 @@ public class EntityVillager extends EntityAgeable implements NPC, IMerchant {
@@ -6049,10 +6163,10 @@ index 14721adb..463213eb 100644
 +    //OilSpigot end
  }
 diff --git a/src/main/java/net/minecraft/server/InventoryEnderChest.java b/src/main/java/net/minecraft/server/InventoryEnderChest.java
-index cd7de2b5..b74ba0b9 100644
+index 37b494b7..04fdfaf6 100644
 --- a/src/main/java/net/minecraft/server/InventoryEnderChest.java
 +++ b/src/main/java/net/minecraft/server/InventoryEnderChest.java
-@@ -40,7 +40,7 @@ public class InventoryEnderChest extends InventorySubcontainer {
+@@ -41,7 +41,7 @@ public class InventoryEnderChest extends InventorySubcontainer {
              int j = nbttagcompound.getByte("Slot") & 255;
  
              if (j >= 0 && j < this.getSize()) {
@@ -7238,15 +7352,16 @@ index 00000000..e5007826
 +    //OilSpigot end
 +}
 diff --git a/src/main/java/net/minecraft/server/ItemStack.java b/src/main/java/net/minecraft/server/ItemStack.java
-index 76bfbaa8..e9b43db7 100644
+index 53e0688d..28aa3b95 100644
 --- a/src/main/java/net/minecraft/server/ItemStack.java
 +++ b/src/main/java/net/minecraft/server/ItemStack.java
-@@ -18,8 +18,19 @@ import org.bukkit.craftbukkit.util.CraftMagicNumbers;
+@@ -19,8 +19,20 @@ import org.bukkit.craftbukkit.util.CraftMagicNumbers;
  import org.bukkit.entity.Player;
  import org.bukkit.event.world.StructureGrowEvent;
  // CraftBukkit end
 +//OilSpigot start
 +import org.oilmod.api.config.Compound;
++import org.oilmod.api.config.DataType;
 +import org.oilmod.spigot.config.nbttag.NBTCompound;
 +import org.oilmod.spigot.enchantments.CustomEnchantment;
 +import org.oilmod.spigot.items.*;
@@ -7262,7 +7377,7 @@ index 76bfbaa8..e9b43db7 100644
  
      public static final ItemStack a = new ItemStack((Item) null);
      public static final DecimalFormat b = new DecimalFormat("#.##");
-@@ -61,6 +72,9 @@ public final class ItemStack {
+@@ -78,6 +90,9 @@ public final class ItemStack {
      }
  
      public ItemStack(Item item, int i, int j, boolean convert) {
@@ -7272,7 +7387,7 @@ index 76bfbaa8..e9b43db7 100644
          // CraftBukkit end
          this.item = item;
          this.damage = j;
-@@ -69,7 +83,7 @@ public final class ItemStack {
+@@ -86,7 +101,7 @@ public final class ItemStack {
          if (MinecraftServer.getServer() != null) {
              this.setData(j);
          }
@@ -7281,7 +7396,7 @@ index 76bfbaa8..e9b43db7 100644
              this.convertStack();
          }
          // CraftBukkit end
-@@ -95,39 +109,60 @@ public final class ItemStack {
+@@ -112,37 +127,56 @@ public final class ItemStack {
              this.load(savedStack);
          }
      }
@@ -7300,7 +7415,7 @@ index 76bfbaa8..e9b43db7 100644
  
 -    // CraftBukkit - break into own method
 -    public void load(NBTTagCompound nbttagcompound) {
--        this.item = Item.b(nbttagcompound.getString("id"));
+-        this.item = nbttagcompound.hasKeyOfType("id", 8) ? Item.b(nbttagcompound.getString("id")) : Item.getItemOf(Blocks.AIR); // Paper - fix NumberFormatException caused by attempting to read an EMPTY ItemStack
 -        this.count = nbttagcompound.getByte("Count");
 -        // CraftBukkit start - Route through setData for filtering
 -        // this.damage = Math.max(0, nbttagcompound.getShort("Damage"));
@@ -7315,13 +7430,14 @@ index 76bfbaa8..e9b43db7 100644
 -        if (nbttagcompound.hasKeyOfType("tag", 10)) {
 -            // CraftBukkit start - make defensive copy as this data may be coming from the save thread
 -            this.tag = (NBTTagCompound) nbttagcompound.getCompound("tag").clone();
+-            processEnchantOrder(this.tag); // Paper
 -            if (this.item != null) {
 -                this.item.a(this.tag);
 -                // CraftBukkit end
 -            }
 +    //OilSpigot start
 +    public static ItemStack createStack(Compound compound) {
-+        Item item = Item.b(compound.getString("id"));
++        Item item = compound.containsKey("id", DataType.String) ? Item.b(compound.getString("id")) : Item.getItemOf(Blocks.AIR); // Paper - fix NumberFormatException caused by attempting to read an EMPTY ItemStack
 +        ItemStack itemstack;
 +        if (item instanceof RealItem) {
 +            itemstack =  ItemUtil.createNBT((RealItem) item, compound);
@@ -7329,19 +7445,19 @@ index 76bfbaa8..e9b43db7 100644
 +        } else {
 +            itemstack = new ItemStack(compound);
 +            return itemstack.getItem() == null ? ItemStack.a  : itemstack;
-         }
-     }
- 
--    public ItemStack(NBTTagCompound nbttagcompound) {
++        }
++    }
++
 +
 +    public static ItemStack createStackVanilla(Item item, int count, int data, NBTTagCompound tag) {
 +        ItemStack itemStack = new ItemStack(item, count, data);
 +        if (tag != null) {
 +            itemStack.setTag(tag);
-+        }
+         }
 +        return itemStack;
-+    }
-+
+     }
+ 
+-    public ItemStack(NBTTagCompound nbttagcompound) {
 +
 +    private ItemStack(NBTTagCompound nbttagcompound) { // OilSpigot: protected -> privat
          this.load(nbttagcompound);
@@ -7356,14 +7472,9 @@ index 76bfbaa8..e9b43db7 100644
      }
 +    //OilSpigot end
  
-     public boolean isEmpty() {
--        return this == ItemStack.a ? true : (this.item != null && this.item != Item.getItemOf(Blocks.AIR) ? (this.count <= 0 ? true : this.damage < -32768 || this.damage > '\uffff') : true);
-+        //OilSpigot no logic change just simplified
-+        return this == ItemStack.a || (this.item == null || this.item == Item.getItemOf(Blocks.AIR) || (this.count <= 0 || (this.damage < -32768 || this.damage > '\uffff')));
-     }
- 
-     public static void a(DataConverterManager dataconvertermanager) {
-@@ -310,6 +345,62 @@ public final class ItemStack {
+     // Paper start - optimize isEmpty
+     private static Item airItem;
+@@ -343,6 +377,64 @@ public final class ItemStack {
          return nbttagcompound;
      }
  
@@ -7401,6 +7512,8 @@ index 76bfbaa8..e9b43db7 100644
 +                this.item.a(this.tag);
 +            }
 +        }
++
++        processEnchantOrder(this.tag); // Paper
 +    }
 +    //OilSpigot end
 +
@@ -7426,7 +7539,7 @@ index 76bfbaa8..e9b43db7 100644
      public int getMaxStackSize() {
          return this.getItem().getMaxStackSize();
      }
-@@ -369,11 +460,13 @@ public final class ItemStack {
+@@ -404,11 +496,13 @@ public final class ItemStack {
          return this.getItem().getMaxDurability();
      }
  
@@ -7441,7 +7554,7 @@ index 76bfbaa8..e9b43db7 100644
                  int j = EnchantmentManager.getEnchantmentLevel(Enchantments.DURABILITY, this);
                  int k = 0;
  
-@@ -401,14 +494,21 @@ public final class ItemStack {
+@@ -436,14 +530,21 @@ public final class ItemStack {
                  }
              }
  
@@ -7468,7 +7581,7 @@ index 76bfbaa8..e9b43db7 100644
  
      public void damage(int i, EntityLiving entityliving) {
          if (!(entityliving instanceof EntityHuman) || !((EntityHuman) entityliving).abilities.canInstantlyBuild) {
-@@ -488,7 +588,10 @@ public final class ItemStack {
+@@ -523,7 +624,10 @@ public final class ItemStack {
      // Spigot End
  
      public static boolean matches(ItemStack itemstack, ItemStack itemstack1) {
@@ -7480,7 +7593,7 @@ index 76bfbaa8..e9b43db7 100644
      }
  
      private boolean d(ItemStack itemstack) {
-@@ -511,6 +614,18 @@ public final class ItemStack {
+@@ -546,6 +650,18 @@ public final class ItemStack {
          return !this.f() ? this.doMaterialsMatch(itemstack) : !itemstack.isEmpty() && this.item == itemstack.item;
      }
  
@@ -7499,7 +7612,7 @@ index 76bfbaa8..e9b43db7 100644
      public String a() {
          return this.getItem().a(this);
      }
-@@ -556,7 +671,7 @@ public final class ItemStack {
+@@ -592,7 +708,7 @@ public final class ItemStack {
          return this.tag;
      }
  
@@ -7508,7 +7621,7 @@ index 76bfbaa8..e9b43db7 100644
          if (this.tag != null && this.tag.hasKeyOfType(s, 10)) {
              return this.tag.getCompound(s);
          } else {
-@@ -568,7 +683,7 @@ public final class ItemStack {
+@@ -604,7 +720,7 @@ public final class ItemStack {
      }
  
      @Nullable
@@ -7517,7 +7630,7 @@ index 76bfbaa8..e9b43db7 100644
          return this.tag != null && this.tag.hasKeyOfType(s, 10) ? this.tag.getCompound(s) : null;
      }
  
-@@ -603,17 +718,23 @@ public final class ItemStack {
+@@ -651,17 +767,23 @@ public final class ItemStack {
          return this.getItem().b(this);
      }
  
@@ -7545,7 +7658,7 @@ index 76bfbaa8..e9b43db7 100644
          NBTTagCompound nbttagcompound = this.d("display");
  
          if (nbttagcompound != null) {
-@@ -626,6 +747,11 @@ public final class ItemStack {
+@@ -674,6 +796,11 @@ public final class ItemStack {
          if (this.tag != null && this.tag.isEmpty()) {
              this.tag = null;
          }
@@ -7557,7 +7670,7 @@ index 76bfbaa8..e9b43db7 100644
  
      }
  
-@@ -643,27 +769,102 @@ public final class ItemStack {
+@@ -691,17 +818,29 @@ public final class ItemStack {
          return !this.getItem().g_(this) ? false : !this.hasEnchantments();
      }
  
@@ -7570,12 +7683,15 @@ index 76bfbaa8..e9b43db7 100644
 +            if (!this.tag.hasKeyOfType("cuEnch", 9)) {
 +                this.tag.set("cuEnch", new NBTTagList());
 +            }
-+
-+            NBTTagList nbttaglist = this.tag.getList("cuEnch", 10);
-+            NBTTagCompound nbttagcompound = new NBTTagCompound();
  
 -        if (!this.tag.hasKeyOfType("ench", 9)) {
 -            this.tag.set("ench", new NBTTagList());
+-        }
++            NBTTagList nbttaglist = this.tag.getList("cuEnch", 10);
++            NBTTagCompound nbttagcompound = new NBTTagCompound();
+ 
+-        NBTTagList nbttaglist = this.tag.getList("ench", 10);
+-        NBTTagCompound nbttagcompound = new NBTTagCompound();
 +            nbttagcompound.setString("key", ((CustomEnchantment) enchantment).getEnchantKey());
 +            nbttagcompound.setShort("lvl", (short) ((byte) i));
 +            nbttaglist.add(nbttagcompound);
@@ -7586,20 +7702,16 @@ index 76bfbaa8..e9b43db7 100644
 +
 +            NBTTagList nbttaglist = this.tag.getList("ench", 10);
 +            NBTTagCompound nbttagcompound = new NBTTagCompound();
-+
-+            nbttagcompound.setShort("id", (short) Enchantment.getId(enchantment));
-+            nbttagcompound.setShort("lvl", (short) ((byte) i));
-+            nbttaglist.add(nbttagcompound);
-         }
  
--        NBTTagList nbttaglist = this.tag.getList("ench", 10);
--        NBTTagCompound nbttagcompound = new NBTTagCompound();
- 
--        nbttagcompound.setShort("id", (short) Enchantment.getId(enchantment));
--        nbttagcompound.setShort("lvl", (short) ((byte) i));
--        nbttaglist.add(nbttagcompound);
+         nbttagcompound.setShort("id", (short) Enchantment.getId(enchantment));
+         nbttagcompound.setShort("lvl", (short) ((byte) i));
+@@ -709,10 +848,73 @@ public final class ItemStack {
+         processEnchantOrder(nbttagcompound); // Paper
      }
  
++
++    }
++
      public boolean hasEnchantments() {
 -        return this.tag != null && this.tag.hasKeyOfType("ench", 9) ? !this.tag.getList("ench", 10).isEmpty() : false;
 +        //OilSpigot add support for custom enchantments
@@ -7668,7 +7780,7 @@ index 76bfbaa8..e9b43db7 100644
      public void a(String s, NBTBase nbtbase) {
          if (this.tag == null) {
              this.setTag(new NBTTagCompound());
-@@ -709,12 +910,19 @@ public final class ItemStack {
+@@ -758,12 +960,19 @@ public final class ItemStack {
          this.tag.setInt("RepairCost", i);
      }
  
@@ -7690,7 +7802,7 @@ index 76bfbaa8..e9b43db7 100644
  
              for (int i = 0; i < nbttaglist.size(); ++i) {
                  NBTTagCompound nbttagcompound = nbttaglist.get(i);
-@@ -725,7 +933,7 @@ public final class ItemStack {
+@@ -774,7 +983,7 @@ public final class ItemStack {
                  }
              }
          } else {
@@ -7699,7 +7811,7 @@ index 76bfbaa8..e9b43db7 100644
          }
  
          return (Multimap) object;
-@@ -846,4 +1054,19 @@ public final class ItemStack {
+@@ -895,4 +1104,19 @@ public final class ItemStack {
      public void subtract(int i) {
          this.add(-i);
      }
@@ -8105,20 +8217,20 @@ index 00000000..df9eee6d
 +    }
 +}
 diff --git a/src/main/java/net/minecraft/server/MinecraftServer.java b/src/main/java/net/minecraft/server/MinecraftServer.java
-index c1a8816b..62c08c42 100644
+index 3b982f99..1a3e0334 100644
 --- a/src/main/java/net/minecraft/server/MinecraftServer.java
 +++ b/src/main/java/net/minecraft/server/MinecraftServer.java
-@@ -1051,7 +1051,7 @@ public abstract class MinecraftServer implements ICommandListener, Runnable, IAs
+@@ -1156,7 +1156,7 @@ public abstract class MinecraftServer implements ICommandListener, Runnable, IAs
      }
  
      public String getServerModName() {
--        return "Spigot"; // Spigot - Spigot > // CraftBukkit - cb > vanilla!
-+        return "OilSpigot"; //OilSpigot - OilSpigot > // Spigot - Spigot > // CraftBukkit - cb > vanilla!
+-        return "Paper"; //Paper - Paper > // Spigot - Spigot > // CraftBukkit - cb > vanilla!
++        return "OilyPaper"; //OilyPaper - OilyPaper > // Spigot - Spigot > // CraftBukkit - cb > vanilla!
      }
  
      public CrashReport b(CrashReport crashreport) {
 diff --git a/src/main/java/net/minecraft/server/PacketDataSerializer.java b/src/main/java/net/minecraft/server/PacketDataSerializer.java
-index a8fc7e43..08ccf5e9 100644
+index d71734df..d3f6055f 100644
 --- a/src/main/java/net/minecraft/server/PacketDataSerializer.java
 +++ b/src/main/java/net/minecraft/server/PacketDataSerializer.java
 @@ -25,6 +25,13 @@ import javax.annotation.Nullable;
@@ -8135,7 +8247,7 @@ index a8fc7e43..08ccf5e9 100644
  public class PacketDataSerializer extends ByteBuf {
  
      private final ByteBuf a;
-@@ -238,6 +245,39 @@ public class PacketDataSerializer extends ByteBuf {
+@@ -239,6 +246,39 @@ public class PacketDataSerializer extends ByteBuf {
      public PacketDataSerializer a(ItemStack itemstack) {
          if (itemstack.isEmpty() || itemstack.getItem() == null) { // CraftBukkit - NPE fix itemstack.getItem()
              this.writeShort(-1);
@@ -8175,7 +8287,7 @@ index a8fc7e43..08ccf5e9 100644
          } else {
              this.writeShort(Item.getId(itemstack.getItem()));
              this.writeByte(itemstack.getCount());
-@@ -258,25 +298,59 @@ public class PacketDataSerializer extends ByteBuf {
+@@ -259,25 +299,59 @@ public class PacketDataSerializer extends ByteBuf {
          return this;
      }
  
@@ -8503,11 +8615,11 @@ index 00000000..1f7f7e07
 +    }
 +}
 diff --git a/src/main/java/net/minecraft/server/PlayerConnection.java b/src/main/java/net/minecraft/server/PlayerConnection.java
-index 8c604ef8..c1c4ee43 100644
+index de62c3b7..727f18cc 100644
 --- a/src/main/java/net/minecraft/server/PlayerConnection.java
 +++ b/src/main/java/net/minecraft/server/PlayerConnection.java
-@@ -58,6 +58,11 @@ import org.bukkit.inventory.InventoryView;
- import org.bukkit.util.NumberConversions;
+@@ -62,6 +62,11 @@ import com.destroystokyo.paper.event.player.PlayerJumpEvent; // Paper
+ import co.aikar.timings.MinecraftTimings; // Paper
  // CraftBukkit end
  
 +//OilSpigot start
@@ -8518,7 +8630,7 @@ index 8c604ef8..c1c4ee43 100644
  public class PlayerConnection implements PacketListenerPlayIn, ITickable {
  
      private static final Logger LOGGER = LogManager.getLogger();
-@@ -815,7 +820,8 @@ public class PlayerConnection implements PacketListenerPlayIn, ITickable {
+@@ -854,7 +859,8 @@ public class PlayerConnection implements PacketListenerPlayIn, ITickable {
                  ItemStack itemstack = this.player.b(EnumHand.OFF_HAND);
  
                  // CraftBukkit start
@@ -8528,7 +8640,7 @@ index 8c604ef8..c1c4ee43 100644
                  this.server.getPluginManager().callEvent(swapItemsEvent);
                  if (swapItemsEvent.isCancelled()) {
                      return;
-@@ -1735,7 +1741,12 @@ public class PlayerConnection implements PacketListenerPlayIn, ITickable {
+@@ -1830,7 +1836,12 @@ public class PlayerConnection implements PacketListenerPlayIn, ITickable {
                                              if (clickedItem.doMaterialsMatch(cursor) && ItemStack.equals(clickedItem, cursor)) {
                                                  int toPlace = packetplayinwindowclick.c() == 0 ? cursor.getCount() : 1;
                                                  toPlace = Math.min(toPlace, clickedItem.getMaxStackSize() - clickedItem.getCount());
@@ -8542,7 +8654,7 @@ index 8c604ef8..c1c4ee43 100644
                                                  if (toPlace == 1) {
                                                      action = InventoryAction.PLACE_ONE;
                                                  } else if (toPlace == cursor.getCount()) {
-@@ -1787,7 +1798,8 @@ public class PlayerConnection implements PacketListenerPlayIn, ITickable {
+@@ -1882,7 +1893,8 @@ public class PlayerConnection implements PacketListenerPlayIn, ITickable {
                              Slot clickedSlot = this.player.activeContainer.getSlot(packetplayinwindowclick.b());
                              if (clickedSlot.isAllowed(player)) {
                                  ItemStack hotbar = this.player.inventory.getItem(packetplayinwindowclick.c());
@@ -8552,7 +8664,7 @@ index 8c604ef8..c1c4ee43 100644
                                  if (clickedSlot.hasItem()) {
                                      if (canCleanSwap) {
                                          action = InventoryAction.HOTBAR_SWAP;
-@@ -1890,6 +1902,21 @@ public class PlayerConnection implements PacketListenerPlayIn, ITickable {
+@@ -1985,6 +1997,21 @@ public class PlayerConnection implements PacketListenerPlayIn, ITickable {
  
                      event.setCancelled(cancelled);
                      Container oldContainer = this.player.activeContainer; // SPIGOT-1224
@@ -8574,7 +8686,7 @@ index 8c604ef8..c1c4ee43 100644
                      server.getPluginManager().callEvent(event);
                      if (this.player.activeContainer != oldContainer) {
                          return;
-@@ -2033,7 +2060,7 @@ public class PlayerConnection implements PacketListenerPlayIn, ITickable {
+@@ -2128,7 +2155,7 @@ public class PlayerConnection implements PacketListenerPlayIn, ITickable {
              if (flag || (flag1 && !ItemStack.matches(this.player.defaultContainer.getSlot(packetplayinsetcreativeslot.a()).getItem(), packetplayinsetcreativeslot.getItemStack()))) { // Insist on valid slot
                  // CraftBukkit start - Call click event
                  InventoryView inventory = this.player.defaultContainer.getBukkitView();
@@ -8583,9 +8695,9 @@ index 8c604ef8..c1c4ee43 100644
  
                  SlotType type = SlotType.QUICKBAR;
                  if (flag) {
-@@ -2550,7 +2577,25 @@ public class PlayerConnection implements PacketListenerPlayIn, ITickable {
-                             PlayerConnection.LOGGER.error("Couldn\'t pick item", exception7);
-                             this.disconnect("Invalid pick item!"); // CraftBukkit
+@@ -2709,7 +2736,25 @@ public class PlayerConnection implements PacketListenerPlayIn, ITickable {
+                         } catch (Exception exception7) {
+                             IllegalPacketEvent.process(player.getBukkitEntity(), "InvalidPickItem", "Invalid PickItem", exception7); // Paper
                          }
 -                    }
 +
@@ -8611,7 +8723,7 @@ index 8c604ef8..c1c4ee43 100644
                      else if (packetplayincustompayload.a().equals("REGISTER")) {
                          try {
 diff --git a/src/main/java/net/minecraft/server/PlayerInteractManager.java b/src/main/java/net/minecraft/server/PlayerInteractManager.java
-index a1689c06..0edce7e8 100644
+index 3d867982..6baf4eb9 100644
 --- a/src/main/java/net/minecraft/server/PlayerInteractManager.java
 +++ b/src/main/java/net/minecraft/server/PlayerInteractManager.java
 @@ -7,6 +7,8 @@ import org.bukkit.craftbukkit.event.CraftEventFactory;
@@ -8709,7 +8821,7 @@ index a1689c06..0edce7e8 100644
          if (event.isCancelled()) {
              // Let the client know the block still exists
              ((EntityPlayer) this.player).playerConnection.sendPacket(new PacketPlayOutBlockChange(this.world, blockposition));
-@@ -170,7 +219,7 @@ public class PlayerInteractManager {
+@@ -171,7 +220,7 @@ public class PlayerInteractManager {
  
              if (event.useItemInHand() == Event.Result.DENY) {
                  // If we 'insta destroyed' then the client needs to be informed.
@@ -8718,7 +8830,7 @@ index a1689c06..0edce7e8 100644
                      ((EntityPlayer) this.player).playerConnection.sendPacket(new PacketPlayOutBlockChange(this.world, blockposition));
                  }
                  return;
-@@ -211,11 +260,21 @@ public class PlayerInteractManager {
+@@ -215,11 +264,21 @@ public class PlayerInteractManager {
              if (iblockdata.getMaterial() != Material.AIR) {
                  float f = iblockdata.a((EntityHuman) this.player, this.player.world, blockposition) * (float) (i + 1);
  
@@ -8742,7 +8854,7 @@ index a1689c06..0edce7e8 100644
                      this.d = false;
                      this.h = true;
                      this.i = blockposition;
-@@ -232,6 +291,10 @@ public class PlayerInteractManager {
+@@ -236,6 +295,10 @@ public class PlayerInteractManager {
  
      public void e() {
          this.d = false;
@@ -8779,10 +8891,10 @@ index 84f59b75..5ecb8f6e 100644
              if (!itemstack.isEmpty()) {
                  if (j >= 0 && j < this.items.size()) {
 diff --git a/src/main/java/net/minecraft/server/PlayerList.java b/src/main/java/net/minecraft/server/PlayerList.java
-index d4acbed0..8a6a139a 100644
+index 44ced604..e65490b1 100644
 --- a/src/main/java/net/minecraft/server/PlayerList.java
 +++ b/src/main/java/net/minecraft/server/PlayerList.java
-@@ -43,6 +43,10 @@ import org.bukkit.util.Vector;
+@@ -44,6 +44,10 @@ import org.bukkit.util.Vector;
  import org.spigotmc.event.player.PlayerSpawnLocationEvent;
  // CraftBukkit end
  
@@ -8793,7 +8905,7 @@ index d4acbed0..8a6a139a 100644
  public abstract class PlayerList {
  
      public static final File a = new File("banned-players.json");
-@@ -387,6 +391,8 @@ public abstract class PlayerList {
+@@ -411,6 +415,8 @@ public abstract class PlayerList {
              this.a(entityplayer, (WorldServer) null);
          }
          // CraftBukkit end
@@ -8802,14 +8914,14 @@ index d4acbed0..8a6a139a 100644
      }
  
      public void d(EntityPlayer entityplayer) {
-@@ -398,6 +404,8 @@ public abstract class PlayerList {
+@@ -422,6 +428,8 @@ public abstract class PlayerList {
  
          entityplayer.b(StatisticList.f);
  
 +        //ConnectionManager.INSTANCE.unregisterConnection(entityplayer); //OilSpigot close open connections //TODO client support
 +
          // CraftBukkit start - Quitting must be before we do final save of data, in case plugins need to modify it
-         org.bukkit.craftbukkit.event.CraftEventFactory.handleInventoryCloseEvent(entityplayer);
+         org.bukkit.craftbukkit.event.CraftEventFactory.handleInventoryCloseEvent(entityplayer, org.bukkit.event.inventory.InventoryCloseEvent.Reason.DISCONNECT); // Paper
  
 diff --git a/src/main/java/net/minecraft/server/RecipeArmorDye.java b/src/main/java/net/minecraft/server/RecipeArmorDye.java
 index 123002ec..55d60afc 100644
@@ -8973,154 +9085,86 @@ index a2e62eb7..0221ce31 100644
 +    //OilSpigot end
  }
 diff --git a/src/main/java/net/minecraft/server/RecipeBookServer.java b/src/main/java/net/minecraft/server/RecipeBookServer.java
-new file mode 100644
-index 00000000..eb5717c4
---- /dev/null
+index f65e74eb..67c5d001 100644
+--- a/src/main/java/net/minecraft/server/RecipeBookServer.java
 +++ b/src/main/java/net/minecraft/server/RecipeBookServer.java
-@@ -0,0 +1,143 @@
-+package net.minecraft.server;
-+
-+import com.google.common.collect.Lists;
-+import java.util.ArrayList;
-+import java.util.Collections;
-+import java.util.Iterator;
-+import java.util.List;
-+import org.apache.logging.log4j.LogManager;
-+import org.apache.logging.log4j.Logger;
-+
-+public class RecipeBookServer extends RecipeBook {
-+
-+    private static final Logger e = LogManager.getLogger();
-+
-+    public RecipeBookServer() {}
-+
-+    public void a(List<IRecipe> list, EntityPlayer entityplayer) {
-+        ArrayList arraylist = Lists.newArrayList();
-+        Iterator iterator = list.iterator();
-+
-+        while (iterator.hasNext()) {
-+            IRecipe irecipe = (IRecipe) iterator.next();
-+
-+            if (!this.a.get(d(irecipe)) && !irecipe.c()) {
-+                this.a(irecipe);
-+                this.g(irecipe);
-+                arraylist.add(irecipe);
-+                CriterionTriggers.f.a(entityplayer, irecipe);
-+            }
-+        }
-+
-+        this.a(PacketPlayOutRecipes.Action.ADD, entityplayer, arraylist);
-+    }
-+
-+    public void b(List<IRecipe> list, EntityPlayer entityplayer) {
-+        ArrayList arraylist = Lists.newArrayList();
-+        Iterator iterator = list.iterator();
-+
-+        while (iterator.hasNext()) {
-+            IRecipe irecipe = (IRecipe) iterator.next();
-+
-+            if (this.a.get(d(irecipe))) {
-+                this.c(irecipe);
-+                arraylist.add(irecipe);
-+            }
-+        }
-+
-+        this.a(PacketPlayOutRecipes.Action.REMOVE, entityplayer, arraylist);
-+    }
-+
-+    private void a(PacketPlayOutRecipes.Action packetplayoutrecipes_action, EntityPlayer entityplayer, List<IRecipe> list) {
-+        entityplayer.playerConnection.sendPacket(new PacketPlayOutRecipes(packetplayoutrecipes_action, list, Collections.emptyList(), this.c, this.d));
-+    }
-+
-+    public NBTTagCompound c() {
-+        NBTTagCompound nbttagcompound = new NBTTagCompound();
-+
-+        nbttagcompound.setBoolean("isGuiOpen", this.c);
-+        nbttagcompound.setBoolean("isFilteringCraftable", this.d);
-+        NBTTagList nbttaglist = new NBTTagList();
-+        Iterator iterator = this.d().iterator();
-+
-+        while (iterator.hasNext()) {
-+            IRecipe irecipe = (IRecipe) iterator.next();
+@@ -63,11 +63,12 @@ public class RecipeBookServer extends RecipeBook {
+         while (iterator.hasNext()) {
+             IRecipe irecipe = (IRecipe) iterator.next();
+ 
+-            // Paper start - ignore missing recipes
+-            MinecraftKey key = CraftingManager.recipes.b(irecipe);
+-            if (key == null) continue;
+-            nbttaglist.add(new NBTTagString(key.toString()));
++            // Paper start - ignore missing recipes //OilyPaper changed
++            if (irecipe.getKey() == null) continue;
+             // Paper end
 +
 +            //OilSpigot recipes now hold their key
 +            nbttaglist.add(new NBTTagString(irecipe.getKey().toString()));
-+        }
-+
-+        nbttagcompound.set("recipes", nbttaglist);
-+        NBTTagList nbttaglist1 = new NBTTagList();
-+        Iterator iterator1 = this.e().iterator();
-+
-+        while (iterator1.hasNext()) {
+         }
+ 
+         nbttagcompound.set("recipes", nbttaglist);
+@@ -75,13 +76,14 @@ public class RecipeBookServer extends RecipeBook {
+         Iterator iterator1 = this.e().iterator();
+ 
+         while (iterator1.hasNext()) {
+-            // Paper start - ignore missing recipes
+-            IRecipe irecipe = (IRecipe) iterator1.next();
 +            IRecipe irecipe1 = (IRecipe) iterator1.next();
+ 
+-            MinecraftKey key = CraftingManager.recipes.b(irecipe);
+-            if (key == null) continue;
+-            nbttaglist1.add(new NBTTagString(key.toString()));
++            // Paper start - ignore missing recipes //OilyPaper changed
++            if (irecipe.getKey() == null) continue;
+             // Paper end
 +
 +            //OilSpigot recipes now hold their key
 +            nbttaglist1.add(new NBTTagString(irecipe1.getKey().toString()));
-+        }
-+
-+        nbttagcompound.set("toBeDisplayed", nbttaglist1);
-+        return nbttagcompound;
-+    }
-+
-+    public void a(NBTTagCompound nbttagcompound) {
-+        this.c = nbttagcompound.getBoolean("isGuiOpen");
-+        this.d = nbttagcompound.getBoolean("isFilteringCraftable");
-+        NBTTagList nbttaglist = nbttagcompound.getList("recipes", 8);
-+
-+        for (int i = 0; i < nbttaglist.size(); ++i) {
-+            MinecraftKey minecraftkey = new MinecraftKey(nbttaglist.getString(i));
+         }
+ 
+         nbttagcompound.set("toBeDisplayed", nbttaglist1);
+@@ -95,7 +97,8 @@ public class RecipeBookServer extends RecipeBook {
+ 
+         for (int i = 0; i < nbttaglist.size(); ++i) {
+             MinecraftKey minecraftkey = new MinecraftKey(nbttaglist.getString(i));
+-            IRecipe irecipe = CraftingManager.a(minecraftkey);
 +            //OilSpigot use getByKey
 +            IRecipe irecipe = CraftingManager.getByKey(minecraftkey);
-+
-+            if (irecipe == null) {
-+                RecipeBookServer.e.info("Tried to load unrecognized recipe: {} removed now.", minecraftkey);
-+            } else {
-+                this.a(irecipe);
-+            }
-+        }
-+
-+        NBTTagList nbttaglist1 = nbttagcompound.getList("toBeDisplayed", 8);
-+
-+        for (int j = 0; j < nbttaglist1.size(); ++j) {
-+            MinecraftKey minecraftkey1 = new MinecraftKey(nbttaglist1.getString(j));
+ 
+             if (irecipe == null) {
+                 RecipeBookServer.e.info("Tried to load unrecognized recipe: {} removed now.", minecraftkey);
+@@ -108,7 +111,8 @@ public class RecipeBookServer extends RecipeBook {
+ 
+         for (int j = 0; j < nbttaglist1.size(); ++j) {
+             MinecraftKey minecraftkey1 = new MinecraftKey(nbttaglist1.getString(j));
+-            IRecipe irecipe1 = CraftingManager.a(minecraftkey1);
 +            //OilSpigot use getByKey
 +            IRecipe irecipe1 = CraftingManager.getByKey(minecraftkey1);
-+
-+            if (irecipe1 == null) {
-+                RecipeBookServer.e.info("Tried to load unrecognized recipe: {} removed now.", minecraftkey1);
-+            } else {
-+                this.g(irecipe1);
-+            }
-+        }
-+
-+    }
-+
-+    private List<IRecipe> d() {
-+        ArrayList arraylist = Lists.newArrayList();
-+
-+        for (int i = this.a.nextSetBit(0); i >= 0; i = this.a.nextSetBit(i + 1)) {
+ 
+             if (irecipe1 == null) {
+                 RecipeBookServer.e.info("Tried to load unrecognized recipe: {} removed now.", minecraftkey1);
+@@ -123,7 +127,8 @@ public class RecipeBookServer extends RecipeBook {
+         ArrayList arraylist = Lists.newArrayList();
+ 
+         for (int i = this.a.nextSetBit(0); i >= 0; i = this.a.nextSetBit(i + 1)) {
+-            arraylist.add(CraftingManager.recipes.getId(i));
 +            //OilSpigot use getById
 +            arraylist.add(CraftingManager.getById(i));
-+        }
-+
-+        return arraylist;
-+    }
-+
-+    private List<IRecipe> e() {
-+        ArrayList arraylist = Lists.newArrayList();
-+
-+        for (int i = this.b.nextSetBit(0); i >= 0; i = this.b.nextSetBit(i + 1)) {
+         }
+ 
+         return arraylist;
+@@ -133,7 +138,8 @@ public class RecipeBookServer extends RecipeBook {
+         ArrayList arraylist = Lists.newArrayList();
+ 
+         for (int i = this.b.nextSetBit(0); i >= 0; i = this.b.nextSetBit(i + 1)) {
+-            arraylist.add(CraftingManager.recipes.getId(i));
 +            //OilSpigot use getById
 +            arraylist.add(CraftingManager.getById(i));
-+        }
-+
-+        return arraylist;
-+    }
-+
-+    public void a(EntityPlayer entityplayer) {
-+        entityplayer.playerConnection.sendPacket(new PacketPlayOutRecipes(PacketPlayOutRecipes.Action.INIT, this.d(), this.e(), this.c, this.d));
-+    }
-+}
+         }
+ 
+         return arraylist;
 diff --git a/src/main/java/net/minecraft/server/RecipeFireworks.java b/src/main/java/net/minecraft/server/RecipeFireworks.java
 index 859900d5..fb9d13be 100644
 --- a/src/main/java/net/minecraft/server/RecipeFireworks.java
@@ -9622,16 +9666,6 @@ index 5f2b8308..4626b6bc 100644
 +        //OilSpigot end
      }
  }
-diff --git a/src/main/java/net/minecraft/server/Registry.java b/src/main/java/net/minecraft/server/Registry.java
-new file mode 100644
-index 00000000..1ff3b24b
---- /dev/null
-+++ b/src/main/java/net/minecraft/server/Registry.java
-@@ -0,0 +1,4 @@
-+package net.minecraft.server;
-+
-+//OilSpigot -  fix decompile error: generics missing
-+public interface Registry<T> extends Iterable<T> {}
 diff --git a/src/main/java/net/minecraft/server/ShapedRecipes.java b/src/main/java/net/minecraft/server/ShapedRecipes.java
 index dd42c47d..797b1bea 100644
 --- a/src/main/java/net/minecraft/server/ShapedRecipes.java
@@ -10011,21 +10045,22 @@ index 00000000..b79106b6
 +    //OilSpigot end
 +}
 diff --git a/src/main/java/net/minecraft/server/SlotFurnaceResult.java b/src/main/java/net/minecraft/server/SlotFurnaceResult.java
-index 1dcf967a..0eeafc8e 100644
+index ed394f7a..fa20dfa6 100644
 --- a/src/main/java/net/minecraft/server/SlotFurnaceResult.java
 +++ b/src/main/java/net/minecraft/server/SlotFurnaceResult.java
-@@ -7,8 +7,8 @@ import org.bukkit.event.inventory.FurnaceExtractEvent;
+@@ -7,8 +7,9 @@ import org.bukkit.event.inventory.FurnaceExtractEvent;
  
  public class SlotFurnaceResult extends Slot {
  
--    private final EntityHuman a;
+-    private final EntityHuman a;public EntityHuman getPlayer() { return a; } // Paper OBFHELPER
 -    private int b;
-+    protected final EntityHuman a; //OilSpigot PAIL private -> protected
++    protected final EntityHuman a; //OilSpigot PAIL private -> protected //TODO: undo
++    public EntityHuman getPlayer() { return a; } // Paper OBFHELPER
 +    protected int b; //OilSpigot PAIL private -> protected
  
      public SlotFurnaceResult(EntityHuman entityhuman, IInventory iinventory, int i, int j, int k) {
          super(iinventory, i, j, k);
-@@ -58,7 +58,7 @@ public class SlotFurnaceResult extends Slot {
+@@ -58,7 +59,7 @@ public class SlotFurnaceResult extends Slot {
  
              // CraftBukkit start - fire FurnaceExtractEvent
              Player player = (Player) a.getBukkitEntity();
@@ -10437,7 +10472,7 @@ index f1670696..32058789 100644
 +    //OilSpigot end
  }
 diff --git a/src/main/java/net/minecraft/server/TileEntityFurnace.java b/src/main/java/net/minecraft/server/TileEntityFurnace.java
-index 886a73e9..d5cfda61 100644
+index 7a142810..40ddb5e5 100644
 --- a/src/main/java/net/minecraft/server/TileEntityFurnace.java
 +++ b/src/main/java/net/minecraft/server/TileEntityFurnace.java
 @@ -234,7 +234,7 @@ public class TileEntityFurnace extends TileEntityContainer implements ITickable,
@@ -10493,10 +10528,10 @@ index 886a73e9..d5cfda61 100644
              FurnaceSmeltEvent furnaceSmeltEvent = new FurnaceSmeltEvent(this.world.getWorld().getBlockAt(position.getX(), position.getY(), position.getZ()), source, result);
              this.world.getServer().getPluginManager().callEvent(furnaceSmeltEvent);
 diff --git a/src/main/java/net/minecraft/server/TileEntitySkull.java b/src/main/java/net/minecraft/server/TileEntitySkull.java
-index a796c08a..9815566f 100644
+index dd266588..4fe71cf3 100644
 --- a/src/main/java/net/minecraft/server/TileEntitySkull.java
 +++ b/src/main/java/net/minecraft/server/TileEntitySkull.java
-@@ -182,7 +182,7 @@ public class TileEntitySkull extends TileEntity implements ITickable {
+@@ -182,7 +182,7 @@ public class TileEntitySkull extends TileEntity /*implements ITickable*/ { // Pa
                  }
                  return false;
              }
@@ -10506,19 +10541,19 @@ index a796c08a..9815566f 100644
      }
  
 diff --git a/src/main/java/net/minecraft/server/World.java b/src/main/java/net/minecraft/server/World.java
-index 740633d9..80917218 100644
+index bc231c7f..093d0d26 100644
 --- a/src/main/java/net/minecraft/server/World.java
 +++ b/src/main/java/net/minecraft/server/World.java
-@@ -28,6 +28,7 @@ import org.bukkit.event.block.BlockCanBuildEvent;
+@@ -31,6 +31,7 @@ import org.bukkit.event.block.BlockCanBuildEvent;
  import org.bukkit.event.block.BlockPhysicsEvent;
  import org.bukkit.event.entity.CreatureSpawnEvent.SpawnReason;
  import org.bukkit.generator.ChunkGenerator;
 +import org.oilmod.spigot.OilMain;
  // CraftBukkit end
  
- public abstract class World implements IBlockAccess {
+ // Paper start
 diff --git a/src/main/java/net/minecraft/server/WorldManager.java b/src/main/java/net/minecraft/server/WorldManager.java
-index 2c8fb705..178629f4 100644
+index bfe003f6..eddae742 100644
 --- a/src/main/java/net/minecraft/server/WorldManager.java
 +++ b/src/main/java/net/minecraft/server/WorldManager.java
 @@ -1,5 +1,7 @@
@@ -10533,7 +10568,7 @@ index 2c8fb705..178629f4 100644
  
      public void a(EntityHuman entityhuman, int i, BlockPosition blockposition, int j) {
          // CraftBukkit - this.world.dimension
--        this.a.getPlayerList().sendPacketNearby(entityhuman, (double) blockposition.getX(), (double) blockposition.getY(), (double) blockposition.getZ(), 64.0D, this.world.dimension, new PacketPlayOutWorldEvent(i, blockposition, j, false));
+-        this.a.getPlayerList().sendPacketNearby(entityhuman, (double) blockposition.getX(), (double) blockposition.getY(), (double) blockposition.getZ(), 64.0D, this.world, new PacketPlayOutWorldEvent(i, blockposition, j, false));
 +        //OilSpigot start send particles
 +        PacketPlayOutWorldEvent packet = new PacketPlayOutWorldEvent(i, blockposition, j, false);
 +
@@ -10547,7 +10582,7 @@ index 2c8fb705..178629f4 100644
      }
  
      public void a(int i, BlockPosition blockposition, int j) {
-@@ -67,10 +78,15 @@ public class WorldManager implements IWorldAccess {
+@@ -67,6 +78,10 @@ public class WorldManager implements IWorldAccess {
          if (entity instanceof EntityHuman) entityhuman = (EntityHuman) entity;
          // CraftBukkit end
  
@@ -10555,8 +10590,12 @@ index 2c8fb705..178629f4 100644
 +        boolean isModItem = entityhuman!=null&&entityhuman.getItemInMainHand().getItem() instanceof RealItem;
 +        //OilSpigot end
 +
-         while (iterator.hasNext()) {
-             EntityPlayer entityplayer = (EntityPlayer) iterator.next();
+         // Paper start
+         java.util.List<? extends EntityHuman> list = entity != null ? entity.world.players : this.a.getPlayerList().v();
+         Iterator<? extends EntityHuman> iterator = list.iterator();
+@@ -76,7 +91,8 @@ public class WorldManager implements IWorldAccess {
+             EntityPlayer entityplayer = (EntityPlayer) human;
+             // Paper end
  
 -            if (entityplayer != null && entityplayer.world == this.world && entityplayer.getId() != i) {
 +            //OilSpigot send anyway if mod item
@@ -10642,10 +10681,10 @@ index 00000000..66356694
 +}
 +/*OilSpigot stop*/
 diff --git a/src/main/java/org/bukkit/craftbukkit/CraftServer.java b/src/main/java/org/bukkit/craftbukkit/CraftServer.java
-index 5ab7cee1..c86f1a86 100644
+index 7c82e18b..204e3355 100644
 --- a/src/main/java/org/bukkit/craftbukkit/CraftServer.java
 +++ b/src/main/java/org/bukkit/craftbukkit/CraftServer.java
-@@ -1123,7 +1123,7 @@ public final class CraftServer implements Server {
+@@ -1183,7 +1183,7 @@ public final class CraftServer implements Server {
  
      @Override
      public void clearRecipes() {
@@ -10654,7 +10693,7 @@ index 5ab7cee1..c86f1a86 100644
          RecipesFurnace.getInstance().recipes.clear();
          RecipesFurnace.getInstance().customRecipes.clear();
          RecipesFurnace.getInstance().customExperience.clear();
-@@ -1131,9 +1131,11 @@ public final class CraftServer implements Server {
+@@ -1191,9 +1191,11 @@ public final class CraftServer implements Server {
  
      @Override
      public void resetRecipes() {
@@ -10669,7 +10708,7 @@ index 5ab7cee1..c86f1a86 100644
          RecipesFurnace.getInstance().customExperience.clear();
      }
 diff --git a/src/main/java/org/bukkit/craftbukkit/block/CraftBlock.java b/src/main/java/org/bukkit/craftbukkit/block/CraftBlock.java
-index 46670c34..a88af8ef 100644
+index a9d3f12b..9ee44698 100644
 --- a/src/main/java/org/bukkit/craftbukkit/block/CraftBlock.java
 +++ b/src/main/java/org/bukkit/craftbukkit/block/CraftBlock.java
 @@ -37,7 +37,7 @@ public class CraftBlock implements Block {
@@ -10681,7 +10720,7 @@ index 46670c34..a88af8ef 100644
          return CraftMagicNumbers.getBlock(this); // TODO: UPDATE THIS
      }
  
-@@ -498,7 +498,7 @@ public class CraftBlock implements Block {
+@@ -513,7 +513,7 @@ public class CraftBlock implements Block {
                              nmsStack.getTag().set("SkullOwner", nbttagcompound);
                          }
  
@@ -10705,7 +10744,7 @@ index c9097ac8..9ed48329 100644
  
      @Override
 diff --git a/src/main/java/org/bukkit/craftbukkit/entity/CraftAbstractHorse.java b/src/main/java/org/bukkit/craftbukkit/entity/CraftAbstractHorse.java
-index 14d04168..a6374c18 100644
+index cc9d432e..6fea5d1f 100644
 --- a/src/main/java/org/bukkit/craftbukkit/entity/CraftAbstractHorse.java
 +++ b/src/main/java/org/bukkit/craftbukkit/entity/CraftAbstractHorse.java
 @@ -1,6 +1,7 @@
@@ -10717,10 +10756,10 @@ index 14d04168..a6374c18 100644
  import net.minecraft.server.EntityHorseAbstract;
  import org.apache.commons.lang.Validate;
 diff --git a/src/main/java/org/bukkit/craftbukkit/entity/CraftEntity.java b/src/main/java/org/bukkit/craftbukkit/entity/CraftEntity.java
-index c5a194ff..d10994ec 100644
+index 47edc049..4d449452 100644
 --- a/src/main/java/org/bukkit/craftbukkit/entity/CraftEntity.java
 +++ b/src/main/java/org/bukkit/craftbukkit/entity/CraftEntity.java
-@@ -213,6 +213,7 @@ public abstract class CraftEntity implements org.bukkit.entity.Entity {
+@@ -220,6 +220,7 @@ public abstract class CraftEntity implements org.bukkit.entity.Entity {
          else if (entity instanceof EntityEvokerFangs) { return new CraftEvokerFangs(server, (EntityEvokerFangs) entity); }
          else if (entity instanceof EntityLlamaSpit) { return new CraftLlamaSpit(server, (EntityLlamaSpit) entity); }
  
@@ -10729,7 +10768,7 @@ index c5a194ff..d10994ec 100644
      }
  
 diff --git a/src/main/java/org/bukkit/craftbukkit/entity/CraftHumanEntity.java b/src/main/java/org/bukkit/craftbukkit/entity/CraftHumanEntity.java
-index a54548f0..842ea06a 100644
+index 05ca403e..ffd90512 100644
 --- a/src/main/java/org/bukkit/craftbukkit/entity/CraftHumanEntity.java
 +++ b/src/main/java/org/bukkit/craftbukkit/entity/CraftHumanEntity.java
 @@ -34,6 +34,12 @@ import org.bukkit.permissions.PermissionAttachment;
@@ -10831,7 +10870,7 @@ index b1953993..805a1917 100644
      @Override
      public EntityPotion getHandle() {
 diff --git a/src/main/java/org/bukkit/craftbukkit/event/CraftEventFactory.java b/src/main/java/org/bukkit/craftbukkit/event/CraftEventFactory.java
-index bc84dd30..41976ea9 100644
+index f1a3ca95..c85534c5 100644
 --- a/src/main/java/org/bukkit/craftbukkit/event/CraftEventFactory.java
 +++ b/src/main/java/org/bukkit/craftbukkit/event/CraftEventFactory.java
 @@ -12,6 +12,7 @@ import com.google.common.base.Functions;
@@ -10842,7 +10881,7 @@ index bc84dd30..41976ea9 100644
  import org.bukkit.Bukkit;
  import org.bukkit.Material;
  import org.bukkit.Server;
-@@ -67,6 +68,10 @@ import org.bukkit.entity.AbstractHorse;
+@@ -68,6 +69,10 @@ import org.bukkit.entity.AbstractHorse;
  import org.bukkit.entity.Vehicle;
  import org.bukkit.event.vehicle.VehicleCreateEvent;
  
@@ -10853,7 +10892,7 @@ index bc84dd30..41976ea9 100644
  public class CraftEventFactory {
      public static final DamageSource MELTING = CraftDamageSource.copyOf(DamageSource.BURN);
      public static final DamageSource POISON = CraftDamageSource.copyOf(DamageSource.MAGIC);
-@@ -232,8 +237,35 @@ public class CraftEventFactory {
+@@ -233,8 +238,35 @@ public class CraftEventFactory {
          if (cancelledBlock) {
              event.setUseInteractedBlock(Event.Result.DENY);
          }
@@ -10889,7 +10928,7 @@ index bc84dd30..41976ea9 100644
          return event;
      }
  
-@@ -773,8 +805,10 @@ public class CraftEventFactory {
+@@ -832,8 +864,10 @@ public class CraftEventFactory {
          return container;
      }
  
@@ -10992,10 +11031,10 @@ index 0f0dd199..336a1869 100644
      }
  }
 diff --git a/src/main/java/org/bukkit/craftbukkit/inventory/CraftItemStack.java b/src/main/java/org/bukkit/craftbukkit/inventory/CraftItemStack.java
-index fb1dc542..8140b2d0 100644
+index decdccdc..cbb26f65 100644
 --- a/src/main/java/org/bukkit/craftbukkit/inventory/CraftItemStack.java
 +++ b/src/main/java/org/bukkit/craftbukkit/inventory/CraftItemStack.java
-@@ -11,6 +11,7 @@ import net.minecraft.server.Item;
+@@ -12,6 +12,7 @@ import net.minecraft.server.Item;
  import net.minecraft.server.NBTTagCompound;
  import net.minecraft.server.NBTTagList;
  
@@ -11003,7 +11042,7 @@ index fb1dc542..8140b2d0 100644
  import org.apache.commons.lang.Validate;
  import org.bukkit.Material;
  import org.bukkit.configuration.serialization.DelegateDeserialization;
-@@ -22,8 +23,12 @@ import org.bukkit.inventory.meta.ItemMeta;
+@@ -23,8 +24,12 @@ import org.bukkit.inventory.meta.ItemMeta;
  import com.google.common.collect.ImmutableMap;
  import org.bukkit.craftbukkit.enchantments.CraftEnchantment;
  
@@ -11017,7 +11056,7 @@ index fb1dc542..8140b2d0 100644
  
      public static net.minecraft.server.ItemStack asNMSCopy(ItemStack original) {
          if (original instanceof CraftItemStack) {
-@@ -56,9 +61,10 @@ public final class CraftItemStack extends ItemStack {
+@@ -57,9 +62,10 @@ public final class CraftItemStack extends ItemStack {
          return stack;
      }
  
@@ -11029,7 +11068,7 @@ index fb1dc542..8140b2d0 100644
      public static ItemStack asBukkitCopy(net.minecraft.server.ItemStack original) {
          if (original.isEmpty()) {
              return new ItemStack(Material.AIR);
-@@ -68,16 +74,34 @@ public final class CraftItemStack extends ItemStack {
+@@ -69,16 +75,34 @@ public final class CraftItemStack extends ItemStack {
              stack.setItemMeta(getItemMeta(original));
          }
          return stack;
@@ -11065,7 +11104,7 @@ index fb1dc542..8140b2d0 100644
          }
          return new CraftItemStack(original);
      }
-@@ -92,10 +116,16 @@ public final class CraftItemStack extends ItemStack {
+@@ -93,10 +117,16 @@ public final class CraftItemStack extends ItemStack {
  
      net.minecraft.server.ItemStack handle;
  
@@ -11083,7 +11122,7 @@ index fb1dc542..8140b2d0 100644
          this.handle = item;
      }
  
-@@ -434,6 +464,25 @@ public final class CraftItemStack extends ItemStack {
+@@ -392,6 +422,25 @@ public final class CraftItemStack extends ItemStack {
          return true;
      }
  
@@ -23148,7 +23187,7 @@ index a5fd59d5..53cabe97 100644
          String pluginVersion = (Metrics.class.getPackage().getImplementationVersion() != null) ? Metrics.class.getPackage().getImplementationVersion() : "unknown";
          String serverVersion = Bukkit.getVersion();
 diff --git a/src/main/java/org/spigotmc/SpigotConfig.java b/src/main/java/org/spigotmc/SpigotConfig.java
-index 1b5158c0..06c1c2ac 100644
+index 2cdd9aaf..7ad4ab16 100644
 --- a/src/main/java/org/spigotmc/SpigotConfig.java
 +++ b/src/main/java/org/spigotmc/SpigotConfig.java
 @@ -28,6 +28,10 @@ import org.bukkit.configuration.ConfigurationSection;
@@ -23162,7 +23201,7 @@ index 1b5158c0..06c1c2ac 100644
  public class SpigotConfig
  {
  
-@@ -87,8 +91,9 @@ public class SpigotConfig
+@@ -88,8 +92,9 @@ public class SpigotConfig
          {
              try
              {
@@ -23174,24 +23213,33 @@ index 1b5158c0..06c1c2ac 100644
              {
                  Bukkit.getServer().getLogger().log( Level.SEVERE, "Could not start metrics service", ex );
 diff --git a/src/main/java/org/spigotmc/WatchdogThread.java b/src/main/java/org/spigotmc/WatchdogThread.java
-index 94a3d423..9c684bd6 100644
+index 93dc6983..13efd5a6 100644
 --- a/src/main/java/org/spigotmc/WatchdogThread.java
 +++ b/src/main/java/org/spigotmc/WatchdogThread.java
-@@ -58,7 +58,7 @@ public class WatchdogThread extends Thread
+@@ -24,7 +24,7 @@ public class WatchdogThread extends Thread
+ 
+     private WatchdogThread(long timeoutTime, boolean restart)
+     {
+-        super( "Paper Watchdog Thread" );
++        super( "OilyPaper Watchdog Thread" );
+         this.timeoutTime = timeoutTime;
+         this.restart = restart;
+         earlyWarningEvery = Math.min(PaperConfig.watchdogPrintEarlyWarningEvery, timeoutTime); // Paper
+@@ -75,7 +75,7 @@ public class WatchdogThread extends Thread
                  log.log( Level.SEVERE, "The server has stopped responding!" );
-                 log.log( Level.SEVERE, "Please report this to http://www.spigotmc.org/" );
+                 log.log( Level.SEVERE, "Please report this to https://github.com/PaperMC/Paper/issues" );
                  log.log( Level.SEVERE, "Be sure to include ALL relevant console errors and Minecraft crash reports" );
--                log.log( Level.SEVERE, "Spigot version: " + Bukkit.getServer().getVersion() );
-+                log.log( Level.SEVERE, "OilSpigot version: " + Bukkit.getServer().getVersion() );
+-                log.log( Level.SEVERE, "Paper version: " + Bukkit.getServer().getVersion() );
++                log.log( Level.SEVERE, "OilyPaper version: " + Bukkit.getServer().getVersion() );
                  //
                  if(net.minecraft.server.World.haveWeSilencedAPhysicsCrash)
                  {
-@@ -68,7 +68,7 @@ public class WatchdogThread extends Thread
+@@ -103,7 +103,7 @@ public class WatchdogThread extends Thread
                  }
-                 //
+                 // Paper end - Different message for short timeout
                  log.log( Level.SEVERE, "------------------------------" );
--                log.log( Level.SEVERE, "Server thread dump (Look for plugins here before reporting to Spigot!):" );
-+                log.log( Level.SEVERE, "Server thread dump (Look for plugins here before reporting to OilSpigot!):" );
+-                log.log( Level.SEVERE, "Server thread dump (Look for plugins here before reporting to Paper!):" );
++                log.log( Level.SEVERE, "Server thread dump (Look for plugins here before reporting to OilyPaper!):" );
                  dumpThread( ManagementFactory.getThreadMXBean().getThreadInfo( MinecraftServer.getServer().primaryThread.getId(), Integer.MAX_VALUE ), log );
                  log.log( Level.SEVERE, "------------------------------" );
                  //

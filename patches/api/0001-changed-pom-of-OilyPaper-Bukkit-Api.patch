@@ -1,0 +1,40 @@
+From 23cc0a20236a825616a40be78a0ba8bc17fc411f Mon Sep 17 00:00:00 2001
+From: sirati97 <TheSirati97@gmail.com>
+Date: Fri, 18 Jan 2019 03:03:37 +0000
+Subject: [PATCH] changed pom of OilyPaper-Bukkit-Api
+
+---
+ pom.xml | 11 +++++------
+ 1 file changed, 5 insertions(+), 6 deletions(-)
+
+diff --git a/pom.xml b/pom.xml
+index 2fa2dd7c..14d07e8a 100644
+--- a/pom.xml
++++ b/pom.xml
+@@ -4,18 +4,17 @@
+     <modelVersion>4.0.0</modelVersion>
+ 
+     <parent>
+-        <groupId>com.destroystokyo.paper</groupId>
+-        <artifactId>paper-parent</artifactId>
++        <groupId>org.oilmod</groupId>
++        <artifactId>oilmod-parent</artifactId>
+         <version>dev-SNAPSHOT</version>
+     </parent>
+ 
+-    <groupId>com.destroystokyo.paper</groupId>
+-    <artifactId>paper-api</artifactId>
++    <artifactId>OilyPaper-Bukkit-api</artifactId>
+     <version>1.12.2-R0.1-SNAPSHOT</version>
+     <packaging>jar</packaging>
+ 
+-    <name>Paper-API</name>
+-    <url>https://github.com/PaperMC/Paper</url>
++    <name>OilyPaper-Bukkit-api</name>
++    <url>https://github.com/OilMod/OilyPaper</url>
+     <description>An enhanced plugin API for Minecraft servers.</description>
+ 
+     <properties>
+-- 
+2.14.2.windows.3
+
