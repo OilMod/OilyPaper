@@ -8,6 +8,7 @@ This is an unfinished implementation of the OilMod api based on PaperMc 1.12.2
 - `git submodule update --init`
 - `./concrete up`
 - `./concrete patch`
+- ` git checkout --recurse-submodules`
 
 ## Pushing ##
 - Agree to our terms of contribution
