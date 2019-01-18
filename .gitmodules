@@ -2,3 +2,15 @@
 	path = Paper
 	url = https://github.com/PaperMC/Paper.git
 	branch = ver/1.12.2
+[submodule "OilMod-API"]
+	path = OilMod-API
+	url = https://github.com/OilMod/OilMod-API.git
+	branch = master
+[submodule "OilMod-TestPlugin"]
+	path = OilMod-TestPlugin
+	url = https://github.com/OilMod/OilMod-TestPlugin.git
+	branch = master
+[submodule "OilMod-TestPlugin2"]
+	path = OilMod-TestPlugin2
+	url = https://github.com/OilMod/OilMod-TestPlugin2.git
+	branch = master
