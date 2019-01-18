@@ -1,0 +1,102 @@
+From 3e146fe0bac144ae3b3fac71d2197cd2c150a06b Mon Sep 17 00:00:00 2001
+From: sirati97 <TheSirati97@gmail.com>
+Date: Fri, 18 Jan 2019 15:22:14 +0000
+Subject: [PATCH] fixed merging bugs
+
+---
+ src/main/java/de/sirati97/spigot/optimisation/ItemStackFreeze.java  | 3 +++
+ src/main/java/net/minecraft/server/EntityLiving.java                | 6 +++---
+ src/main/java/net/minecraft/server/EntityLlama.java                 | 3 ++-
+ src/main/java/net/minecraft/server/RecipeBookServer.java            | 2 +-
+ src/main/java/org/oilmod/spigot/bukkit/stubs/OilBlockStub.java      | 5 +++++
+ src/main/java/org/oilmod/spigot/inventory/OilSlotFurnaceResult.java | 2 +-
+ 6 files changed, 15 insertions(+), 6 deletions(-)
+
+diff --git a/src/main/java/de/sirati97/spigot/optimisation/ItemStackFreeze.java b/src/main/java/de/sirati97/spigot/optimisation/ItemStackFreeze.java
+index 5b17b52a..980657f6 100644
+--- a/src/main/java/de/sirati97/spigot/optimisation/ItemStackFreeze.java
++++ b/src/main/java/de/sirati97/spigot/optimisation/ItemStackFreeze.java
+@@ -61,4 +61,7 @@ public class ItemStackFreeze { //TODO get this into oilmod
+         return isEmpty() ? "EmptyItemFreeze" : "Freeze: " + this.count + "x" + this.item.getName() + "@" + this.damage;
+     }
+ 
++    public ItemStack createItemStack() {
++        return ItemStack.createStackVanilla(item, count, damage, (NBTTagCompound) tag.clone());
++    }
+ }
+diff --git a/src/main/java/net/minecraft/server/EntityLiving.java b/src/main/java/net/minecraft/server/EntityLiving.java
+index 231a4092..e6f070dc 100644
+--- a/src/main/java/net/minecraft/server/EntityLiving.java
++++ b/src/main/java/net/minecraft/server/EntityLiving.java
+@@ -1992,9 +1992,9 @@ public abstract class EntityLiving extends Entity {
+                 //OilSpigot start
+                 if (!ItemStackFreeze.matches(freeze, itemstack1)) {
+                     // Paper start - PlayerArmorChangeEvent
+-                    if (this instanceof EntityPlayer && enumitemslot.getType() == EnumItemSlot.Function.ARMOR && !itemstack.getItem().equals(itemstack1.getItem())) {
+-                        final org.bukkit.inventory.ItemStack oldItem = CraftItemStack.asBukkitCopy(itemstack);
+-                        final org.bukkit.inventory.ItemStack newItem = CraftItemStack.asBukkitCopy(itemstack1);
++                    if (this instanceof EntityPlayer && enumitemslot.getType() == EnumItemSlot.Function.ARMOR && !freeze.item.equals(itemstack1.getItem())) {
++                        final org.bukkit.inventory.ItemStack oldItem = CraftItemStack.asCraftMirror(freeze.createItemStack());
++                        final org.bukkit.inventory.ItemStack newItem = CraftItemStack.asCraftMirror(itemstack1);
+                         new PlayerArmorChangeEvent((Player) this.getBukkitEntity(), PlayerArmorChangeEvent.SlotType.valueOf(enumitemslot.name()), oldItem, newItem).callEvent();
+                     }
+                     // Paper end
+diff --git a/src/main/java/net/minecraft/server/EntityLlama.java b/src/main/java/net/minecraft/server/EntityLlama.java
+index af49b727..60356b48 100644
+--- a/src/main/java/net/minecraft/server/EntityLlama.java
++++ b/src/main/java/net/minecraft/server/EntityLlama.java
+@@ -49,7 +49,8 @@ public class EntityLlama extends EntityHorseChestedAbstract implements IRangedEn
+         super.a(nbttagcompound);
+         this.setVariant(nbttagcompound.getInt("Variant"));
+         if (nbttagcompound.hasKeyOfType("DecorItem", 10)) {
+-            this.inventoryChest.setItem(1, new ItemStack(nbttagcompound.getCompound("DecorItem")));
++            //OilSpigot - use factory method
++            this.inventoryChest.setItem(1, ItemStack.createStack(nbttagcompound.getCompound("DecorItem")));
+         }
+ 
+         this.dD();
+diff --git a/src/main/java/net/minecraft/server/RecipeBookServer.java b/src/main/java/net/minecraft/server/RecipeBookServer.java
+index 67c5d001..8a7662b2 100644
+--- a/src/main/java/net/minecraft/server/RecipeBookServer.java
++++ b/src/main/java/net/minecraft/server/RecipeBookServer.java
+@@ -79,7 +79,7 @@ public class RecipeBookServer extends RecipeBook {
+             IRecipe irecipe1 = (IRecipe) iterator1.next();
+ 
+             // Paper start - ignore missing recipes //OilyPaper changed
+-            if (irecipe.getKey() == null) continue;
++            if (irecipe1.getKey() == null) continue;
+             // Paper end
+ 
+             //OilSpigot recipes now hold their key
+diff --git a/src/main/java/org/oilmod/spigot/bukkit/stubs/OilBlockStub.java b/src/main/java/org/oilmod/spigot/bukkit/stubs/OilBlockStub.java
+index a428de90..7a2cf967 100644
+--- a/src/main/java/org/oilmod/spigot/bukkit/stubs/OilBlockStub.java
++++ b/src/main/java/org/oilmod/spigot/bukkit/stubs/OilBlockStub.java
+@@ -178,6 +178,11 @@ public class OilBlockStub extends OilStubMetadatable implements Block {
+         return null;
+     }
+ 
++    @Override
++    public BlockState getState(boolean useSnapshot) {
++        return null;
++    }
++
+     @Override
+     public Biome getBiome() {
+         return Biome.VOID;
+diff --git a/src/main/java/org/oilmod/spigot/inventory/OilSlotFurnaceResult.java b/src/main/java/org/oilmod/spigot/inventory/OilSlotFurnaceResult.java
+index 7bd0e847..eb810d13 100644
+--- a/src/main/java/org/oilmod/spigot/inventory/OilSlotFurnaceResult.java
++++ b/src/main/java/org/oilmod/spigot/inventory/OilSlotFurnaceResult.java
+@@ -65,7 +65,7 @@ public class OilSlotFurnaceResult extends SlotFurnaceResult {
+             while (i > 0) {
+                 j = EntityExperienceOrb.getOrbValue(i);
+                 i -= j;
+-                this.a.world.addEntity(new EntityExperienceOrb(this.a.world, this.a.locX, this.a.locY + 0.5D, this.a.locZ + 0.5D, j));
++                this.a.world.addEntity(new EntityExperienceOrb(this.a.world, this.a.locX, this.a.locY + 0.5D, this.a.locZ + 0.5D, j, org.bukkit.entity.ExperienceOrb.SpawnReason.FURNACE, getPlayer())); // Paper
+             }
+         }
+ 
+-- 
+2.14.2.windows.3
+
