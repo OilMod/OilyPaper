@@ -2,6 +2,8 @@ Spigot
 mc-dev
 OilyPaper
 OilyPaper-Server
+OilyPaper-API
+OilyPaper-Bukkit-API
 
 # Eclipse stuff
 /.classpath
