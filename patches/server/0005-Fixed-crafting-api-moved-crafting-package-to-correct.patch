@@ -1,0 +1,904 @@
+From ec1391c0ddc68b793afe5eb1559b2d3aee6dd586 Mon Sep 17 00:00:00 2001
+From: sirati97 <TheSirati97@gmail.com>
+Date: Sun, 20 Jan 2019 07:50:07 +0000
+Subject: [PATCH] Fixed crafting api, moved crafting package to correct
+ location
+
+---
+ src/main/java/net/minecraft/server/CraftingManager.java  |  6 +++---
+ .../java/net/minecraft/server/EnchantmentSlotType.java   |  1 -
+ src/main/java/net/minecraft/server/IRecipe.java          |  2 +-
+ src/main/java/net/minecraft/server/PlayerConnection.java | 10 +++++++++-
+ src/main/java/net/minecraft/server/RecipeArmorDye.java   |  4 ++--
+ src/main/java/net/minecraft/server/RecipeBookClone.java  |  2 +-
+ src/main/java/net/minecraft/server/RecipeMapClone.java   |  2 +-
+ src/main/java/net/minecraft/server/RecipeRepair.java     |  4 ++--
+ .../java/net/minecraft/server/RecipeTippedArrow.java     |  4 ++--
+ src/main/java/net/minecraft/server/RecipiesShield.java   |  4 ++--
+ src/main/java/net/minecraft/server/ShapedRecipes.java    | 16 +++++++++++-----
+ src/main/java/net/minecraft/server/ShapelessRecipes.java | 16 +++++++++++-----
+ .../net/minecraft/server/oilmod/IInventoryCrafting.java  |  2 +-
+ .../craftbukkit/inventory/CraftInventoryCrafting.java    |  8 +++++---
+ src/main/java/org/oilmod/bukkit/OilMain.java             |  4 ++--
+ .../crafting/BukkitCraftingIngredient.java               |  2 +-
+ .../crafting/BukkitCraftingResultFactory.java            |  2 +-
+ .../crafting/ItemStackCraftingInventoryReference.java    |  2 +-
+ .../crafting/NMSCraftingIngredient.java                  |  2 +-
+ .../crafting/NMSCraftingResultFactory.java               |  2 +-
+ .../{items/itemstackimpl => }/crafting/OilRecipe.java    | 11 ++++++-----
+ .../itemstackimpl => }/crafting/OilShapedRecipe.java     | 11 ++++++-----
+ .../itemstackimpl => }/crafting/OilShapelessRecipe.java  | 11 ++++++-----
+ .../crafting/RealItemCraftingFactory.java                |  2 +-
+ .../itemstackimpl => }/crafting/help/CHCollection.java   |  2 +-
+ .../itemstackimpl => }/crafting/help/CHCommand.java      |  2 +-
+ .../itemstackimpl => }/crafting/help/CHContainer.java    |  2 +-
+ .../crafting/help/CHDisplaySlotView.java                 |  2 +-
+ .../crafting/help/CHSelectorSlotView.java                |  2 +-
+ .../{items/itemstackimpl => }/crafting/help/CHView.java  |  2 +-
+ .../itemstackimpl => }/crafting/help/OilCHView.java      |  2 +-
+ .../itemstackimpl => }/crafting/help/ShapedCHView.java   |  2 +-
+ .../crafting/help/ShapelessCHView.java                   |  2 +-
+ .../crafting/help/VanillaArmorDyeChView.java             |  2 +-
+ .../crafting/help/VanillaBannerAddCHView.java            |  2 +-
+ .../crafting/help/VanillaBannerDuplicateCHView.java      |  2 +-
+ .../itemstackimpl => }/crafting/help/VanillaCHView.java  |  2 +-
+ .../crafting/help/VanillaFireworksCHView.java            |  2 +-
+ .../crafting/help/VanillaRepairCHView.java               |  2 +-
+ .../crafting/help/VanillaShapedCHView.java               |  2 +-
+ .../crafting/help/VanillaShapelessCHView.java            |  2 +-
+ .../crafting/help/VanillaShieldBannerCHView.java         |  4 ++--
+ .../crafting/help/VanillaTippedArrowCHView.java          |  2 +-
+ .../itemstackimpl => }/crafting/nms/NMS_OilRecipe.java   |  4 ++--
+ .../crafting/nms/NMS_OilShapedRecipe.java                | 10 +++++-----
+ .../crafting/nms/NMS_OilShapelessRecipe.java             |  8 ++++----
+ 46 files changed, 108 insertions(+), 84 deletions(-)
+ rename src/main/java/org/oilmod/bukkit/{items/itemstackimpl => }/crafting/BukkitCraftingIngredient.java (95%)
+ rename src/main/java/org/oilmod/bukkit/{items/itemstackimpl => }/crafting/BukkitCraftingResultFactory.java (95%)
+ rename src/main/java/org/oilmod/bukkit/{items/itemstackimpl => }/crafting/ItemStackCraftingInventoryReference.java (92%)
+ rename src/main/java/org/oilmod/bukkit/{items/itemstackimpl => }/crafting/NMSCraftingIngredient.java (88%)
+ rename src/main/java/org/oilmod/bukkit/{items/itemstackimpl => }/crafting/NMSCraftingResultFactory.java (87%)
+ rename src/main/java/org/oilmod/bukkit/{items/itemstackimpl => }/crafting/OilRecipe.java (93%)
+ rename src/main/java/org/oilmod/bukkit/{items/itemstackimpl => }/crafting/OilShapedRecipe.java (94%)
+ rename src/main/java/org/oilmod/bukkit/{items/itemstackimpl => }/crafting/OilShapelessRecipe.java (94%)
+ rename src/main/java/org/oilmod/bukkit/{items/itemstackimpl => }/crafting/RealItemCraftingFactory.java (97%)
+ rename src/main/java/org/oilmod/bukkit/{items/itemstackimpl => }/crafting/help/CHCollection.java (91%)
+ rename src/main/java/org/oilmod/bukkit/{items/itemstackimpl => }/crafting/help/CHCommand.java (97%)
+ rename src/main/java/org/oilmod/bukkit/{items/itemstackimpl => }/crafting/help/CHContainer.java (93%)
+ rename src/main/java/org/oilmod/bukkit/{items/itemstackimpl => }/crafting/help/CHDisplaySlotView.java (98%)
+ rename src/main/java/org/oilmod/bukkit/{items/itemstackimpl => }/crafting/help/CHSelectorSlotView.java (94%)
+ rename src/main/java/org/oilmod/bukkit/{items/itemstackimpl => }/crafting/help/CHView.java (95%)
+ rename src/main/java/org/oilmod/bukkit/{items/itemstackimpl => }/crafting/help/OilCHView.java (92%)
+ rename src/main/java/org/oilmod/bukkit/{items/itemstackimpl => }/crafting/help/ShapedCHView.java (94%)
+ rename src/main/java/org/oilmod/bukkit/{items/itemstackimpl => }/crafting/help/ShapelessCHView.java (94%)
+ rename src/main/java/org/oilmod/bukkit/{items/itemstackimpl => }/crafting/help/VanillaArmorDyeChView.java (97%)
+ rename src/main/java/org/oilmod/bukkit/{items/itemstackimpl => }/crafting/help/VanillaBannerAddCHView.java (98%)
+ rename src/main/java/org/oilmod/bukkit/{items/itemstackimpl => }/crafting/help/VanillaBannerDuplicateCHView.java (96%)
+ rename src/main/java/org/oilmod/bukkit/{items/itemstackimpl => }/crafting/help/VanillaCHView.java (95%)
+ rename src/main/java/org/oilmod/bukkit/{items/itemstackimpl => }/crafting/help/VanillaFireworksCHView.java (86%)
+ rename src/main/java/org/oilmod/bukkit/{items/itemstackimpl => }/crafting/help/VanillaRepairCHView.java (96%)
+ rename src/main/java/org/oilmod/bukkit/{items/itemstackimpl => }/crafting/help/VanillaShapedCHView.java (90%)
+ rename src/main/java/org/oilmod/bukkit/{items/itemstackimpl => }/crafting/help/VanillaShapelessCHView.java (90%)
+ rename src/main/java/org/oilmod/bukkit/{items/itemstackimpl => }/crafting/help/VanillaShieldBannerCHView.java (89%)
+ rename src/main/java/org/oilmod/bukkit/{items/itemstackimpl => }/crafting/help/VanillaTippedArrowCHView.java (96%)
+ rename src/main/java/org/oilmod/bukkit/{items/itemstackimpl => }/crafting/nms/NMS_OilRecipe.java (57%)
+ rename src/main/java/org/oilmod/bukkit/{items/itemstackimpl => }/crafting/nms/NMS_OilShapedRecipe.java (55%)
+ rename src/main/java/org/oilmod/bukkit/{items/itemstackimpl => }/crafting/nms/NMS_OilShapelessRecipe.java (77%)
+
+diff --git a/src/main/java/net/minecraft/server/CraftingManager.java b/src/main/java/net/minecraft/server/CraftingManager.java
+index 272c945a..b18d813d 100644
+--- a/src/main/java/net/minecraft/server/CraftingManager.java
++++ b/src/main/java/net/minecraft/server/CraftingManager.java
+@@ -27,9 +27,9 @@ import org.apache.logging.log4j.LogManager;
+ import org.apache.logging.log4j.Logger;
+ 
+ //OilSpigot start
+-import org.oilmod.bukkit.items.itemstackimpl.crafting.OilRecipe;
+-import org.oilmod.bukkit.items.itemstackimpl.crafting.help.CHView;
+-import org.oilmod.bukkit.items.itemstackimpl.crafting.nms.NMS_OilRecipe;
++import org.oilmod.bukkit.crafting.OilRecipe;
++import org.oilmod.bukkit.crafting.help.CHView;
++import org.oilmod.bukkit.crafting.nms.NMS_OilRecipe;
+ 
+ import java.util.LinkedList;
+ import java.util.List;
+diff --git a/src/main/java/net/minecraft/server/EnchantmentSlotType.java b/src/main/java/net/minecraft/server/EnchantmentSlotType.java
+index 56531f0a..565641d7 100644
+--- a/src/main/java/net/minecraft/server/EnchantmentSlotType.java
++++ b/src/main/java/net/minecraft/server/EnchantmentSlotType.java
+@@ -3,7 +3,6 @@ package net.minecraft.server;
+ import org.oilmod.api.items.EnchantmentType;
+ import org.oilmod.api.items.NMSItem;
+ import org.oilmod.api.items.nms.NMSEnchantmentType;
+-import org.oilmod.api.items.type.ISpecialEnchantable;
+ import org.oilmod.bukkit.items.RealItem;
+ 
+ 
+diff --git a/src/main/java/net/minecraft/server/IRecipe.java b/src/main/java/net/minecraft/server/IRecipe.java
+index b031ce0d..c8d2fe3c 100644
+--- a/src/main/java/net/minecraft/server/IRecipe.java
++++ b/src/main/java/net/minecraft/server/IRecipe.java
+@@ -2,7 +2,7 @@ package net.minecraft.server;
+ 
+ import net.minecraft.server.oilmod.IInventoryCrafting;
+ import org.oilmod.api.items.crafting.NMSCraftingRecipe;
+-import org.oilmod.bukkit.items.itemstackimpl.crafting.help.CHView;
++import org.oilmod.bukkit.crafting.help.CHView;
+ 
+ 
+ public interface IRecipe extends NMSCraftingRecipe/*OilSpigot added OilApi dependency*/ {
+diff --git a/src/main/java/net/minecraft/server/PlayerConnection.java b/src/main/java/net/minecraft/server/PlayerConnection.java
+index 51ccfb73..b12ec1d5 100644
+--- a/src/main/java/net/minecraft/server/PlayerConnection.java
++++ b/src/main/java/net/minecraft/server/PlayerConnection.java
+@@ -19,6 +19,7 @@ import java.util.concurrent.atomic.AtomicIntegerFieldUpdater;
+ import org.bukkit.Location;
+ import org.bukkit.craftbukkit.entity.CraftPlayer;
+ import org.bukkit.craftbukkit.event.CraftEventFactory;
++import org.bukkit.craftbukkit.inventory.CraftInventoryCrafting;
+ import org.bukkit.craftbukkit.inventory.CraftInventoryView;
+ import org.bukkit.craftbukkit.inventory.CraftItemStack;
+ import org.bukkit.craftbukkit.util.CraftChatMessage;
+@@ -1981,7 +1982,14 @@ public class PlayerConnection implements PacketListenerPlayIn, ITickable {
+ 
+                     org.bukkit.inventory.Inventory top = inventory.getTopInventory();
+                     if (packetplayinwindowclick.b() == 0 && top instanceof CraftingInventory) {
+-                        org.bukkit.inventory.Recipe recipe = ((CraftingInventory) top).getRecipe();
++                        //OilyPaper - start
++                        /* prepare crafting before event */
++                        CraftInventoryCrafting craftingInventory = (CraftInventoryCrafting) top;
++                        //done to allow oilmod to prepare the actual crafting result
++                        craftingInventory.getMatrixInventory().getCurrentRecipe().craftItem(craftingInventory.getMatrixInventory());
++
++                        org.bukkit.inventory.Recipe recipe = craftingInventory.getRecipe();
++                        //OilyPaper - end
+                         if (recipe != null) {
+                             if (click == ClickType.NUMBER_KEY) {
+                                 event = new CraftItemEvent(recipe, inventory, type, packetplayinwindowclick.b(), click, action, packetplayinwindowclick.c());
+diff --git a/src/main/java/net/minecraft/server/RecipeArmorDye.java b/src/main/java/net/minecraft/server/RecipeArmorDye.java
+index b4441f6f..1634c021 100644
+--- a/src/main/java/net/minecraft/server/RecipeArmorDye.java
++++ b/src/main/java/net/minecraft/server/RecipeArmorDye.java
+@@ -4,8 +4,8 @@ import com.google.common.collect.Lists;
+ import java.util.ArrayList;
+ 
+ //OilSpigot start
+-import org.oilmod.bukkit.items.itemstackimpl.crafting.help.CHView;
+-import org.oilmod.bukkit.items.itemstackimpl.crafting.help.VanillaArmorDyeChView;
++import org.oilmod.bukkit.crafting.help.CHView;
++import org.oilmod.bukkit.crafting.help.VanillaArmorDyeChView;
+ //OilSpigot end
+ 
+ public class RecipeArmorDye extends ShapelessRecipes implements IRecipe { // CraftBukkit - added extends
+diff --git a/src/main/java/net/minecraft/server/RecipeBookClone.java b/src/main/java/net/minecraft/server/RecipeBookClone.java
+index 6ee0b321..fed2d5c5 100644
+--- a/src/main/java/net/minecraft/server/RecipeBookClone.java
++++ b/src/main/java/net/minecraft/server/RecipeBookClone.java
+@@ -2,7 +2,7 @@ package net.minecraft.server;
+ 
+ //OilSpigot start
+ import net.minecraft.server.oilmod.IInventoryCrafting;
+-import org.oilmod.bukkit.items.itemstackimpl.crafting.help.CHView;
++import org.oilmod.bukkit.crafting.help.CHView;
+ import org.oilmod.bukkit.items.itemstackimpl.internal.ModItemStack;
+ //OilSpigot end
+ 
+diff --git a/src/main/java/net/minecraft/server/RecipeMapClone.java b/src/main/java/net/minecraft/server/RecipeMapClone.java
+index 9680909f..6987a42d 100644
+--- a/src/main/java/net/minecraft/server/RecipeMapClone.java
++++ b/src/main/java/net/minecraft/server/RecipeMapClone.java
+@@ -3,7 +3,7 @@ package net.minecraft.server;
+ 
+ //OilSpigot start
+ import net.minecraft.server.oilmod.IInventoryCrafting;
+-import org.oilmod.bukkit.items.itemstackimpl.crafting.help.CHView;
++import org.oilmod.bukkit.crafting.help.CHView;
+ import org.oilmod.bukkit.items.itemstackimpl.internal.ModItemStack;
+ //OilSpigot end
+ 
+diff --git a/src/main/java/net/minecraft/server/RecipeRepair.java b/src/main/java/net/minecraft/server/RecipeRepair.java
+index aeefb036..e55423e7 100644
+--- a/src/main/java/net/minecraft/server/RecipeRepair.java
++++ b/src/main/java/net/minecraft/server/RecipeRepair.java
+@@ -5,8 +5,8 @@ import java.util.ArrayList;
+ 
+ //OilSpigot start
+ import net.minecraft.server.oilmod.IInventoryCrafting;
+-import org.oilmod.bukkit.items.itemstackimpl.crafting.help.CHView;
+-import org.oilmod.bukkit.items.itemstackimpl.crafting.help.VanillaRepairCHView;
++import org.oilmod.bukkit.crafting.help.CHView;
++import org.oilmod.bukkit.crafting.help.VanillaRepairCHView;
+ import org.oilmod.bukkit.items.itemstackimpl.internal.ModItemStack;
+ //OilSpigot end
+ 
+diff --git a/src/main/java/net/minecraft/server/RecipeTippedArrow.java b/src/main/java/net/minecraft/server/RecipeTippedArrow.java
+index 08006442..d0976978 100644
+--- a/src/main/java/net/minecraft/server/RecipeTippedArrow.java
++++ b/src/main/java/net/minecraft/server/RecipeTippedArrow.java
+@@ -4,8 +4,8 @@ import java.util.Collection;
+ 
+ //OilSpigot start
+ import net.minecraft.server.oilmod.IInventoryCrafting;
+-import org.oilmod.bukkit.items.itemstackimpl.crafting.help.CHView;
+-import org.oilmod.bukkit.items.itemstackimpl.crafting.help.VanillaTippedArrowCHView;
++import org.oilmod.bukkit.crafting.help.CHView;
++import org.oilmod.bukkit.crafting.help.VanillaTippedArrowCHView;
+ //OilSpigot end
+ 
+ public class RecipeTippedArrow extends ShapedRecipes implements IRecipe { // CraftBukkit
+diff --git a/src/main/java/net/minecraft/server/RecipiesShield.java b/src/main/java/net/minecraft/server/RecipiesShield.java
+index ee442e8c..5e8706be 100644
+--- a/src/main/java/net/minecraft/server/RecipiesShield.java
++++ b/src/main/java/net/minecraft/server/RecipiesShield.java
+@@ -2,8 +2,8 @@ package net.minecraft.server;
+ 
+ /*OilSpigo1t start*/
+ import net.minecraft.server.oilmod.IInventoryCrafting;
+-import org.oilmod.bukkit.items.itemstackimpl.crafting.help.CHView;
+-import org.oilmod.bukkit.items.itemstackimpl.crafting.help.VanillaShieldBannerCHView;
++import org.oilmod.bukkit.crafting.help.CHView;
++import org.oilmod.bukkit.crafting.help.VanillaShieldBannerCHView;
+ //OilSpigot end
+ 
+ // CraftBukkit - decompile weirdness
+diff --git a/src/main/java/net/minecraft/server/ShapedRecipes.java b/src/main/java/net/minecraft/server/ShapedRecipes.java
+index 557ca74d..9be66471 100644
+--- a/src/main/java/net/minecraft/server/ShapedRecipes.java
++++ b/src/main/java/net/minecraft/server/ShapedRecipes.java
+@@ -23,8 +23,8 @@ import org.bukkit.craftbukkit.inventory.CraftShapedRecipe;
+ // CraftBukkit end
+ 
+ //OilSpigot start
+-import org.oilmod.bukkit.items.itemstackimpl.crafting.help.CHView;
+-import org.oilmod.bukkit.items.itemstackimpl.crafting.help.VanillaShapedCHView;
++import org.oilmod.bukkit.crafting.help.CHView;
++import org.oilmod.bukkit.crafting.help.VanillaShapedCHView;
+ //OilSpigot end
+ 
+ public class ShapedRecipes implements IRecipe {
+@@ -33,7 +33,7 @@ public class ShapedRecipes implements IRecipe {
+     private final int height;
+     private final NonNullList<RecipeItemStack> items;
+     private final ItemStack result;
+-    private final String e;
++    private final String group;
+ 
+     //OilSpigot start - key and global id
+     // CraftBukkit start
+@@ -62,10 +62,16 @@ public class ShapedRecipes implements IRecipe {
+         this.key = key;
+         this.globalId = globalId;
+     }
++
++    protected ShapedRecipes(String group, int i, int j, NonNullList<RecipeItemStack> nonnulllist, ItemStack itemstack, MinecraftKey key, int globalId) {
++        this(group, i, j, nonnulllist, itemstack);
++        this.key = key;
++        this.globalId = globalId;
++    }
+     //OilSpigot end
+ 
+-    public ShapedRecipes(String s, int i, int j, NonNullList<RecipeItemStack> nonnulllist, ItemStack itemstack) {
+-        this.e = s;
++    public ShapedRecipes(String group, int i, int j, NonNullList<RecipeItemStack> nonnulllist, ItemStack itemstack) {
++        this.group = group;
+         this.width = i;
+         this.height = j;
+         this.items = nonnulllist;
+diff --git a/src/main/java/net/minecraft/server/ShapelessRecipes.java b/src/main/java/net/minecraft/server/ShapelessRecipes.java
+index 106027f4..e1e1ac33 100644
+--- a/src/main/java/net/minecraft/server/ShapelessRecipes.java
++++ b/src/main/java/net/minecraft/server/ShapelessRecipes.java
+@@ -14,15 +14,15 @@ import org.bukkit.craftbukkit.inventory.CraftShapelessRecipe;
+ // CraftBukkit end
+ 
+ //OilSpigot start
+-import org.oilmod.bukkit.items.itemstackimpl.crafting.help.CHView;
+-import org.oilmod.bukkit.items.itemstackimpl.crafting.help.VanillaShapelessCHView;
++import org.oilmod.bukkit.crafting.help.CHView;
++import org.oilmod.bukkit.crafting.help.VanillaShapelessCHView;
+ //OilSpigot end
+ 
+ public class ShapelessRecipes implements IRecipe {
+ 
+     private final ItemStack result;
+     private final NonNullList<RecipeItemStack> ingredients;
+-    private final String c;
++    private final String group;
+ 
+     //OilSpigot start - key and global id
+     // CraftBukkit start
+@@ -51,10 +51,16 @@ public class ShapelessRecipes implements IRecipe {
+         this.key = key;
+         this.globalId = globalId;
+     }
++
++    protected ShapelessRecipes(String group, ItemStack itemstack, NonNullList<RecipeItemStack> nonnulllist, MinecraftKey key, int globalId) {
++        this(group, itemstack, nonnulllist);
++        this.key = key;
++        this.globalId = globalId;
++    }
+     //OilSpigot end
+ 
+-    public ShapelessRecipes(String s, ItemStack itemstack, NonNullList<RecipeItemStack> nonnulllist) {
+-        this.c = s;
++    public ShapelessRecipes(String group, ItemStack itemstack, NonNullList<RecipeItemStack> nonnulllist) {
++        this.group = group;
+         this.result = itemstack;
+         this.ingredients = nonnulllist;
+         this.chViews = createCraftingHelps();//OilSpigot
+diff --git a/src/main/java/net/minecraft/server/oilmod/IInventoryCrafting.java b/src/main/java/net/minecraft/server/oilmod/IInventoryCrafting.java
+index 66356694..44713d14 100644
+--- a/src/main/java/net/minecraft/server/oilmod/IInventoryCrafting.java
++++ b/src/main/java/net/minecraft/server/oilmod/IInventoryCrafting.java
+@@ -14,7 +14,7 @@ import org.bukkit.inventory.InventoryView;
+ import java.util.Iterator;
+ 
+ //OilSpigot start - KEEPSYNC with InventoryCrafting.java
+-public interface IInventoryCrafting extends BukkitIInventory {
++public interface IInventoryCrafting extends BukkitIInventory, IInventory {
+     void setCurrentRecipe(IRecipe currentRecipe);
+     IRecipe getCurrentRecipe();
+     IInventory getResultInventory();
+diff --git a/src/main/java/org/bukkit/craftbukkit/inventory/CraftInventoryCrafting.java b/src/main/java/org/bukkit/craftbukkit/inventory/CraftInventoryCrafting.java
+index 336a1869..1fb97aa4 100644
+--- a/src/main/java/org/bukkit/craftbukkit/inventory/CraftInventoryCrafting.java
++++ b/src/main/java/org/bukkit/craftbukkit/inventory/CraftInventoryCrafting.java
+@@ -17,7 +17,8 @@ import net.minecraft.server.oilmod.IInventoryCrafting;
+ public class CraftInventoryCrafting extends CraftInventory implements CraftingInventory {
+     private final IInventory resultInventory;
+ 
+-    public CraftInventoryCrafting(IInventoryCrafting inventory, IInventory resultInventory) {//OilSpigot changed from InventoryCrafting to IInventoryCrafting
++    //OilSpigot - changed from InventoryCrafting to IInventoryCrafting
++    public CraftInventoryCrafting(IInventoryCrafting inventory, IInventory resultInventory) {
+         super(inventory);
+         this.resultInventory = resultInventory;
+     }
+@@ -26,8 +27,9 @@ public class CraftInventoryCrafting extends CraftInventory implements CraftingIn
+         return resultInventory;
+     }
+ 
+-    public IInventory getMatrixInventory() {
+-        return inventory;
++    //OilSpigot - changed result type
++    public IInventoryCrafting getMatrixInventory() {
++        return (IInventoryCrafting) inventory;
+     }
+ 
+     @Override
+diff --git a/src/main/java/org/oilmod/bukkit/OilMain.java b/src/main/java/org/oilmod/bukkit/OilMain.java
+index 404e34f4..a895b43e 100644
+--- a/src/main/java/org/oilmod/bukkit/OilMain.java
++++ b/src/main/java/org/oilmod/bukkit/OilMain.java
+@@ -18,8 +18,8 @@ import org.oilmod.bukkit.inventory.RealInventoryFactory;
+ import org.oilmod.bukkit.inventory.creative.OilCreativeModInventoryCommand;
+ import org.oilmod.bukkit.inventory.custom.api.RealUIHelper;
+ import org.oilmod.bukkit.items.*;
+-import org.oilmod.bukkit.items.itemstackimpl.crafting.RealItemCraftingFactory;
+-import org.oilmod.bukkit.items.itemstackimpl.crafting.help.CHCommand;
++import org.oilmod.bukkit.crafting.RealItemCraftingFactory;
++import org.oilmod.bukkit.crafting.help.CHCommand;
+ import org.oilmod.bukkit.items.itemtype.RealTBBHelper;
+ import org.oilmod.bukkit.util.RealOilUtil;
+ import io.netty.buffer.Unpooled;
+diff --git a/src/main/java/org/oilmod/bukkit/items/itemstackimpl/crafting/BukkitCraftingIngredient.java b/src/main/java/org/oilmod/bukkit/crafting/BukkitCraftingIngredient.java
+similarity index 95%
+rename from src/main/java/org/oilmod/bukkit/items/itemstackimpl/crafting/BukkitCraftingIngredient.java
+rename to src/main/java/org/oilmod/bukkit/crafting/BukkitCraftingIngredient.java
+index 8bc23746..36e32fbd 100644
+--- a/src/main/java/org/oilmod/bukkit/items/itemstackimpl/crafting/BukkitCraftingIngredient.java
++++ b/src/main/java/org/oilmod/bukkit/crafting/BukkitCraftingIngredient.java
+@@ -1,4 +1,4 @@
+-package org.oilmod.bukkit.items.itemstackimpl.crafting;
++package org.oilmod.bukkit.crafting;
+ 
+ import org.oilmod.api.items.crafting.DataHolder;
+ import org.oilmod.api.items.crafting.OilCraftingIngredient;
+diff --git a/src/main/java/org/oilmod/bukkit/items/itemstackimpl/crafting/BukkitCraftingResultFactory.java b/src/main/java/org/oilmod/bukkit/crafting/BukkitCraftingResultFactory.java
+similarity index 95%
+rename from src/main/java/org/oilmod/bukkit/items/itemstackimpl/crafting/BukkitCraftingResultFactory.java
+rename to src/main/java/org/oilmod/bukkit/crafting/BukkitCraftingResultFactory.java
+index 703d9415..19b97e51 100644
+--- a/src/main/java/org/oilmod/bukkit/items/itemstackimpl/crafting/BukkitCraftingResultFactory.java
++++ b/src/main/java/org/oilmod/bukkit/crafting/BukkitCraftingResultFactory.java
+@@ -1,4 +1,4 @@
+-package org.oilmod.bukkit.items.itemstackimpl.crafting;
++package org.oilmod.bukkit.crafting;
+ 
+ import net.minecraft.server.NonNullList;
+ import org.oilmod.api.items.crafting.OilCraftingResult;
+diff --git a/src/main/java/org/oilmod/bukkit/items/itemstackimpl/crafting/ItemStackCraftingInventoryReference.java b/src/main/java/org/oilmod/bukkit/crafting/ItemStackCraftingInventoryReference.java
+similarity index 92%
+rename from src/main/java/org/oilmod/bukkit/items/itemstackimpl/crafting/ItemStackCraftingInventoryReference.java
+rename to src/main/java/org/oilmod/bukkit/crafting/ItemStackCraftingInventoryReference.java
+index 35683a52..be6aeded 100644
+--- a/src/main/java/org/oilmod/bukkit/items/itemstackimpl/crafting/ItemStackCraftingInventoryReference.java
++++ b/src/main/java/org/oilmod/bukkit/crafting/ItemStackCraftingInventoryReference.java
+@@ -1,4 +1,4 @@
+-package org.oilmod.bukkit.items.itemstackimpl.crafting;
++package org.oilmod.bukkit.crafting;
+ 
+ import net.minecraft.server.oilmod.IInventoryCrafting;
+ import net.minecraft.server.ItemStack;
+diff --git a/src/main/java/org/oilmod/bukkit/items/itemstackimpl/crafting/NMSCraftingIngredient.java b/src/main/java/org/oilmod/bukkit/crafting/NMSCraftingIngredient.java
+similarity index 88%
+rename from src/main/java/org/oilmod/bukkit/items/itemstackimpl/crafting/NMSCraftingIngredient.java
+rename to src/main/java/org/oilmod/bukkit/crafting/NMSCraftingIngredient.java
+index 4280c495..f40d6c95 100644
+--- a/src/main/java/org/oilmod/bukkit/items/itemstackimpl/crafting/NMSCraftingIngredient.java
++++ b/src/main/java/org/oilmod/bukkit/crafting/NMSCraftingIngredient.java
+@@ -1,4 +1,4 @@
+-package org.oilmod.bukkit.items.itemstackimpl.crafting;
++package org.oilmod.bukkit.crafting;
+ 
+ import org.oilmod.api.items.crafting.DataHolder;
+ import net.minecraft.server.ItemStack;
+diff --git a/src/main/java/org/oilmod/bukkit/items/itemstackimpl/crafting/NMSCraftingResultFactory.java b/src/main/java/org/oilmod/bukkit/crafting/NMSCraftingResultFactory.java
+similarity index 87%
+rename from src/main/java/org/oilmod/bukkit/items/itemstackimpl/crafting/NMSCraftingResultFactory.java
+rename to src/main/java/org/oilmod/bukkit/crafting/NMSCraftingResultFactory.java
+index 5959c231..3c44a202 100644
+--- a/src/main/java/org/oilmod/bukkit/items/itemstackimpl/crafting/NMSCraftingResultFactory.java
++++ b/src/main/java/org/oilmod/bukkit/crafting/NMSCraftingResultFactory.java
+@@ -1,4 +1,4 @@
+-package org.oilmod.bukkit.items.itemstackimpl.crafting;
++package org.oilmod.bukkit.crafting;
+ 
+ import net.minecraft.server.ItemStack;
+ import net.minecraft.server.NonNullList;
+diff --git a/src/main/java/org/oilmod/bukkit/items/itemstackimpl/crafting/OilRecipe.java b/src/main/java/org/oilmod/bukkit/crafting/OilRecipe.java
+similarity index 93%
+rename from src/main/java/org/oilmod/bukkit/items/itemstackimpl/crafting/OilRecipe.java
+rename to src/main/java/org/oilmod/bukkit/crafting/OilRecipe.java
+index 48df66c9..36c4641f 100644
+--- a/src/main/java/org/oilmod/bukkit/items/itemstackimpl/crafting/OilRecipe.java
++++ b/src/main/java/org/oilmod/bukkit/crafting/OilRecipe.java
+@@ -1,8 +1,8 @@
+-package org.oilmod.bukkit.items.itemstackimpl.crafting;
++package org.oilmod.bukkit.crafting;
+ 
+ import org.apache.commons.lang3.Validate;
+ import org.oilmod.api.items.crafting.DataHolder;
+-import org.oilmod.bukkit.items.itemstackimpl.crafting.help.CHView;
++import org.oilmod.bukkit.crafting.help.CHView;
+ import net.minecraft.server.EntityHuman;
+ import net.minecraft.server.oilmod.IInventoryCrafting;
+ import net.minecraft.server.IRecipe;
+@@ -17,8 +17,8 @@ import org.bukkit.inventory.Recipe;
+  * Created by sirati97 on 24.03.2016.
+  */
+ public abstract class OilRecipe implements IRecipe {
+-    protected final NMSCraftingIngredient[] ingredients;
+-    protected final NMSCraftingResultFactory resultItem;
++    public final NMSCraftingIngredient[] ingredients;
++    public final NMSCraftingResultFactory resultItem;
+     private CHView chViews[];
+ 
+     //OilSpigot start - key and global id
+@@ -57,6 +57,7 @@ public abstract class OilRecipe implements IRecipe {
+ 
+ 
+     //OilSpigot KEEPSYNC ShapedRecipes.b() and ShapelessRecipes.b()
++    @Override
+     public NonNullList<ItemStack> b(IInventoryCrafting inventorycrafting) { //OilSpigot changed from InventoryCrafting to IInventoryCrafting
+         NonNullList nonnulllist = NonNullList.a(inventorycrafting.getSize(), ItemStack.a);
+ 
+@@ -105,7 +106,7 @@ public abstract class OilRecipe implements IRecipe {
+     protected final NonNullList<ItemStack> refToStack(ItemStackCraftingInventoryReference[] refs) {
+         NonNullList<ItemStack> result = NonNullList.a(refs.length, ItemStack.a);
+         for (int i=0;i<refs.length;i++) {
+-            result.set(i, refs[i].get());
++            result.set(i, refs[i]==null?ItemStack.a:refs[i].get());
+         }
+         return result;
+     }
+diff --git a/src/main/java/org/oilmod/bukkit/items/itemstackimpl/crafting/OilShapedRecipe.java b/src/main/java/org/oilmod/bukkit/crafting/OilShapedRecipe.java
+similarity index 94%
+rename from src/main/java/org/oilmod/bukkit/items/itemstackimpl/crafting/OilShapedRecipe.java
+rename to src/main/java/org/oilmod/bukkit/crafting/OilShapedRecipe.java
+index 9504d1fb..d36771f1 100644
+--- a/src/main/java/org/oilmod/bukkit/items/itemstackimpl/crafting/OilShapedRecipe.java
++++ b/src/main/java/org/oilmod/bukkit/crafting/OilShapedRecipe.java
+@@ -1,9 +1,9 @@
+-package org.oilmod.bukkit.items.itemstackimpl.crafting;
++package org.oilmod.bukkit.crafting;
+ 
+ import org.oilmod.api.items.crafting.DataHolder;
+-import org.oilmod.bukkit.items.itemstackimpl.crafting.help.CHView;
+-import org.oilmod.bukkit.items.itemstackimpl.crafting.help.OilCHView;
+-import org.oilmod.bukkit.items.itemstackimpl.crafting.nms.NMS_OilShapedRecipe;
++import org.oilmod.bukkit.crafting.help.CHView;
++import org.oilmod.bukkit.crafting.help.OilCHView;
++import org.oilmod.bukkit.crafting.nms.NMS_OilShapedRecipe;
+ import net.minecraft.server.EntityHuman;
+ import net.minecraft.server.oilmod.IInventoryCrafting;
+ import net.minecraft.server.ItemStack;
+@@ -72,6 +72,7 @@ public class OilShapedRecipe extends OilRecipe {
+         return true;
+     }
+ 
++    @Override
+     public ItemStack craftItem(IInventoryCrafting inventoryCrafting) { //OilSpigot changed from InventoryCrafting to IInventoryCrafting
+         NonNullList<ItemStack> ingredients = getIngredientItemStacks(inventoryCrafting);
+         ItemStack result = resultItem.preCraftResult(ingredients, true, width, height);
+@@ -109,7 +110,7 @@ public class OilShapedRecipe extends OilRecipe {
+         int top = Integer.MAX_VALUE;
+         for (int i = inventoryCrafting.i()-1/*width*/; i >= 0 ; i--) {
+             for (int j = inventoryCrafting.h()-1/*height*/; j >= 0; j--) {
+-                if (inventoryCrafting.c(i, j) != null) {
++                if (!inventoryCrafting.c(i, j).isEmpty()) {
+                     if (left > i) {
+                         left = i;
+                     }
+diff --git a/src/main/java/org/oilmod/bukkit/items/itemstackimpl/crafting/OilShapelessRecipe.java b/src/main/java/org/oilmod/bukkit/crafting/OilShapelessRecipe.java
+similarity index 94%
+rename from src/main/java/org/oilmod/bukkit/items/itemstackimpl/crafting/OilShapelessRecipe.java
+rename to src/main/java/org/oilmod/bukkit/crafting/OilShapelessRecipe.java
+index aca91054..262a33db 100644
+--- a/src/main/java/org/oilmod/bukkit/items/itemstackimpl/crafting/OilShapelessRecipe.java
++++ b/src/main/java/org/oilmod/bukkit/crafting/OilShapelessRecipe.java
+@@ -1,10 +1,10 @@
+-package org.oilmod.bukkit.items.itemstackimpl.crafting;
++package org.oilmod.bukkit.crafting;
+ 
+ import com.google.common.collect.Lists;
+ import org.oilmod.api.items.crafting.DataHolder;
+-import org.oilmod.bukkit.items.itemstackimpl.crafting.help.CHView;
+-import org.oilmod.bukkit.items.itemstackimpl.crafting.help.OilCHView;
+-import org.oilmod.bukkit.items.itemstackimpl.crafting.nms.NMS_OilShapelessRecipe;
++import org.oilmod.bukkit.crafting.help.CHView;
++import org.oilmod.bukkit.crafting.help.OilCHView;
++import org.oilmod.bukkit.crafting.nms.NMS_OilShapelessRecipe;
+ import net.minecraft.server.EntityHuman;
+ import net.minecraft.server.oilmod.IInventoryCrafting;
+ import net.minecraft.server.ItemStack;
+@@ -92,7 +92,8 @@ public class OilShapelessRecipe extends OilRecipe {
+         for (int i = 0; i < inventoryCrafting.i(); ++i) {
+             for (int j = 0; j < inventoryCrafting.h(); ++j) {
+                 ItemStack itemStack = inventoryCrafting.c(i, j);
+-                if (itemStack.isEmpty()) {
++                if (!itemStack.isEmpty()) {
++                    System.out.println("yayayfshig jklbs");
+                     result[counter++] = new ItemStackCraftingInventoryReference(i, j, inventoryCrafting);
+                 }
+             }
+diff --git a/src/main/java/org/oilmod/bukkit/items/itemstackimpl/crafting/RealItemCraftingFactory.java b/src/main/java/org/oilmod/bukkit/crafting/RealItemCraftingFactory.java
+similarity index 97%
+rename from src/main/java/org/oilmod/bukkit/items/itemstackimpl/crafting/RealItemCraftingFactory.java
+rename to src/main/java/org/oilmod/bukkit/crafting/RealItemCraftingFactory.java
+index 0b75db85..0186374e 100644
+--- a/src/main/java/org/oilmod/bukkit/items/itemstackimpl/crafting/RealItemCraftingFactory.java
++++ b/src/main/java/org/oilmod/bukkit/crafting/RealItemCraftingFactory.java
+@@ -1,4 +1,4 @@
+-package org.oilmod.bukkit.items.itemstackimpl.crafting;
++package org.oilmod.bukkit.crafting;
+ 
+ import net.minecraft.server.MinecraftKey;
+ import org.oilmod.api.items.crafting.OilCraftingIngredient;
+diff --git a/src/main/java/org/oilmod/bukkit/items/itemstackimpl/crafting/help/CHCollection.java b/src/main/java/org/oilmod/bukkit/crafting/help/CHCollection.java
+similarity index 91%
+rename from src/main/java/org/oilmod/bukkit/items/itemstackimpl/crafting/help/CHCollection.java
+rename to src/main/java/org/oilmod/bukkit/crafting/help/CHCollection.java
+index c4d4975d..faac5b2c 100644
+--- a/src/main/java/org/oilmod/bukkit/items/itemstackimpl/crafting/help/CHCollection.java
++++ b/src/main/java/org/oilmod/bukkit/crafting/help/CHCollection.java
+@@ -1,4 +1,4 @@
+-package org.oilmod.bukkit.items.itemstackimpl.crafting.help;
++package org.oilmod.bukkit.crafting.help;
+ 
+ import net.minecraft.server.CraftingManager;
+ import net.minecraft.server.ItemStack;
+diff --git a/src/main/java/org/oilmod/bukkit/items/itemstackimpl/crafting/help/CHCommand.java b/src/main/java/org/oilmod/bukkit/crafting/help/CHCommand.java
+similarity index 97%
+rename from src/main/java/org/oilmod/bukkit/items/itemstackimpl/crafting/help/CHCommand.java
+rename to src/main/java/org/oilmod/bukkit/crafting/help/CHCommand.java
+index a50dd546..5ae6364b 100644
+--- a/src/main/java/org/oilmod/bukkit/items/itemstackimpl/crafting/help/CHCommand.java
++++ b/src/main/java/org/oilmod/bukkit/crafting/help/CHCommand.java
+@@ -1,4 +1,4 @@
+-package org.oilmod.bukkit.items.itemstackimpl.crafting.help;
++package org.oilmod.bukkit.crafting.help;
+ 
+ import org.oilmod.bukkit.inventory.custom.nms.ViewContainer;
+ import net.minecraft.server.CraftingManager;
+diff --git a/src/main/java/org/oilmod/bukkit/items/itemstackimpl/crafting/help/CHContainer.java b/src/main/java/org/oilmod/bukkit/crafting/help/CHContainer.java
+similarity index 93%
+rename from src/main/java/org/oilmod/bukkit/items/itemstackimpl/crafting/help/CHContainer.java
+rename to src/main/java/org/oilmod/bukkit/crafting/help/CHContainer.java
+index 6b20972a..24848c20 100644
+--- a/src/main/java/org/oilmod/bukkit/items/itemstackimpl/crafting/help/CHContainer.java
++++ b/src/main/java/org/oilmod/bukkit/crafting/help/CHContainer.java
+@@ -1,4 +1,4 @@
+-package org.oilmod.bukkit.items.itemstackimpl.crafting.help;
++package org.oilmod.bukkit.crafting.help;
+ 
+ import org.oilmod.bukkit.inventory.custom.view.ISlotView;
+ import org.oilmod.bukkit.inventory.custom.view.ScrollableSlotView;
+diff --git a/src/main/java/org/oilmod/bukkit/items/itemstackimpl/crafting/help/CHDisplaySlotView.java b/src/main/java/org/oilmod/bukkit/crafting/help/CHDisplaySlotView.java
+similarity index 98%
+rename from src/main/java/org/oilmod/bukkit/items/itemstackimpl/crafting/help/CHDisplaySlotView.java
+rename to src/main/java/org/oilmod/bukkit/crafting/help/CHDisplaySlotView.java
+index 3b75aeb0..661adb74 100644
+--- a/src/main/java/org/oilmod/bukkit/items/itemstackimpl/crafting/help/CHDisplaySlotView.java
++++ b/src/main/java/org/oilmod/bukkit/crafting/help/CHDisplaySlotView.java
+@@ -1,4 +1,4 @@
+-package org.oilmod.bukkit.items.itemstackimpl.crafting.help;
++package org.oilmod.bukkit.crafting.help;
+ 
+ import org.oilmod.bukkit.inventory.custom.ClickExtraData;
+ import org.oilmod.bukkit.inventory.custom.view.ISlotView;
+diff --git a/src/main/java/org/oilmod/bukkit/items/itemstackimpl/crafting/help/CHSelectorSlotView.java b/src/main/java/org/oilmod/bukkit/crafting/help/CHSelectorSlotView.java
+similarity index 94%
+rename from src/main/java/org/oilmod/bukkit/items/itemstackimpl/crafting/help/CHSelectorSlotView.java
+rename to src/main/java/org/oilmod/bukkit/crafting/help/CHSelectorSlotView.java
+index dc9d403f..c63db0cb 100644
+--- a/src/main/java/org/oilmod/bukkit/items/itemstackimpl/crafting/help/CHSelectorSlotView.java
++++ b/src/main/java/org/oilmod/bukkit/crafting/help/CHSelectorSlotView.java
+@@ -1,4 +1,4 @@
+-package org.oilmod.bukkit.items.itemstackimpl.crafting.help;
++package org.oilmod.bukkit.crafting.help;
+ 
+ import org.oilmod.bukkit.inventory.custom.ClickExtraData;
+ import org.oilmod.bukkit.inventory.custom.view.ScalableSlotView;
+diff --git a/src/main/java/org/oilmod/bukkit/items/itemstackimpl/crafting/help/CHView.java b/src/main/java/org/oilmod/bukkit/crafting/help/CHView.java
+similarity index 95%
+rename from src/main/java/org/oilmod/bukkit/items/itemstackimpl/crafting/help/CHView.java
+rename to src/main/java/org/oilmod/bukkit/crafting/help/CHView.java
+index 74769b17..8b9a69c6 100644
+--- a/src/main/java/org/oilmod/bukkit/items/itemstackimpl/crafting/help/CHView.java
++++ b/src/main/java/org/oilmod/bukkit/crafting/help/CHView.java
+@@ -1,4 +1,4 @@
+-package org.oilmod.bukkit.items.itemstackimpl.crafting.help;
++package org.oilmod.bukkit.crafting.help;
+ 
+ import net.minecraft.server.ItemStack;
+ import org.oilmod.bukkit.util.BetterNonNullList;
+diff --git a/src/main/java/org/oilmod/bukkit/items/itemstackimpl/crafting/help/OilCHView.java b/src/main/java/org/oilmod/bukkit/crafting/help/OilCHView.java
+similarity index 92%
+rename from src/main/java/org/oilmod/bukkit/items/itemstackimpl/crafting/help/OilCHView.java
+rename to src/main/java/org/oilmod/bukkit/crafting/help/OilCHView.java
+index 7173c778..61e1aac3 100644
+--- a/src/main/java/org/oilmod/bukkit/items/itemstackimpl/crafting/help/OilCHView.java
++++ b/src/main/java/org/oilmod/bukkit/crafting/help/OilCHView.java
+@@ -1,4 +1,4 @@
+-package org.oilmod.bukkit.items.itemstackimpl.crafting.help;
++package org.oilmod.bukkit.crafting.help;
+ 
+ import net.minecraft.server.ItemStack;
+ import org.oilmod.bukkit.util.BetterNonNullList;
+diff --git a/src/main/java/org/oilmod/bukkit/items/itemstackimpl/crafting/help/ShapedCHView.java b/src/main/java/org/oilmod/bukkit/crafting/help/ShapedCHView.java
+similarity index 94%
+rename from src/main/java/org/oilmod/bukkit/items/itemstackimpl/crafting/help/ShapedCHView.java
+rename to src/main/java/org/oilmod/bukkit/crafting/help/ShapedCHView.java
+index 790f5387..44646fec 100644
+--- a/src/main/java/org/oilmod/bukkit/items/itemstackimpl/crafting/help/ShapedCHView.java
++++ b/src/main/java/org/oilmod/bukkit/crafting/help/ShapedCHView.java
+@@ -1,4 +1,4 @@
+-package org.oilmod.bukkit.items.itemstackimpl.crafting.help;
++package org.oilmod.bukkit.crafting.help;
+ 
+ import net.minecraft.server.ItemStack;
+ 
+diff --git a/src/main/java/org/oilmod/bukkit/items/itemstackimpl/crafting/help/ShapelessCHView.java b/src/main/java/org/oilmod/bukkit/crafting/help/ShapelessCHView.java
+similarity index 94%
+rename from src/main/java/org/oilmod/bukkit/items/itemstackimpl/crafting/help/ShapelessCHView.java
+rename to src/main/java/org/oilmod/bukkit/crafting/help/ShapelessCHView.java
+index 3fcca6c1..3729bfa1 100644
+--- a/src/main/java/org/oilmod/bukkit/items/itemstackimpl/crafting/help/ShapelessCHView.java
++++ b/src/main/java/org/oilmod/bukkit/crafting/help/ShapelessCHView.java
+@@ -1,4 +1,4 @@
+-package org.oilmod.bukkit.items.itemstackimpl.crafting.help;
++package org.oilmod.bukkit.crafting.help;
+ 
+ import net.minecraft.server.ItemStack;
+ 
+diff --git a/src/main/java/org/oilmod/bukkit/items/itemstackimpl/crafting/help/VanillaArmorDyeChView.java b/src/main/java/org/oilmod/bukkit/crafting/help/VanillaArmorDyeChView.java
+similarity index 97%
+rename from src/main/java/org/oilmod/bukkit/items/itemstackimpl/crafting/help/VanillaArmorDyeChView.java
+rename to src/main/java/org/oilmod/bukkit/crafting/help/VanillaArmorDyeChView.java
+index aea6fe05..541b9952 100644
+--- a/src/main/java/org/oilmod/bukkit/items/itemstackimpl/crafting/help/VanillaArmorDyeChView.java
++++ b/src/main/java/org/oilmod/bukkit/crafting/help/VanillaArmorDyeChView.java
+@@ -1,4 +1,4 @@
+-package org.oilmod.bukkit.items.itemstackimpl.crafting.help;
++package org.oilmod.bukkit.crafting.help;
+ 
+ import net.minecraft.server.EntitySheep;
+ import net.minecraft.server.EnumColor;
+diff --git a/src/main/java/org/oilmod/bukkit/items/itemstackimpl/crafting/help/VanillaBannerAddCHView.java b/src/main/java/org/oilmod/bukkit/crafting/help/VanillaBannerAddCHView.java
+similarity index 98%
+rename from src/main/java/org/oilmod/bukkit/items/itemstackimpl/crafting/help/VanillaBannerAddCHView.java
+rename to src/main/java/org/oilmod/bukkit/crafting/help/VanillaBannerAddCHView.java
+index e0b480b8..7811601d 100644
+--- a/src/main/java/org/oilmod/bukkit/items/itemstackimpl/crafting/help/VanillaBannerAddCHView.java
++++ b/src/main/java/org/oilmod/bukkit/crafting/help/VanillaBannerAddCHView.java
+@@ -1,4 +1,4 @@
+-package org.oilmod.bukkit.items.itemstackimpl.crafting.help;
++package org.oilmod.bukkit.crafting.help;
+ 
+ import net.minecraft.server.*;
+ 
+diff --git a/src/main/java/org/oilmod/bukkit/items/itemstackimpl/crafting/help/VanillaBannerDuplicateCHView.java b/src/main/java/org/oilmod/bukkit/crafting/help/VanillaBannerDuplicateCHView.java
+similarity index 96%
+rename from src/main/java/org/oilmod/bukkit/items/itemstackimpl/crafting/help/VanillaBannerDuplicateCHView.java
+rename to src/main/java/org/oilmod/bukkit/crafting/help/VanillaBannerDuplicateCHView.java
+index ae26a31f..33380b26 100644
+--- a/src/main/java/org/oilmod/bukkit/items/itemstackimpl/crafting/help/VanillaBannerDuplicateCHView.java
++++ b/src/main/java/org/oilmod/bukkit/crafting/help/VanillaBannerDuplicateCHView.java
+@@ -1,4 +1,4 @@
+-package org.oilmod.bukkit.items.itemstackimpl.crafting.help;
++package org.oilmod.bukkit.crafting.help;
+ 
+ import net.minecraft.server.EnumBannerPatternType;
+ import net.minecraft.server.EnumColor;
+diff --git a/src/main/java/org/oilmod/bukkit/items/itemstackimpl/crafting/help/VanillaCHView.java b/src/main/java/org/oilmod/bukkit/crafting/help/VanillaCHView.java
+similarity index 95%
+rename from src/main/java/org/oilmod/bukkit/items/itemstackimpl/crafting/help/VanillaCHView.java
+rename to src/main/java/org/oilmod/bukkit/crafting/help/VanillaCHView.java
+index 4eb1fe4a..bf1616e2 100644
+--- a/src/main/java/org/oilmod/bukkit/items/itemstackimpl/crafting/help/VanillaCHView.java
++++ b/src/main/java/org/oilmod/bukkit/crafting/help/VanillaCHView.java
+@@ -1,4 +1,4 @@
+-package org.oilmod.bukkit.items.itemstackimpl.crafting.help;
++package org.oilmod.bukkit.crafting.help;
+ 
+ 
+ import net.minecraft.server.*;
+diff --git a/src/main/java/org/oilmod/bukkit/items/itemstackimpl/crafting/help/VanillaFireworksCHView.java b/src/main/java/org/oilmod/bukkit/crafting/help/VanillaFireworksCHView.java
+similarity index 86%
+rename from src/main/java/org/oilmod/bukkit/items/itemstackimpl/crafting/help/VanillaFireworksCHView.java
+rename to src/main/java/org/oilmod/bukkit/crafting/help/VanillaFireworksCHView.java
+index d1140f10..8558f87e 100644
+--- a/src/main/java/org/oilmod/bukkit/items/itemstackimpl/crafting/help/VanillaFireworksCHView.java
++++ b/src/main/java/org/oilmod/bukkit/crafting/help/VanillaFireworksCHView.java
+@@ -1,4 +1,4 @@
+-package org.oilmod.bukkit.items.itemstackimpl.crafting.help;
++package org.oilmod.bukkit.crafting.help;
+ 
+ import net.minecraft.server.ItemStack;
+ 
+diff --git a/src/main/java/org/oilmod/bukkit/items/itemstackimpl/crafting/help/VanillaRepairCHView.java b/src/main/java/org/oilmod/bukkit/crafting/help/VanillaRepairCHView.java
+similarity index 96%
+rename from src/main/java/org/oilmod/bukkit/items/itemstackimpl/crafting/help/VanillaRepairCHView.java
+rename to src/main/java/org/oilmod/bukkit/crafting/help/VanillaRepairCHView.java
+index 4d01f62d..027eb31a 100644
+--- a/src/main/java/org/oilmod/bukkit/items/itemstackimpl/crafting/help/VanillaRepairCHView.java
++++ b/src/main/java/org/oilmod/bukkit/crafting/help/VanillaRepairCHView.java
+@@ -1,4 +1,4 @@
+-package org.oilmod.bukkit.items.itemstackimpl.crafting.help;
++package org.oilmod.bukkit.crafting.help;
+ 
+ import net.minecraft.server.Item;
+ import net.minecraft.server.ItemStack;
+diff --git a/src/main/java/org/oilmod/bukkit/items/itemstackimpl/crafting/help/VanillaShapedCHView.java b/src/main/java/org/oilmod/bukkit/crafting/help/VanillaShapedCHView.java
+similarity index 90%
+rename from src/main/java/org/oilmod/bukkit/items/itemstackimpl/crafting/help/VanillaShapedCHView.java
+rename to src/main/java/org/oilmod/bukkit/crafting/help/VanillaShapedCHView.java
+index a7a772a4..a88c6f4d 100644
+--- a/src/main/java/org/oilmod/bukkit/items/itemstackimpl/crafting/help/VanillaShapedCHView.java
++++ b/src/main/java/org/oilmod/bukkit/crafting/help/VanillaShapedCHView.java
+@@ -1,4 +1,4 @@
+-package org.oilmod.bukkit.items.itemstackimpl.crafting.help;
++package org.oilmod.bukkit.crafting.help;
+ 
+ import net.minecraft.server.ItemStack;
+ import net.minecraft.server.ShapedRecipes;
+diff --git a/src/main/java/org/oilmod/bukkit/items/itemstackimpl/crafting/help/VanillaShapelessCHView.java b/src/main/java/org/oilmod/bukkit/crafting/help/VanillaShapelessCHView.java
+similarity index 90%
+rename from src/main/java/org/oilmod/bukkit/items/itemstackimpl/crafting/help/VanillaShapelessCHView.java
+rename to src/main/java/org/oilmod/bukkit/crafting/help/VanillaShapelessCHView.java
+index 50e92691..398c4b81 100644
+--- a/src/main/java/org/oilmod/bukkit/items/itemstackimpl/crafting/help/VanillaShapelessCHView.java
++++ b/src/main/java/org/oilmod/bukkit/crafting/help/VanillaShapelessCHView.java
+@@ -1,4 +1,4 @@
+-package org.oilmod.bukkit.items.itemstackimpl.crafting.help;
++package org.oilmod.bukkit.crafting.help;
+ 
+ import net.minecraft.server.ItemStack;
+ import net.minecraft.server.ShapelessRecipes;
+diff --git a/src/main/java/org/oilmod/bukkit/items/itemstackimpl/crafting/help/VanillaShieldBannerCHView.java b/src/main/java/org/oilmod/bukkit/crafting/help/VanillaShieldBannerCHView.java
+similarity index 89%
+rename from src/main/java/org/oilmod/bukkit/items/itemstackimpl/crafting/help/VanillaShieldBannerCHView.java
+rename to src/main/java/org/oilmod/bukkit/crafting/help/VanillaShieldBannerCHView.java
+index 292efb16..4099b759 100644
+--- a/src/main/java/org/oilmod/bukkit/items/itemstackimpl/crafting/help/VanillaShieldBannerCHView.java
++++ b/src/main/java/org/oilmod/bukkit/crafting/help/VanillaShieldBannerCHView.java
+@@ -1,10 +1,10 @@
+-package org.oilmod.bukkit.items.itemstackimpl.crafting.help;
++package org.oilmod.bukkit.crafting.help;
+ 
+ import net.minecraft.server.*;
+ 
+ import java.util.List;
+ 
+-import static org.oilmod.bukkit.items.itemstackimpl.crafting.help.VanillaBannerAddCHView.addPatternToBannerWithClone;
++import static org.oilmod.bukkit.crafting.help.VanillaBannerAddCHView.addPatternToBannerWithClone;
+ 
+ /**
+  * Created by sirati97 on 13.06.2016 for spigot.
+diff --git a/src/main/java/org/oilmod/bukkit/items/itemstackimpl/crafting/help/VanillaTippedArrowCHView.java b/src/main/java/org/oilmod/bukkit/crafting/help/VanillaTippedArrowCHView.java
+similarity index 96%
+rename from src/main/java/org/oilmod/bukkit/items/itemstackimpl/crafting/help/VanillaTippedArrowCHView.java
+rename to src/main/java/org/oilmod/bukkit/crafting/help/VanillaTippedArrowCHView.java
+index f92e7fbf..d4b44884 100644
+--- a/src/main/java/org/oilmod/bukkit/items/itemstackimpl/crafting/help/VanillaTippedArrowCHView.java
++++ b/src/main/java/org/oilmod/bukkit/crafting/help/VanillaTippedArrowCHView.java
+@@ -1,4 +1,4 @@
+-package org.oilmod.bukkit.items.itemstackimpl.crafting.help;
++package org.oilmod.bukkit.crafting.help;
+ 
+ import net.minecraft.server.ItemStack;
+ import net.minecraft.server.Items;
+diff --git a/src/main/java/org/oilmod/bukkit/items/itemstackimpl/crafting/nms/NMS_OilRecipe.java b/src/main/java/org/oilmod/bukkit/crafting/nms/NMS_OilRecipe.java
+similarity index 57%
+rename from src/main/java/org/oilmod/bukkit/items/itemstackimpl/crafting/nms/NMS_OilRecipe.java
+rename to src/main/java/org/oilmod/bukkit/crafting/nms/NMS_OilRecipe.java
+index eb6fd848..5e4ecd04 100644
+--- a/src/main/java/org/oilmod/bukkit/items/itemstackimpl/crafting/nms/NMS_OilRecipe.java
++++ b/src/main/java/org/oilmod/bukkit/crafting/nms/NMS_OilRecipe.java
+@@ -1,6 +1,6 @@
+-package org.oilmod.bukkit.items.itemstackimpl.crafting.nms;
++package org.oilmod.bukkit.crafting.nms;
+ 
+-import org.oilmod.bukkit.items.itemstackimpl.crafting.OilRecipe;
++import org.oilmod.bukkit.crafting.OilRecipe;
+ import net.minecraft.server.IRecipe;
+ 
+ /**
+diff --git a/src/main/java/org/oilmod/bukkit/items/itemstackimpl/crafting/nms/NMS_OilShapedRecipe.java b/src/main/java/org/oilmod/bukkit/crafting/nms/NMS_OilShapedRecipe.java
+similarity index 55%
+rename from src/main/java/org/oilmod/bukkit/items/itemstackimpl/crafting/nms/NMS_OilShapedRecipe.java
+rename to src/main/java/org/oilmod/bukkit/crafting/nms/NMS_OilShapedRecipe.java
+index 0479c8d8..426d863a 100644
+--- a/src/main/java/org/oilmod/bukkit/items/itemstackimpl/crafting/nms/NMS_OilShapedRecipe.java
++++ b/src/main/java/org/oilmod/bukkit/crafting/nms/NMS_OilShapedRecipe.java
+@@ -1,7 +1,7 @@
+-package org.oilmod.bukkit.items.itemstackimpl.crafting.nms;
++package org.oilmod.bukkit.crafting.nms;
+ 
+-import org.oilmod.bukkit.items.itemstackimpl.crafting.OilRecipe;
+-import org.oilmod.bukkit.items.itemstackimpl.crafting.OilShapedRecipe;
++import org.oilmod.bukkit.crafting.OilRecipe;
++import org.oilmod.bukkit.crafting.OilShapedRecipe;
+ import net.minecraft.server.ItemStack;
+ import net.minecraft.server.NonNullList;
+ import net.minecraft.server.ShapedRecipes;
+@@ -12,8 +12,8 @@ import net.minecraft.server.ShapedRecipes;
+ public class NMS_OilShapedRecipe extends ShapedRecipes implements NMS_OilRecipe {
+     private final OilRecipe oilRecipe;
+ 
+-    public NMS_OilShapedRecipe(int i, int j, NonNullList<ItemStack> aitemstack, ItemStack itemstack, OilShapedRecipe oilRecipe) {
+-        super(null, i, j, NMS_OilShapelessRecipe.convert(aitemstack), itemstack); //TODO set first arg and deal with key
++    public  NMS_OilShapedRecipe(int i, int j, NonNullList<ItemStack> aitemstack, ItemStack itemstack, OilShapedRecipe oilRecipe) {
++        super(null, i, j, NMS_OilShapelessRecipe.convert(aitemstack), itemstack, oilRecipe.getKey(), oilRecipe.getGlobalId());
+         this.oilRecipe = oilRecipe;
+     }
+ 
+diff --git a/src/main/java/org/oilmod/bukkit/items/itemstackimpl/crafting/nms/NMS_OilShapelessRecipe.java b/src/main/java/org/oilmod/bukkit/crafting/nms/NMS_OilShapelessRecipe.java
+similarity index 77%
+rename from src/main/java/org/oilmod/bukkit/items/itemstackimpl/crafting/nms/NMS_OilShapelessRecipe.java
+rename to src/main/java/org/oilmod/bukkit/crafting/nms/NMS_OilShapelessRecipe.java
+index 84d3d47c..82c7d0fa 100644
+--- a/src/main/java/org/oilmod/bukkit/items/itemstackimpl/crafting/nms/NMS_OilShapelessRecipe.java
++++ b/src/main/java/org/oilmod/bukkit/crafting/nms/NMS_OilShapelessRecipe.java
+@@ -1,7 +1,7 @@
+-package org.oilmod.bukkit.items.itemstackimpl.crafting.nms;
++package org.oilmod.bukkit.crafting.nms;
+ 
+-import org.oilmod.bukkit.items.itemstackimpl.crafting.OilRecipe;
+-import org.oilmod.bukkit.items.itemstackimpl.crafting.OilShapelessRecipe;
++import org.oilmod.bukkit.crafting.OilRecipe;
++import org.oilmod.bukkit.crafting.OilShapelessRecipe;
+ import net.minecraft.server.ItemStack;
+ import net.minecraft.server.NonNullList;
+ import net.minecraft.server.RecipeItemStack;
+@@ -14,7 +14,7 @@ public class NMS_OilShapelessRecipe extends ShapelessRecipes implements NMS_OilR
+     private final OilRecipe oilRecipe;
+ 
+     public NMS_OilShapelessRecipe(ItemStack itemstack, NonNullList<ItemStack> list, OilShapelessRecipe oilRecipe) {
+-        super(null, itemstack, convert(list)); //TODO set first arg and deal with key
++        super(null, itemstack, convert(list));
+         this.oilRecipe = oilRecipe;
+     }
+ 
+-- 
+2.14.2.windows.3
+
