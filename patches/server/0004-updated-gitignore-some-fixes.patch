@@ -1,0 +1,39 @@
+From 0e01be77185424c56f3b3a3bac9334683f6e1a86 Mon Sep 17 00:00:00 2001
+From: sirati97 <TheSirati97@gmail.com>
+Date: Sun, 20 Jan 2019 05:06:09 +0000
+Subject: [PATCH] updated gitignore, some fixes
+
+---
+ .gitignore                   | 3 +++
+ src/main/java/nbt/YList.java | 2 +-
+ 2 files changed, 4 insertions(+), 1 deletion(-)
+
+diff --git a/.gitignore b/.gitignore
+index 73c16b1d..88939151 100644
+--- a/.gitignore
++++ b/.gitignore
+@@ -34,5 +34,8 @@ dependency-reduced-pom.xml
+ *.iws
+ .idea/
+ 
++#JRebel
++rebel.xml
++
+ /src/main/resources/achievement
+ /src/main/resources/lang
+diff --git a/src/main/java/nbt/YList.java b/src/main/java/nbt/YList.java
+index 605767d6..3ec5f92b 100644
+--- a/src/main/java/nbt/YList.java
++++ b/src/main/java/nbt/YList.java
+@@ -1,7 +1,7 @@
+ package nbt;
+ 
+ import org.oilmod.api.config.DataType;
+-import org.oilmod.spigot.config.yaml.YamlDataList;
++import org.oilmod.bukkit.config.yaml.YamlDataList;
+ 
+ import java.util.HashMap;
+ import java.util.List;
+-- 
+2.14.2.windows.3
+

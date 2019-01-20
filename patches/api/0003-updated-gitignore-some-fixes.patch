@@ -1,0 +1,23 @@
+From fd19ad7e2b9bce9483a97c451cdd1a9bf0ffd2be Mon Sep 17 00:00:00 2001
+From: sirati97 <TheSirati97@gmail.com>
+Date: Sun, 20 Jan 2019 05:06:10 +0000
+Subject: [PATCH] updated gitignore, some fixes
+
+---
+ .gitignore | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/.gitignore b/.gitignore
+index edf9e5c3..71bb43d5 100644
+--- a/.gitignore
++++ b/.gitignore
+@@ -29,3 +29,6 @@
+ *.ipr
+ *.iws
+ .idea/
++
++#JRebel
++rebel.xml
+-- 
+2.14.2.windows.3
+
