@@ -1,0 +1,420 @@
+From 3608fe5af312024770ad42d55f1da1218cc69b66 Mon Sep 17 00:00:00 2001
+From: sirati97 <TheSirati97@gmail.com>
+Date: Sun, 20 Jan 2019 08:55:54 +0000
+Subject: [PATCH] fixed crafting help
+
+---
+ .../net/minecraft/server/PlayerConnection.java     |   1 +
+ .../oilmod/bukkit/crafting/OilShapedRecipe.java    |   1 +
+ .../org/oilmod/bukkit/crafting/help/CHView.java    |   4 +-
+ .../org/oilmod/bukkit/crafting/help/OilCHView.java |   4 +-
+ .../bukkit/crafting/help/ShapelessCHView.java      |   1 -
+ .../crafting/help/VanillaArmorDyeChView.java       |   3 +-
+ .../crafting/help/VanillaBannerAddCHView.java      |   3 +-
+ .../help/VanillaBannerDuplicateCHView.java         |   3 +-
+ .../oilmod/bukkit/crafting/help/VanillaCHView.java |   3 +-
+ .../crafting/help/VanillaFireworksCHView.java      |   3 +-
+ .../bukkit/crafting/help/VanillaRepairCHView.java  |   3 +-
+ .../crafting/help/VanillaShieldBannerCHView.java   |   3 +-
+ .../crafting/help/VanillaTippedArrowCHView.java    |   3 +-
+ .../bukkit/inventory/custom/ClickExtraData.java    |   2 +-
+ .../org/oilmod/bukkit/util/BetterNonNullList.java  | 115 ++++++++++++++++++++-
+ 15 files changed, 136 insertions(+), 16 deletions(-)
+
+diff --git a/src/main/java/net/minecraft/server/PlayerConnection.java b/src/main/java/net/minecraft/server/PlayerConnection.java
+index b12ec1d5..39596f24 100644
+--- a/src/main/java/net/minecraft/server/PlayerConnection.java
++++ b/src/main/java/net/minecraft/server/PlayerConnection.java
+@@ -2084,6 +2084,7 @@ public class PlayerConnection implements PacketListenerPlayIn, ITickable {
+                     }
+                 }
+                 // CraftBukkit end
++                ItemStack itemstackE = packetplayinwindowclick.e();
+                 if (ItemStack.matches(packetplayinwindowclick.e(), itemstack)) {
+                     this.player.playerConnection.sendPacket(new PacketPlayOutTransaction(packetplayinwindowclick.a(), packetplayinwindowclick.d(), true));
+                     this.player.f = true;
+diff --git a/src/main/java/org/oilmod/bukkit/crafting/OilShapedRecipe.java b/src/main/java/org/oilmod/bukkit/crafting/OilShapedRecipe.java
+index d36771f1..8e93f15b 100644
+--- a/src/main/java/org/oilmod/bukkit/crafting/OilShapedRecipe.java
++++ b/src/main/java/org/oilmod/bukkit/crafting/OilShapedRecipe.java
+@@ -156,6 +156,7 @@ public class OilShapedRecipe extends OilRecipe {
+         protected void fillIngredients(List<ItemStack> ingredients) {
+             DataHolder dataHolder = new DataHolder();
+             for (NMSCraftingIngredient ingredient:OilShapedRecipe.this.ingredients) {
++
+                 ingredients.add(ingredient==null?ItemStack.a:ingredient.getRandomExample(rnd, dataHolder));
+             }
+         }
+diff --git a/src/main/java/org/oilmod/bukkit/crafting/help/CHView.java b/src/main/java/org/oilmod/bukkit/crafting/help/CHView.java
+index 8b9a69c6..6daf017c 100644
+--- a/src/main/java/org/oilmod/bukkit/crafting/help/CHView.java
++++ b/src/main/java/org/oilmod/bukkit/crafting/help/CHView.java
+@@ -42,9 +42,9 @@ public abstract class CHView { //TODO add support for RecipeItemStack
+     public abstract ItemStack getItemStack(int left, int top);
+     public abstract ItemStack getResult();
+ 
+-    protected abstract void update(List<ItemStack> result);
++    protected abstract void update(BetterNonNullList<ItemStack> result);
+ 
+-    protected static Random rnd = new Random();
++    protected final static Random rnd = new Random();
+ 
+     public boolean isSpecialRecipe() {
+         return false;
+diff --git a/src/main/java/org/oilmod/bukkit/crafting/help/OilCHView.java b/src/main/java/org/oilmod/bukkit/crafting/help/OilCHView.java
+index 61e1aac3..923068b4 100644
+--- a/src/main/java/org/oilmod/bukkit/crafting/help/OilCHView.java
++++ b/src/main/java/org/oilmod/bukkit/crafting/help/OilCHView.java
+@@ -16,9 +16,9 @@ public abstract class OilCHView extends CHView {
+     }
+ 
+     @Override
+-    protected final void update(List<ItemStack> ingredients) {
++    protected final void update(BetterNonNullList<ItemStack> ingredients) {
+         fillIngredients(ingredients);
+-        result = createResult((BetterNonNullList<ItemStack>) ingredients);
++        result = createResult(ingredients);
+     }
+     protected abstract void fillIngredients(List<ItemStack> ingredients);
+     protected abstract ItemStack createResult(BetterNonNullList<ItemStack> ingredients);
+diff --git a/src/main/java/org/oilmod/bukkit/crafting/help/ShapelessCHView.java b/src/main/java/org/oilmod/bukkit/crafting/help/ShapelessCHView.java
+index 3729bfa1..6888dba6 100644
+--- a/src/main/java/org/oilmod/bukkit/crafting/help/ShapelessCHView.java
++++ b/src/main/java/org/oilmod/bukkit/crafting/help/ShapelessCHView.java
+@@ -36,7 +36,6 @@ public abstract class ShapelessCHView extends CHView {
+ 
+     public static ItemStack getItemStackShapeless(int left, int top, List<ItemStack> items) {
+         int index = left+top*3;
+-        System.out.println(index);
+         if (index>=items.size()) {
+             return ItemStack.a;
+         }
+diff --git a/src/main/java/org/oilmod/bukkit/crafting/help/VanillaArmorDyeChView.java b/src/main/java/org/oilmod/bukkit/crafting/help/VanillaArmorDyeChView.java
+index 541b9952..e03b8067 100644
+--- a/src/main/java/org/oilmod/bukkit/crafting/help/VanillaArmorDyeChView.java
++++ b/src/main/java/org/oilmod/bukkit/crafting/help/VanillaArmorDyeChView.java
+@@ -6,6 +6,7 @@ import net.minecraft.server.Item;
+ import net.minecraft.server.ItemArmor;
+ import net.minecraft.server.ItemStack;
+ import net.minecraft.server.Items;
++import org.oilmod.bukkit.util.BetterNonNullList;
+ 
+ import java.util.ArrayList;
+ import java.util.Iterator;
+@@ -35,7 +36,7 @@ public class VanillaArmorDyeChView extends ShapelessCHView {
+     }
+ 
+     @Override
+-    protected void update(List<ItemStack> result) {
++    protected void update(BetterNonNullList<ItemStack> result) {
+         EnumColor[] allColors = EnumColor.values();
+         EnumColor[] usedColors = new EnumColor[rnd.nextInt(8)+1];
+         for (int i = 0; i < usedColors.length; i++) {
+diff --git a/src/main/java/org/oilmod/bukkit/crafting/help/VanillaBannerAddCHView.java b/src/main/java/org/oilmod/bukkit/crafting/help/VanillaBannerAddCHView.java
+index 7811601d..97f1e37e 100644
+--- a/src/main/java/org/oilmod/bukkit/crafting/help/VanillaBannerAddCHView.java
++++ b/src/main/java/org/oilmod/bukkit/crafting/help/VanillaBannerAddCHView.java
+@@ -1,6 +1,7 @@
+ package org.oilmod.bukkit.crafting.help;
+ 
+ import net.minecraft.server.*;
++import org.oilmod.bukkit.util.BetterNonNullList;
+ 
+ import java.util.ArrayList;
+ import java.util.List;
+@@ -49,7 +50,7 @@ public class VanillaBannerAddCHView extends CHView {
+     }
+ 
+     @Override
+-    protected void update(List<ItemStack> result) {
++    protected void update(BetterNonNullList<ItemStack> result) {
+         EnumBannerPatternType patternType = PATTERN_TYPES[rnd.nextInt(PATTERN_TYPES.length)];
+         EnumColor[] colors = EnumColor.values();
+         EnumColor colorBanner = colors[rnd.nextInt(colors.length)];
+diff --git a/src/main/java/org/oilmod/bukkit/crafting/help/VanillaBannerDuplicateCHView.java b/src/main/java/org/oilmod/bukkit/crafting/help/VanillaBannerDuplicateCHView.java
+index 33380b26..944835dc 100644
+--- a/src/main/java/org/oilmod/bukkit/crafting/help/VanillaBannerDuplicateCHView.java
++++ b/src/main/java/org/oilmod/bukkit/crafting/help/VanillaBannerDuplicateCHView.java
+@@ -4,6 +4,7 @@ import net.minecraft.server.EnumBannerPatternType;
+ import net.minecraft.server.EnumColor;
+ import net.minecraft.server.ItemStack;
+ import net.minecraft.server.Items;
++import org.oilmod.bukkit.util.BetterNonNullList;
+ 
+ import java.util.ArrayList;
+ import java.util.List;
+@@ -41,7 +42,7 @@ public class VanillaBannerDuplicateCHView extends CHView {
+     }
+ 
+     @Override
+-    protected void update(List<ItemStack> result) {
++    protected void update(BetterNonNullList<ItemStack> result) {
+         EnumBannerPatternType patternType = PATTERN_TYPES[rnd.nextInt(PATTERN_TYPES.length)];
+         EnumColor[] colors = EnumColor.values();
+         EnumColor colorBanner = colors[rnd.nextInt(colors.length)];
+diff --git a/src/main/java/org/oilmod/bukkit/crafting/help/VanillaCHView.java b/src/main/java/org/oilmod/bukkit/crafting/help/VanillaCHView.java
+index bf1616e2..c4e04fb8 100644
+--- a/src/main/java/org/oilmod/bukkit/crafting/help/VanillaCHView.java
++++ b/src/main/java/org/oilmod/bukkit/crafting/help/VanillaCHView.java
+@@ -2,6 +2,7 @@ package org.oilmod.bukkit.crafting.help;
+ 
+ 
+ import net.minecraft.server.*;
++import org.oilmod.bukkit.util.BetterNonNullList;
+ 
+ import java.util.List;
+ 
+@@ -47,7 +48,7 @@ public abstract class VanillaCHView extends CHView {
+     }
+ 
+     @Override
+-    protected void update(List<ItemStack> result) {
++    protected void update(BetterNonNullList<ItemStack> result) {
+         for (RecipeItemStack itemStack:getRecipe().d()) {
+             result.add(nextItemStack(itemStack.choices.length == 0?ItemStack.a:itemStack.choices[rnd.nextInt(itemStack.choices.length)]));
+         }
+diff --git a/src/main/java/org/oilmod/bukkit/crafting/help/VanillaFireworksCHView.java b/src/main/java/org/oilmod/bukkit/crafting/help/VanillaFireworksCHView.java
+index 8558f87e..c39424cc 100644
+--- a/src/main/java/org/oilmod/bukkit/crafting/help/VanillaFireworksCHView.java
++++ b/src/main/java/org/oilmod/bukkit/crafting/help/VanillaFireworksCHView.java
+@@ -1,6 +1,7 @@
+ package org.oilmod.bukkit.crafting.help;
+ 
+ import net.minecraft.server.ItemStack;
++import org.oilmod.bukkit.util.BetterNonNullList;
+ 
+ import java.util.List;
+ 
+@@ -15,7 +16,7 @@ public class VanillaFireworksCHView extends ShapelessCHView {
+     }
+ 
+     @Override
+-    protected void update(List<ItemStack> result) {
++    protected void update(BetterNonNullList<ItemStack> result) {
+ 
+     }
+ 
+diff --git a/src/main/java/org/oilmod/bukkit/crafting/help/VanillaRepairCHView.java b/src/main/java/org/oilmod/bukkit/crafting/help/VanillaRepairCHView.java
+index 027eb31a..687dec9d 100644
+--- a/src/main/java/org/oilmod/bukkit/crafting/help/VanillaRepairCHView.java
++++ b/src/main/java/org/oilmod/bukkit/crafting/help/VanillaRepairCHView.java
+@@ -2,6 +2,7 @@ package org.oilmod.bukkit.crafting.help;
+ 
+ import net.minecraft.server.Item;
+ import net.minecraft.server.ItemStack;
++import org.oilmod.bukkit.util.BetterNonNullList;
+ 
+ import java.util.ArrayList;
+ import java.util.Iterator;
+@@ -31,7 +32,7 @@ public class VanillaRepairCHView extends ShapelessCHView{
+     }
+ 
+     @Override
+-    protected void update(List<ItemStack> result) {
++    protected void update(BetterNonNullList<ItemStack> result) {
+         Item item = repairItems[rnd.nextInt(repairItems.length)];
+         ItemStack itemStack1 = new ItemStack(item, 1, rnd.nextInt(item.getMaxDurability()));
+         ItemStack itemStack2 = new ItemStack(item, 1, rnd.nextInt(item.getMaxDurability()/2));
+diff --git a/src/main/java/org/oilmod/bukkit/crafting/help/VanillaShieldBannerCHView.java b/src/main/java/org/oilmod/bukkit/crafting/help/VanillaShieldBannerCHView.java
+index 4099b759..16b25a58 100644
+--- a/src/main/java/org/oilmod/bukkit/crafting/help/VanillaShieldBannerCHView.java
++++ b/src/main/java/org/oilmod/bukkit/crafting/help/VanillaShieldBannerCHView.java
+@@ -1,6 +1,7 @@
+ package org.oilmod.bukkit.crafting.help;
+ 
+ import net.minecraft.server.*;
++import org.oilmod.bukkit.util.BetterNonNullList;
+ 
+ import java.util.List;
+ 
+@@ -16,7 +17,7 @@ public class VanillaShieldBannerCHView extends ShapelessCHView {
+     }
+ 
+     @Override
+-    protected void update(List<ItemStack> result) {
++    protected void update(BetterNonNullList<ItemStack> result) {
+         EnumBannerPatternType patternType = VanillaBannerDuplicateCHView.PATTERN_TYPES[rnd.nextInt(VanillaBannerDuplicateCHView.PATTERN_TYPES.length)];
+         EnumColor[] colors = EnumColor.values();
+         EnumColor colorBanner = colors[rnd.nextInt(colors.length)];
+diff --git a/src/main/java/org/oilmod/bukkit/crafting/help/VanillaTippedArrowCHView.java b/src/main/java/org/oilmod/bukkit/crafting/help/VanillaTippedArrowCHView.java
+index d4b44884..ab0ab62f 100644
+--- a/src/main/java/org/oilmod/bukkit/crafting/help/VanillaTippedArrowCHView.java
++++ b/src/main/java/org/oilmod/bukkit/crafting/help/VanillaTippedArrowCHView.java
+@@ -5,6 +5,7 @@ import net.minecraft.server.Items;
+ import net.minecraft.server.PotionRegistry;
+ import net.minecraft.server.PotionUtil;
+ import net.minecraft.server.Potions;
++import org.oilmod.bukkit.util.BetterNonNullList;
+ 
+ import java.util.HashSet;
+ import java.util.Iterator;
+@@ -45,7 +46,7 @@ public class VanillaTippedArrowCHView extends ShapedCHView {
+     }
+ 
+     @Override
+-    protected void update(List<ItemStack> result) {
++    protected void update(BetterNonNullList<ItemStack> result) {
+         PotionRegistry potion = potions[rnd.nextInt(potions.length)];
+         ItemStack lingeringPotion = PotionUtil.a(new ItemStack(Items.LINGERING_POTION), potion);
+         for (int i = 0; i < 8; i++) {
+diff --git a/src/main/java/org/oilmod/bukkit/inventory/custom/ClickExtraData.java b/src/main/java/org/oilmod/bukkit/inventory/custom/ClickExtraData.java
+index 1c770107..3c11f079 100644
+--- a/src/main/java/org/oilmod/bukkit/inventory/custom/ClickExtraData.java
++++ b/src/main/java/org/oilmod/bukkit/inventory/custom/ClickExtraData.java
+@@ -9,7 +9,7 @@ import net.minecraft.server.ItemStack;
+  * Created by sirati97 on 14.06.2016 for spigot.
+  */
+ public class ClickExtraData implements NMSClickData {
+-    private ItemStack result;
++    private ItemStack result = ItemStack.a;
+     private final ViewContainer viewContainer;
+     private final ISingleSlot singleSlot;
+ 
+diff --git a/src/main/java/org/oilmod/bukkit/util/BetterNonNullList.java b/src/main/java/org/oilmod/bukkit/util/BetterNonNullList.java
+index 0503cae7..f434fc57 100644
+--- a/src/main/java/org/oilmod/bukkit/util/BetterNonNullList.java
++++ b/src/main/java/org/oilmod/bukkit/util/BetterNonNullList.java
+@@ -3,9 +3,13 @@ package org.oilmod.bukkit.util;
+ import net.minecraft.server.NonNullList;
+ import org.apache.commons.lang3.Validate;
+ 
++import javax.annotation.Nonnull;
+ import javax.annotation.Nullable;
+ import java.util.ArrayList;
++import java.util.Collection;
++import java.util.Iterator;
+ import java.util.List;
++import java.util.ListIterator;
+ 
+ public class BetterNonNullList<T> extends NonNullList<T> { //This one is not fixed size
+     private final List<T> list;
+@@ -16,17 +20,124 @@ public class BetterNonNullList<T> extends NonNullList<T> { //This one is not fix
+     }
+ 
+     protected BetterNonNullList(List<T> list, @Nullable T empty) {
+-        super(list, empty);
+         this.list = list;
+         this.empty = empty;
+     }
+ 
+     public boolean add(T item) {
+         Validate.notNull(item);
+-        return this.list.add(item);
++        return BetterNonNullList.this.list.add(item);
+     }
+ 
++    @Override
++    public void clear() {
++        list.clear();
++    }
++
++
+     public T getEmpty() {
+         return empty;
+     }
++
++    public Iterator<T> iterator() {
++        return list.iterator();
++    }
++
++    public int size() {
++        return list.size();
++    }
++
++    public boolean isEmpty() {
++        return list.isEmpty();
++    }
++
++    public boolean contains(Object o) {
++        return list.contains(o);
++    }
++
++    
++    public Object[] toArray() {
++        return list.toArray();
++    }
++
++    
++    public <T1> T1[] toArray( T1[] a) {
++        return list.toArray(a);
++    }
++
++    public boolean remove(Object o) {
++        return list.remove(o);
++    }
++
++    public boolean containsAll(Collection<?> c) {
++        return list.containsAll(c);
++    }
++
++    public boolean addAll(Collection<? extends T> c) {
++        Validate.noNullElements(c);
++        return list.addAll(c);
++    }
++
++    public boolean removeAll(Collection<?> c) {
++        return list.removeAll(c);
++    }
++
++    public boolean retainAll(Collection<?> c) {
++        return list.retainAll(c);
++    }
++
++    public String toString() {
++        return list.toString();
++    }
++
++    public int indexOf(Object o) {
++        return list.indexOf(o);
++    }
++
++    public int lastIndexOf(Object o) {
++        return list.lastIndexOf(o);
++    }
++
++    public boolean addAll(int index, Collection<? extends T> c) {
++        return list.addAll(index, c);
++    }
++
++    public ListIterator<T> listIterator() {
++        return list.listIterator();
++    }
++
++    public ListIterator<T> listIterator(int index) {
++        return list.listIterator(index);
++    }
++
++    public List<T> subList(int fromIndex, int toIndex) {
++        return list.subList(fromIndex, toIndex);
++    }
++
++    public boolean equals(Object o) {
++        return list.equals(o);
++    }
++
++    public int hashCode() {
++        return list.hashCode();
++    }
++
++    @Nonnull
++    public T get(int i) {
++        return list.get(i);
++    }
++
++    public T set(int i, T t) {
++        Validate.notNull(t);
++        return list.set(i, t);
++    }
++
++    public void add(int i, T t) {
++        Validate.notNull(t);
++        list.add(i, t);
++    }
++
++    public T remove(int i) {
++        return list.remove(i);
++    }
+ }
+-- 
+2.14.2.windows.3
+
