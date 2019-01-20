@@ -1,0 +1,76 @@
+From 83e3d6ba131e864ef89ed489687061cbe1f46f4d Mon Sep 17 00:00:00 2001
+From: sirati97 <TheSirati97@gmail.com>
+Date: Sun, 20 Jan 2019 07:50:44 +0000
+Subject: [PATCH] modified unit tests to allow for placeholder
+
+---
+ src/test/java/org/bukkit/PerMaterialTest.java                          | 3 +++
+ .../java/org/bukkit/craftbukkit/inventory/FactoryItemMaterialTest.java | 2 ++
+ src/test/java/org/bukkit/support/AbstractTestingBase.java              | 3 ++-
+ 3 files changed, 7 insertions(+), 1 deletion(-)
+
+diff --git a/src/test/java/org/bukkit/PerMaterialTest.java b/src/test/java/org/bukkit/PerMaterialTest.java
+index ed5242a9..e560f079 100644
+--- a/src/test/java/org/bukkit/PerMaterialTest.java
++++ b/src/test/java/org/bukkit/PerMaterialTest.java
+@@ -103,6 +103,7 @@ public class PerMaterialTest extends AbstractTestingBase {
+ 
+     @Test
+     public void isTransparent() {
++        if (material == Material.OilMaterial)return; //OilSpigot - placeholder cannot be used
+         if (material == Material.AIR) {
+             assertTrue(material.isTransparent());
+         } else if (material.isBlock()) {
+@@ -165,6 +166,7 @@ public class PerMaterialTest extends AbstractTestingBase {
+ 
+     @Test
+     public void testBlock() {
++        if (material == Material.OilMaterial)return; //OilSpigot - placeholder cannot be used
+         if (material == Material.AIR) {
+             assertTrue(material.isBlock());
+         } else {
+@@ -174,6 +176,7 @@ public class PerMaterialTest extends AbstractTestingBase {
+ 
+     @Test
+     public void testItem() {
++        if (material == Material.OilMaterial)return; //OilSpigot - placeholder cannot be used
+         if (material == Material.AIR) {
+             assertTrue(material.isItem());
+         } else {
+diff --git a/src/test/java/org/bukkit/craftbukkit/inventory/FactoryItemMaterialTest.java b/src/test/java/org/bukkit/craftbukkit/inventory/FactoryItemMaterialTest.java
+index 1e5c3ef2..4cec0d9c 100644
+--- a/src/test/java/org/bukkit/craftbukkit/inventory/FactoryItemMaterialTest.java
++++ b/src/test/java/org/bukkit/craftbukkit/inventory/FactoryItemMaterialTest.java
+@@ -57,6 +57,7 @@ public class FactoryItemMaterialTest extends AbstractTestingBase {
+ 
+     @Test
+     public void itemStack() {
++        if (material == Material.OilMaterial)return; //OilSpigot - placeholder cannot be used
+         ItemStack bukkitStack = new ItemStack(material);
+         CraftItemStack craftStack = CraftItemStack.asCraftCopy(bukkitStack);
+         ItemMeta meta = factory.getItemMeta(material);
+@@ -92,6 +93,7 @@ public class FactoryItemMaterialTest extends AbstractTestingBase {
+         }
+ 
+         for (Material other : materials) {
++            if (other == Material.OilMaterial)continue; //OilSpigot - placeholder cannot be used
+             final ItemStack bukkitStack = new ItemStack(other);
+             final CraftItemStack craftStack = CraftItemStack.asCraftCopy(bukkitStack);
+             final CraftMetaItem otherMeta = (CraftMetaItem) factory.asMetaFor(baseMeta, other);
+diff --git a/src/test/java/org/bukkit/support/AbstractTestingBase.java b/src/test/java/org/bukkit/support/AbstractTestingBase.java
+index 86c2b971..cae9c98b 100644
+--- a/src/test/java/org/bukkit/support/AbstractTestingBase.java
++++ b/src/test/java/org/bukkit/support/AbstractTestingBase.java
+@@ -69,7 +69,8 @@ public abstract class AbstractTestingBase {
+                     Material.BEETROOT_BLOCK,
+                     Material.END_GATEWAY,
+                     Material.BURNING_FURNACE,
+-                    Material.FROSTED_ICE
++                    Material.FROSTED_ICE,
++                    Material.OilMaterial //OilSpigot
+             ).build();
+ 
+     @BeforeClass
+-- 
+2.14.2.windows.3
+

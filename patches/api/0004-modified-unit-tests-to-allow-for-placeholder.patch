@@ -1,0 +1,65 @@
+From c082abe6dd713d29cb416047fc2ed0c28da48fcd Mon Sep 17 00:00:00 2001
+From: sirati97 <TheSirati97@gmail.com>
+Date: Sun, 20 Jan 2019 07:50:45 +0000
+Subject: [PATCH] modified unit tests to allow for placeholder
+
+---
+ src/main/java/org/bukkit/Material.java | 21 ++++++++++++++++++---
+ 1 file changed, 18 insertions(+), 3 deletions(-)
+
+diff --git a/src/main/java/org/bukkit/Material.java b/src/main/java/org/bukkit/Material.java
+index d78e3f17..1b1f0931 100644
+--- a/src/main/java/org/bukkit/Material.java
++++ b/src/main/java/org/bukkit/Material.java
+@@ -538,7 +538,7 @@ public enum Material {
+     RECORD_12(2267, 1),
+     //OilyPaper - start
+     /* Adding fake OilMaterial  */
+-    OilMaterial(-1, -1)
++    OilMaterial(-393, -1)
+     //OilyPaper - end
+     ;
+ 
+@@ -710,7 +710,14 @@ public enum Material {
+     public static Material getMaterial(final int id) {
+         if (byId.length > id && id >= 0) {
+             return byId[id];
+-        } else {
++        }
++        //OilyPaper - start
++        /* unit test requires */
++        else if (id == OilMaterial.id){
++            return OilMaterial;
++        }
++        //OilyPaper - end
++        else {
+             return null;
+         }
+     }
+@@ -749,6 +756,11 @@ public enum Material {
+             result = getMaterial(Integer.parseInt(name));
+         } catch (NumberFormatException ex) {}
+ 
++        //OilyPaper - start
++        /* unit test requires */
++        if (OilMaterial.name().equalsIgnoreCase(name))return OilMaterial;
++        //OilyPaper - end
++
+         if (result == null) {
+             String filtered = name.toUpperCase(java.util.Locale.ENGLISH);
+ 
+@@ -769,7 +781,10 @@ public enum Material {
+     //OilyPaper - start
+     /*  added register new method */
+     public static void registerNewOil(Material material) {
+-        if (material.id<0)return;
++        if (material == OilMaterial) {
++            BY_NAME.put(material.name(), material);
++            return;
++        }
+         if (byId.length > material.id) {
+             byId[material.id] = material;
+         } else {
+-- 
+2.14.2.windows.3
+
