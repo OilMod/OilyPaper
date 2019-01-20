@@ -1,10 +1,10 @@
-Spigot
-mc-dev
-OilyPaper
-OilyPaper-Server
-OilyPaper-API
-OilyPaper-Bukkit-API
-Test
+Spigot/
+mc-dev/
+OilyPaper/
+OilyPaper-Server/
+OilyPaper-API/
+OilyPaper-Bukkit-API/
+Test/
 
 # Eclipse stuff
 /.classpath
@@ -41,6 +41,9 @@ dependency-reduced-pom.xml
 *.ipr
 *.iws
 .idea/
+
+#JRebel
+rebel.xml
 
 /src/main/resources/achievement
 /src/main/resources/lang
