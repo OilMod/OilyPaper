@@ -16,8 +16,8 @@
         <module>OilyPaper-Server</module>
         <module>OilyPaper-API</module>
         <module>OilMod-API</module>
-        <module>OilMod-TestPlugin2</module>
         <module>OilMod-TestPlugin</module>
+        <module>OilMod-TestPlugin2</module>
     </modules>
 
 
