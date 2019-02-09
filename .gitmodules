@@ -14,3 +14,6 @@
 	path = OilMod-TestPlugin2
 	url = https://github.com/OilMod/OilMod-TestPlugin2.git
 	branch = master
+[submodule "OilRep-Api"]
+	path = OilRep-Api
+	url = git@github.com:OilMod/OilMod-Representation-Api.git
