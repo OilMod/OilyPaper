@@ -14,6 +14,7 @@
     </build>
     <modules>
         <module>OilyPaper-Server</module>
+        <module>OilRep-Api</module>
         <module>OilyPaper-API</module>
         <module>OilMod-API</module>
         <module>OilMod-TestPlugin</module>

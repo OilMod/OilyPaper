@@ -38,6 +38,7 @@ function checkout {
 	(cd "$basedir" &&
 	git submodule update --init
 
+	checkout  OilRep-Api &&
 	checkout  OilMod-API &&
 	checkout  OilMod-TestPlugin &&
 	checkout  OilMod-TestPlugin2) || exit 1
