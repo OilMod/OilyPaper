@@ -1,0 +1,1322 @@
+From 0c936c92ea2c18b9d797f80424e71566b690eba5 Mon Sep 17 00:00:00 2001
+From: sirati97 <TheSirati97@gmail.com>
+Date: Thu, 24 Jan 2019 01:24:54 +0000
+Subject: [PATCH] Added anvil support and api
+
+---
+ .../net/minecraft/server/ContainerAnvil.java  | 181 ++++++------
+ .../server/ContainerBrewingStand.java         |   5 +-
+ .../server/ContainerEnchantTable.java         |  10 +-
+ .../minecraft/server/EnchantmentManager.java  |  13 +-
+ .../java/net/minecraft/server/EntityItem.java |   7 +-
+ .../java/net/minecraft/server/ItemStack.java  |   4 +-
+ .../net/minecraft/server/RecipeBookClone.java |   4 -
+ .../net/minecraft/server/RecipeItemStack.java |   5 -
+ .../net/minecraft/server/RecipeMapClone.java  |   4 -
+ .../net/minecraft/server/RecipeRepair.java    |   4 -
+ .../craftbukkit/event/CraftEventFactory.java  |  14 +-
+ .../oilmod/bukkit/items/ItemStackCreator.java |   9 +-
+ .../org/oilmod/bukkit/items/RealItem.java     |  60 ++--
+ .../oilmod/bukkit/items/RealItemStack.java    |  34 ++-
+ .../bukkit/items/RealItemTypeHelper.java      |   5 +
+ .../internal/ModCraftItemStack.java           |   6 +-
+ .../items/itemstackimpl/internal/ModItem.java |  20 --
+ .../itemstackimpl/internal/ModItemStack.java  | 257 ------------------
+ .../internal/ModItemStackFreeze.java          |  38 ---
+ .../internal/RealItemClassMap.java            |  35 ---
+ .../internal/RealItemFactory.java             |  20 --
+ .../org/oilmod/bukkit/util/OilSpigotUtil.java |   5 +
+ 22 files changed, 199 insertions(+), 541 deletions(-)
+ delete mode 100644 src/main/java/org/oilmod/bukkit/items/itemstackimpl/internal/ModItem.java
+ delete mode 100644 src/main/java/org/oilmod/bukkit/items/itemstackimpl/internal/ModItemStack.java
+ delete mode 100644 src/main/java/org/oilmod/bukkit/items/itemstackimpl/internal/ModItemStackFreeze.java
+ delete mode 100644 src/main/java/org/oilmod/bukkit/items/itemstackimpl/internal/RealItemClassMap.java
+ delete mode 100644 src/main/java/org/oilmod/bukkit/items/itemstackimpl/internal/RealItemFactory.java
+
+diff --git a/src/main/java/net/minecraft/server/ContainerAnvil.java b/src/main/java/net/minecraft/server/ContainerAnvil.java
+index 88355bd4..7b8f13bd 100644
+--- a/src/main/java/net/minecraft/server/ContainerAnvil.java
++++ b/src/main/java/net/minecraft/server/ContainerAnvil.java
+@@ -12,7 +12,8 @@ import org.bukkit.craftbukkit.inventory.CraftInventoryView;
+ 
+ //OilSpigot start
+ import org.bukkit.ChatColor;
+-import org.oilmod.bukkit.items.itemstackimpl.internal.ModItemStack;
++import org.oilmod.bukkit.items.RealItem;
++import org.oilmod.bukkit.items.RealItemStack;
+ //OilSpigot end
+ 
+ public class ContainerAnvil extends Container {
+@@ -39,7 +40,6 @@ public class ContainerAnvil extends Container {
+     //OilSpigot start
+     private boolean oilSpigotAnvilRepair = false;
+     private boolean oilSpigotAnvilCombine = false;
+-    private ItemStack lastResult = null;
+     //OilSpigot end
+ 
+     public ContainerAnvil(PlayerInventory playerinventory, final World world, final BlockPosition blockposition, EntityHuman entityhuman) {
+@@ -65,11 +65,17 @@ public class ContainerAnvil extends Container {
+ 
+                 ContainerAnvil.this.levelCost = 0;
+                 //OilSpigot start
+-                if(oilSpigotAnvilRepair) {
+-                    ((ModItemStack)ContainerAnvil.this.lastResult).repairAnvil(ContainerAnvil.this.h.getItem(1), player.player);
+-                }
+-                if(oilSpigotAnvilCombine) {
+-                    ((ModItemStack)ContainerAnvil.this.lastResult).combineAnvil(ContainerAnvil.this.h.getItem(1), player.player);
++                /* Call finialsation method */
++                if (itemstack instanceof RealItemStack) {
++                    RealItemStack realItemStack = (RealItemStack) itemstack;
++
++                    if(oilSpigotAnvilRepair) {
++                        realItemStack.repairAnvil(ContainerAnvil.this.h.getItem(1), player.player);
++                    }
++                    if(oilSpigotAnvilCombine) {
++                        realItemStack.combineAnvil(ContainerAnvil.this.h.getItem(1), player.player);
++                    }
++
+                 }
+                 oilSpigotAnvilCombine = false;
+                 oilSpigotAnvilRepair = false;
+@@ -134,11 +140,11 @@ public class ContainerAnvil extends Container {
+     }
+ 
+     public void e() {
++        ItemStack itemstack = this.h.getItem(0);
+         //OilSpigot start
+         oilSpigotAnvilCombine = false;
+         oilSpigotAnvilRepair = false;
+         //OilSpigot end
+-        ItemStack itemstack = this.h.getItem(0);
+ 
+         this.levelCost = 1;
+         int i = 0;
+@@ -148,62 +154,48 @@ public class ContainerAnvil extends Container {
+         if (itemstack.isEmpty()) {
+             org.bukkit.craftbukkit.event.CraftEventFactory.callPrepareAnvilEvent(getBukkitView(), ItemStack.a); // CraftBukkit
+             this.levelCost = 0;
+-            this.update(); //OilSpigot - update levelCost for Client //TODO changed d to update check
++            this.update(); //OilSpigot - update levelCost for Client //TODO change d to update check
+         } else {
+-            ItemStack itemstack1 = itemstack.cloneItemStack();
++            ItemStack itemstack1 = itemstack.cloneItemStack(); //OilSpigot TODO: see if we can use lazy method (itemstack intern)
+             ItemStack itemstack2 = this.h.getItem(1);
+             Map map = EnchantmentManager.a(itemstack1);
+             int j = b0 + itemstack.getRepairCost() + (itemstack2.isEmpty() ? 0 : itemstack2.getRepairCost());
+ 
+             this.k = 0;
+             if (!itemstack2.isEmpty()) {
+-                //OilSpigot - ModItemStacks does not behave as vanilla items.
+-                boolean flag = itemstack2.getItem() == Items.ENCHANTED_BOOK && !ItemEnchantedBook.h(itemstack2).isEmpty() && !(itemstack2 instanceof ModItemStack); //Todo: maybe removeable after direct item modding is added / scope of the next update
++                boolean flag = itemstack2.getItem() == Items.ENCHANTED_BOOK && !ItemEnchantedBook.h(itemstack2).isEmpty();
+                 int k;
+                 int l;
+                 int i1;
+ 
+-                //OilSpigot - Allow repairing for ModItemStacks
+-                if (itemstack1 instanceof ModItemStack?itemstack.getCount()==1 && (((ModItemStack) itemstack1).canRepairAnvil(itemstack2, player.player)):itemstack1.f() && itemstack1.getItem().a(itemstack, itemstack2)) {
+-                    //OilSpigot start
+-                    oilSpigotAnvilRepair = itemstack1 instanceof ModItemStack;
+-                    if (oilSpigotAnvilRepair) {
+-                        this.k = ((ModItemStack) itemstack1).prepareRepairAnvil(itemstack2, player.player);
+-                        i+=this.k;
+-                    } else {
+-                        //OilSpigot end
+-                        k = Math.min(itemstack1.i(), itemstack1.k() / 4);
+-                        if (k <= 0) {
+-                            org.bukkit.craftbukkit.event.CraftEventFactory.callPrepareAnvilEvent(getBukkitView(), ItemStack.a); // CraftBukkit
+-                            this.levelCost = 0;
+-                            this.d(); //OilSpigot - update levelCost for Client todo: d -> update
+-                            return;
+-                        }
++                if (itemstack1.f() && itemstack1.getItem().a(itemstack, itemstack2)) {
++                    k = Math.min(itemstack1.i(), itemstack1.k() / 4);
++                    if (k <= 0) {
++                        org.bukkit.craftbukkit.event.CraftEventFactory.callPrepareAnvilEvent(getBukkitView(), ItemStack.a); // CraftBukkit
++                        this.levelCost = 0;
++                        return;
++                    }
+ 
+-                        for (l = 0; k > 0 && l < itemstack2.getCount(); ++l) {
+-                            i1 = itemstack1.i() - k;
+-                            itemstack1.setData(i1);
+-                            ++i;
+-                            k = Math.min(itemstack1.i(), itemstack1.k() / 4);
+-                        }
++                    for (l = 0; k > 0 && l < itemstack2.getCount(); ++l) {
++                        i1 = itemstack1.i() - k;
++                        itemstack1.setData(i1);
++                        ++i;
++                        k = Math.min(itemstack1.i(), itemstack1.k() / 4);
++                    }
++                    if (itemstack1 instanceof RealItemStack) {
++                        oilSpigotAnvilRepair = true;
++                        l = ((RealItemStack) itemstack1).prepareRepairAnvil(itemstack2, player.player, l, itemstack.i());
++                    }
+ 
+-                        this.k = l;
+-                    }//OilSpigot bracket
++                    this.k = l;
+                 } else {
+-                    if (!flag && (itemstack1 instanceof ModItemStack?(itemstack.getCount()!=1 || itemstack2.getCount()!=1 || !(oilSpigotAnvilCombine=((ModItemStack) itemstack1).canCombineAnvil(itemstack2, player.player))):itemstack1.getItem() != itemstack2.getItem() || !itemstack1.f())) {
++                    if (!flag && (itemstack1.getItem() != itemstack2.getItem() || !itemstack1.f())) {
+                         org.bukkit.craftbukkit.event.CraftEventFactory.callPrepareAnvilEvent(getBukkitView(), ItemStack.a); // CraftBukkit
+                         this.levelCost = 0;
+-                        this.d(); //OilSpigot - update levelCost for Client todo: d -> update
+                         return;
+                     }
+ 
+-
+-                    //OilSpigot start
+-                    if (oilSpigotAnvilCombine) {
+-                        ((ModItemStack)itemstack1).prepareCombineAnvil(itemstack2, player.player);
+-                        i += 2;//increase level cost
+-                        //OilSpigot end
+-                    } else if (itemstack1.f() && !flag) {
++                    if (itemstack1.f() && !flag) {
+                         k = itemstack.k() - itemstack.i();
+                         l = itemstack2.k() - itemstack2.i();
+                         i1 = l + itemstack1.k() * 12 / 100;
+@@ -233,8 +225,9 @@ public class ContainerAnvil extends Container {
+                             int i2 = ((Integer) map1.get(enchantment)).intValue();
+ 
+                             i2 = l1 == i2 ? i2 + 1 : Math.max(i2, l1);
+-                            //OilSpigot - Added support for ModItemstacks
+-                            boolean flag3 = itemstack instanceof ModItemStack ? ((ModItemStack) itemstack).canEnchant(enchantment):enchantment.canEnchant(itemstack);
++                            //OilSpigot TODO: future add anvil only enchantment api
++                            //OilSpigot - Added support for special enchantment api
++                            boolean flag3 = enchantment.canEnchant(itemstack)||(itemstack instanceof RealItemStack && ((RealItem)itemstack.getItem()).canEnchantSpecial(enchantment, true));
+ 
+                             if (this.m.abilities.canInstantlyBuild || itemstack.getItem() == Items.ENCHANTED_BOOK) {
+                                 flag3 = true;
+@@ -254,6 +247,7 @@ public class ContainerAnvil extends Container {
+                             if (!flag3) {
+                                 flag2 = true;
+                             } else {
++                                //OilSpigot: TODO: future add item special max enchant level api
+                                 flag1 = true;
+                                 if (i2 > enchantment.getMaxLevel()) {
+                                     i2 = enchantment.getMaxLevel();
+@@ -285,7 +279,7 @@ public class ContainerAnvil extends Container {
+ 
+                                 i += j2 * i2;
+                                 if (itemstack.getCount() > 1) {
+-                                    i = 40;
++                                    i = 40; //OilSpigot EXPLANATION means that stacks cannot be enchanted in survival as too expensive
+                                 }
+                             }
+                         }
+@@ -294,41 +288,30 @@ public class ContainerAnvil extends Container {
+                     if (flag2 && !flag1) {
+                         org.bukkit.craftbukkit.event.CraftEventFactory.callPrepareAnvilEvent(getBukkitView(), ItemStack.a); // CraftBukkit
+                         this.levelCost = 0;
+-                        this.d(); //OilSpigot - update levelCost for Client todo: d -> update
++                        this.update(); //OilSpigot - update levelCost for Client
+                         return;
+                     }
+                 }
+             }
+ 
+             //OilSpigot start - handle renaming for moditems
+-            if (itemstack instanceof ModItemStack) {
+-                ModItemStack modItemStack = (ModItemStack) itemstack;
+-                String correctName = modItemStack.getCorrectDisplayName();
+-                if (StringUtils.isBlank(this.renameText)) {
+-                    if (!oilCompareNames(correctName, this.renameText)) {
+-                        b1 = 1;
+-                        i += b1;
+-                        itemstack1.s(); //update name (if item no longer has custom name apply mod item name)
+-                    }
+-                } else if ((!oilCompareNames(correctName, ChatColor.stripColor(itemstack.getName())) || !oilCompareNames(correctName, this.renameText)) && !this.renameText.equals(itemstack.getName())) {
+-                    b1 = 1;
+-                    i += b1;
+-                    itemstack1.c(this.renameText);
+-                }
+-            } else {
++            String correctName = itemstack instanceof RealItemStack ?
++                    player.player instanceof EntityPlayer?
++                            ((RealItemStack) itemstack).getApiItem().getDisplayName(((EntityPlayer) player.player).getBukkitEntity()):
++                            ((RealItemStack) itemstack).getApiItem().getDisplayName() :
++                    itemstack.getItem().j(itemstack);
++            if (StringUtils.isBlank(this.renameText) || oilCompareNames(correctName)) {
+                 //OilSpigot end
+-                if (StringUtils.isBlank(this.renameText)) {
+-                    if (itemstack.hasName()) {
+-                        b1 = 1;
+-                        i += b1;
+-                        itemstack1.s();
+-                    }
+-                } else if (!this.renameText.equals(itemstack.getName())) {
++                if (itemstack.hasName()) {
+                     b1 = 1;
+                     i += b1;
+-                    itemstack1.g(this.renameText);
++                    itemstack1.removeDisplayName(); //OilSpigot
+                 }
+-            }//OilSpigot bracket
++            } else if (!(oilCompareNames(itemstack.getName()))) {//OilSpigot
++                b1 = 1;
++                i += b1;
++                itemstack1.g(this.renameText);
++            }
+ 
+             this.levelCost = j + i;
+             if (i <= 0) {
+@@ -359,7 +342,6 @@ public class ContainerAnvil extends Container {
+             }
+ 
+             org.bukkit.craftbukkit.event.CraftEventFactory.callPrepareAnvilEvent(getBukkitView(), itemstack1); // CraftBukkit
+-            lastResult = itemstack1; //OilSpigot - save last result for later
+             this.b();
+         }
+     }
+@@ -420,28 +402,39 @@ public class ContainerAnvil extends Container {
+         return itemstack;
+     }
+ 
++    //OilSpigot - start
++    /* add remove color method */
++    private static String removeColor(String s) {
++        return ChatColor.stripColor(s).replace("§","").trim();
++    }
++
++    private boolean oilCompareNames(String toCompare) {
++        return renameText.equals(removeColor(toCompare));
++    }
++
++
++
++    //OilSpigot - end
++
++
+     public void a(String s) {
+-        this.renameText = s;
++        //OilSpigot remove color
++        this.renameText = removeColor(s);
+         if (this.getSlot(2).hasItem()) {
+             ItemStack itemstack = this.getSlot(2).getItem();
+ 
+-            if (StringUtils.isBlank(s)) {
+-                itemstack.s();
+-            } else {
+-                //OilSpigot start
+-                if (itemstack instanceof ModItemStack) {
+-                    ModItemStack modItemStack_Slot0 = (ModItemStack) this.getSlot(0).getItem();
+-                    String oldName = modItemStack_Slot0.getName();
+-                    if (oldName.equals(modItemStack_Slot0.getCorrectDisplayName())) {
+-                        if (oilCompareNames(oldName, s)) {
+-                            this.renameText = oldName;
+-                            itemstack.s();
+-                            this.e();
+-                            return;
+-                        }
+-                    }
+-                }
++            String correctName = itemstack instanceof RealItemStack ?
++                    player.player instanceof EntityPlayer?
++                            ((RealItemStack) itemstack).getApiItem().getDisplayName(((EntityPlayer) player.player).getBukkitEntity()):
++                            ((RealItemStack) itemstack).getApiItem().getDisplayName() :
++                    itemstack.getItem().j(itemstack);
++
++            if (StringUtils.isBlank(this.renameText) || oilCompareNames(correctName)) {
+                 //OilSpigot end
++                if (itemstack.hasName()) {
++                    itemstack.removeDisplayName(); //OilSpigot
++                }
++            } else if (!(oilCompareNames(itemstack.getName()))) {//OilSpigot
+                 itemstack.g(this.renameText);
+             }
+         }
+@@ -449,12 +442,6 @@ public class ContainerAnvil extends Container {
+         this.e();
+     }
+ 
+-    //OilSpigot start
+-    private boolean oilCompareNames(String correct, String toCompare) {
+-        return correct.equals(toCompare) || correct.replace("§","").equals(toCompare) || ChatColor.stripColor(correct).equals(ChatColor.stripColor(toCompare));
+-    }
+-    //OilSpigot end
+-
+     //OilSpigot start - added level cost updating
+     @Override
+     public boolean update() {
+diff --git a/src/main/java/net/minecraft/server/ContainerBrewingStand.java b/src/main/java/net/minecraft/server/ContainerBrewingStand.java
+index 9e79e431..96b21da6 100644
+--- a/src/main/java/net/minecraft/server/ContainerBrewingStand.java
++++ b/src/main/java/net/minecraft/server/ContainerBrewingStand.java
+@@ -1,7 +1,6 @@
+ package net.minecraft.server;
+ 
+ // CraftBukkit start
+-import org.oilmod.bukkit.items.itemstackimpl.internal.ModItemStack;
+ import org.bukkit.craftbukkit.inventory.CraftInventoryBrewer;
+ import org.bukkit.craftbukkit.inventory.CraftInventoryView;
+ // CraftBukkit end
+@@ -145,7 +144,7 @@ public class ContainerBrewingStand extends Container {
+         }
+ 
+         public static boolean b_(ItemStack itemstack) {
+-            return itemstack.getItem() == Items.BLAZE_POWDER && !(itemstack instanceof ModItemStack); //OilSpigot - deny use of modded items
++            return itemstack.getItem() == Items.BLAZE_POWDER;
+         }
+ 
+         public int getMaxStackSize() {
+@@ -160,7 +159,7 @@ public class ContainerBrewingStand extends Container {
+         }
+ 
+         public boolean isAllowed(ItemStack itemstack) {
+-            return PotionBrewer.a(itemstack) && !(itemstack instanceof ModItemStack);//OilSpigot - deny use of modded items
++            return PotionBrewer.a(itemstack);
+         }
+ 
+         public int getMaxStackSize() {
+diff --git a/src/main/java/net/minecraft/server/ContainerEnchantTable.java b/src/main/java/net/minecraft/server/ContainerEnchantTable.java
+index beddd077..ea1dd002 100644
+--- a/src/main/java/net/minecraft/server/ContainerEnchantTable.java
++++ b/src/main/java/net/minecraft/server/ContainerEnchantTable.java
+@@ -16,7 +16,7 @@ import org.bukkit.entity.Player;
+ // CraftBukkit end
+ 
+ //OilSpigot start
+-import org.oilmod.bukkit.items.itemstackimpl.internal.ModItemStack;
++
+ //OilSpigot end
+ 
+ public class ContainerEnchantTable extends Container {
+@@ -261,8 +261,6 @@ public class ContainerEnchantTable extends Container {
+     public boolean a(EntityHuman entityhuman, int i) {
+         ItemStack itemstack = this.enchantSlots.getItem(0);
+         ItemStack itemstack1 = this.enchantSlots.getItem(1);
+-        //OilSpigot start - check if unnamed before
+-        boolean unnamed = itemstack instanceof ModItemStack && ((ModItemStack) itemstack).getCorrectDisplayName().equals(itemstack.getName());
+ 
+         int j = i + 1;
+ 
+@@ -325,12 +323,6 @@ public class ContainerEnchantTable extends Container {
+                         }
+                     }
+ 
+-                    //OilSpigot start
+-                    if (unnamed) {
+-                        itemstack.s(); //Need to update the name because enchanted items have a blue name
+-                    }
+-                    //OilSpigot end
+-
+                     entityhuman.b(StatisticList.W);
+                     if (entityhuman instanceof EntityPlayer) {
+                         CriterionTriggers.i.a((EntityPlayer) entityhuman, itemstack, j);
+diff --git a/src/main/java/net/minecraft/server/EnchantmentManager.java b/src/main/java/net/minecraft/server/EnchantmentManager.java
+index e351880e..00c49907 100644
+--- a/src/main/java/net/minecraft/server/EnchantmentManager.java
++++ b/src/main/java/net/minecraft/server/EnchantmentManager.java
+@@ -2,6 +2,9 @@ package net.minecraft.server;
+ 
+ import com.google.common.collect.Lists;
+ import com.google.common.collect.Maps;
++import org.oilmod.bukkit.items.RealItem;
++import org.oilmod.bukkit.items.RealItemStack;
++
+ import java.util.ArrayList;
+ import java.util.Iterator;
+ import java.util.LinkedHashMap;
+@@ -11,7 +14,7 @@ import java.util.Random;
+ import java.util.Map.Entry;
+ 
+ //OilSpigot start
+-import org.oilmod.bukkit.items.itemstackimpl.internal.ModItemStack;
++
+ //OilSpigot end
+ 
+ public class EnchantmentManager {
+@@ -254,7 +257,7 @@ public class EnchantmentManager {
+ 
+     public static int a(Random random, int i, int j, ItemStack itemstack) {
+         Item item = itemstack.getItem();
+-        int k = (itemstack instanceof ModItemStack)?((ModItemStack) itemstack).getEnchantSelectModifier():item.c(); //OilSpigot added support for ModItems - this the enchantabilty value
++        int k = item.c();
+ 
+         if (k <= 0) {
+             return 0;
+@@ -295,7 +298,7 @@ public class EnchantmentManager {
+     public static List<WeightedRandomEnchant> b(Random random, ItemStack itemstack, int i, boolean flag) {
+         ArrayList arraylist = Lists.newArrayList();
+         Item item = itemstack.getItem();
+-        int j = (itemstack instanceof ModItemStack)?((ModItemStack) itemstack).getEnchantSelectModifier():item.c(); //OilSpigot added support for ModItems
++        int j = item.c();
+ 
+         if (j <= 0) {
+             return arraylist;
+@@ -344,8 +347,8 @@ public class EnchantmentManager {
+         while (iterator.hasNext()) {
+             Enchantment enchantment = (Enchantment) iterator.next();
+ 
+-            //OilSpigot add support for moditems if needed
+-            if ((!enchantment.isTreasure() || flag) && ((itemstack instanceof ModItemStack)?((ModItemStack) itemstack).canEnchant(enchantment):(enchantment.itemTarget.canEnchant(item) || isBook))) {
++            //OilSpigot add support for special enchant api
++            if ((!enchantment.isTreasure() || flag) && ((itemstack instanceof RealItemStack&&((RealItem) itemstack.getItem()).canEnchantSpecial(enchantment, false))||(enchantment.itemTarget.canEnchant(item) || isBook))) {
+                 for (int j = enchantment.getMaxLevel(); j > enchantment.getStartLevel() - 1; --j) {
+                     if (i >= enchantment.a(j) && i <= enchantment.b(j)) {
+                         arraylist.add(new WeightedRandomEnchant(enchantment, j));
+diff --git a/src/main/java/net/minecraft/server/EntityItem.java b/src/main/java/net/minecraft/server/EntityItem.java
+index 1d465d92..c572172e 100644
+--- a/src/main/java/net/minecraft/server/EntityItem.java
++++ b/src/main/java/net/minecraft/server/EntityItem.java
+@@ -12,7 +12,7 @@ import org.bukkit.event.player.PlayerAttemptPickupItemEvent; // Paper
+ import com.destroystokyo.paper.HopperPusher; // Paper
+ 
+ //OilSpigot start
+-import org.oilmod.bukkit.items.itemstackimpl.internal.ModItemStack;
++
+ //OilSpigot end
+ 
+ // Paper start - implement HopperPusher
+@@ -411,9 +411,8 @@ public class EntityItem extends Entity implements HopperPusher {
+     }
+ 
+     public String getName() {
+-        //OilSpigot start
+-        return this.hasCustomName() ? this.getCustomName() : (this.getItemStack() instanceof ModItemStack) ? "item."+((ModItemStack) this.getItemStack()).getModItem().getKey().toString(): LocaleI18n.get("item." + this.getItemStack().a()); //OilSpigot
+-        //OilSpigot end
++        //OilSpigot - make use of item method instead
++        return this.hasCustomName() ? this.getCustomName() : this.getItemStack().getItem().j(this.getItemStack());
+     }
+ 
+     public boolean bd() {
+diff --git a/src/main/java/net/minecraft/server/ItemStack.java b/src/main/java/net/minecraft/server/ItemStack.java
+index 117ef8da..241bf890 100644
+--- a/src/main/java/net/minecraft/server/ItemStack.java
++++ b/src/main/java/net/minecraft/server/ItemStack.java
+@@ -530,7 +530,7 @@ public class ItemStack { //OilSpigot - removed final
+                 }
+             }
+ 
+-            //OilSpigot moved to handleDamage
++            //OilSpigot moved to handleItemDamage
+             return handleDamage(i, entityliving);
+         }
+     }
+@@ -799,7 +799,7 @@ public class ItemStack { //OilSpigot - removed final
+     }
+ 
+     //OilSpigot s -> removeDisplayName
+-    public final void s() { //OilSpigot removeDisplayName?!????
++    public final void s() {
+         removeDisplayName();
+ 
+     }
+diff --git a/src/main/java/net/minecraft/server/RecipeBookClone.java b/src/main/java/net/minecraft/server/RecipeBookClone.java
+index fed2d5c5..91d225bc 100644
+--- a/src/main/java/net/minecraft/server/RecipeBookClone.java
++++ b/src/main/java/net/minecraft/server/RecipeBookClone.java
+@@ -3,7 +3,6 @@ package net.minecraft.server;
+ //OilSpigot start
+ import net.minecraft.server.oilmod.IInventoryCrafting;
+ import org.oilmod.bukkit.crafting.help.CHView;
+-import org.oilmod.bukkit.items.itemstackimpl.internal.ModItemStack;
+ //OilSpigot end
+ 
+ public class RecipeBookClone extends ShapelessRecipes implements IRecipe { // CraftBukkit - added extends
+@@ -21,9 +20,6 @@ public class RecipeBookClone extends ShapelessRecipes implements IRecipe { // Cr
+             ItemStack itemstack1 = inventorycrafting.getItem(j);
+ 
+             if (!itemstack1.isEmpty()) {
+-                if (itemstack instanceof ModItemStack) { //OilSpigot disallow normal crafting with custom items
+-                    return false;
+-                }
+                 if (itemstack1.getItem() == Items.WRITTEN_BOOK) {
+                     if (!itemstack.isEmpty()) {
+                         return false;
+diff --git a/src/main/java/net/minecraft/server/RecipeItemStack.java b/src/main/java/net/minecraft/server/RecipeItemStack.java
+index 6ffa9c39..75c97a18 100644
+--- a/src/main/java/net/minecraft/server/RecipeItemStack.java
++++ b/src/main/java/net/minecraft/server/RecipeItemStack.java
+@@ -1,7 +1,6 @@
+ package net.minecraft.server;
+ 
+ import com.google.common.base.Predicate;
+-import org.oilmod.bukkit.items.itemstackimpl.internal.ModItemStack;
+ import it.unimi.dsi.fastutil.ints.IntArrayList;
+ import it.unimi.dsi.fastutil.ints.IntComparators;
+ import it.unimi.dsi.fastutil.ints.IntList;
+@@ -32,10 +31,6 @@ public class RecipeItemStack implements Predicate<ItemStack> {
+ 
+             for (int j = 0; j < i; ++j) {
+                 ItemStack itemstack1 = aitemstack[j];
+-                //OilSpigot disallow normal crafting with custom items
+-                if (itemstack instanceof ModItemStack && (!(itemstack1 instanceof ModItemStack) || !ItemStack.matchesIgnoresCount(itemstack1, itemstack))) {
+-                    return false;
+-                }
+ 
+                 if (itemstack1.getItem() == itemstack.getItem()) {
+                     int k = itemstack1.getData();
+diff --git a/src/main/java/net/minecraft/server/RecipeMapClone.java b/src/main/java/net/minecraft/server/RecipeMapClone.java
+index 6987a42d..337c0ce6 100644
+--- a/src/main/java/net/minecraft/server/RecipeMapClone.java
++++ b/src/main/java/net/minecraft/server/RecipeMapClone.java
+@@ -4,7 +4,6 @@ package net.minecraft.server;
+ //OilSpigot start
+ import net.minecraft.server.oilmod.IInventoryCrafting;
+ import org.oilmod.bukkit.crafting.help.CHView;
+-import org.oilmod.bukkit.items.itemstackimpl.internal.ModItemStack;
+ //OilSpigot end
+ 
+ public class RecipeMapClone extends ShapelessRecipes implements IRecipe { // CraftBukkit - added extends
+@@ -23,9 +22,6 @@ public class RecipeMapClone extends ShapelessRecipes implements IRecipe { // Cra
+             ItemStack itemstack1 = inventorycrafting.getItem(j);
+ 
+             if (!itemstack1.isEmpty()) {
+-                if (itemstack instanceof ModItemStack) { //OilSpigot disallow normal crafting with custom items
+-                    return false;
+-                }
+                 if (itemstack1.getItem() == Items.FILLED_MAP) {
+                     if (!itemstack.isEmpty()) {
+                         return false;
+diff --git a/src/main/java/net/minecraft/server/RecipeRepair.java b/src/main/java/net/minecraft/server/RecipeRepair.java
+index e55423e7..e16d75d6 100644
+--- a/src/main/java/net/minecraft/server/RecipeRepair.java
++++ b/src/main/java/net/minecraft/server/RecipeRepair.java
+@@ -7,7 +7,6 @@ import java.util.ArrayList;
+ import net.minecraft.server.oilmod.IInventoryCrafting;
+ import org.oilmod.bukkit.crafting.help.CHView;
+ import org.oilmod.bukkit.crafting.help.VanillaRepairCHView;
+-import org.oilmod.bukkit.items.itemstackimpl.internal.ModItemStack;
+ //OilSpigot end
+ 
+ public class RecipeRepair extends ShapelessRecipes implements IRecipe { // CraftBukkit - added extends
+@@ -25,9 +24,6 @@ public class RecipeRepair extends ShapelessRecipes implements IRecipe { // Craft
+             ItemStack itemstack = inventorycrafting.getItem(i);
+ 
+             if (!itemstack.isEmpty()) {
+-                if (itemstack instanceof ModItemStack) { //OilSpigot disallow normal crafting with custom items
+-                    return false;
+-                }
+                 arraylist.add(itemstack);
+                 if (arraylist.size() > 1) {
+                     ItemStack itemstack1 = (ItemStack) arraylist.get(0);
+diff --git a/src/main/java/org/bukkit/craftbukkit/event/CraftEventFactory.java b/src/main/java/org/bukkit/craftbukkit/event/CraftEventFactory.java
+index 6c9ad2a4..dd9af4c2 100644
+--- a/src/main/java/org/bukkit/craftbukkit/event/CraftEventFactory.java
++++ b/src/main/java/org/bukkit/craftbukkit/event/CraftEventFactory.java
+@@ -67,9 +67,12 @@ import org.bukkit.inventory.meta.BookMeta;
+ import org.bukkit.entity.AbstractHorse;
+ import org.bukkit.entity.Vehicle;
+ import org.bukkit.event.vehicle.VehicleCreateEvent;
++import org.oilmod.api.OilMod;
++import org.oilmod.bukkit.OilMain;
++import org.oilmod.bukkit.items.RealItemStack;
++import org.oilmod.bukkit.util.OilSpigotUtil;
+ 
+ /*OilSpigot start*/
+-import org.oilmod.bukkit.items.itemstackimpl.internal.ModItemStack;
+ /*OilSpigot end*/
+ 
+ public class CraftEventFactory {
+@@ -238,7 +241,7 @@ public class CraftEventFactory {
+             event.setUseInteractedBlock(Event.Result.DENY);
+         }
+         //OilSpigot start
+-        if (event.isCancelled() && itemstack != null && itemstack instanceof ModItemStack) {
++        if (event.isCancelled() && itemstack != null && itemstack instanceof RealItemStack) {
+             event.setCancelled(false);
+         }
+         //OilSpigot end
+@@ -247,8 +250,9 @@ public class CraftEventFactory {
+ 
+ 
+         //OilSpigot start
+-        if ((!event.isCancelled() || cancelledBlock) && itemstack != null && itemstack instanceof ModItemStack) {
+-            ModItemStack modItemStack = (ModItemStack) itemstack;
++        if ((!event.isCancelled() || cancelledBlock) && itemstack != null && itemstack instanceof RealItemStack) {
++            OilMain.printTrace(action.toString());
++            /*RealItemStack modItemStack = (RealItemStack) itemstack;
+             boolean handled = false;
+             if (action == Action.RIGHT_CLICK_AIR || action == Action.RIGHT_CLICK_BLOCK) {
+                 handled = modItemStack.onUse(who, action);
+@@ -262,7 +266,7 @@ public class CraftEventFactory {
+             if (action == Action.LEFT_CLICK_BLOCK) {
+                 handled |= modItemStack.onLeftClickOnBlock(who, action, position, direction);
+             }
+-            event.setCancelled(handled || event.isCancelled());
++            event.setCancelled(handled || event.isCancelled());*/
+             //TODO: do this at a better location! / Do not abuse bukkit code for it
+         }
+         //OilSpigot end
+diff --git a/src/main/java/org/oilmod/bukkit/items/ItemStackCreator.java b/src/main/java/org/oilmod/bukkit/items/ItemStackCreator.java
+index 3605d3f3..76d41572 100644
+--- a/src/main/java/org/oilmod/bukkit/items/ItemStackCreator.java
++++ b/src/main/java/org/oilmod/bukkit/items/ItemStackCreator.java
+@@ -6,13 +6,12 @@ import org.oilmod.bukkit.config.DeserializationMethod;
+ import net.minecraft.server.Item;
+ import net.minecraft.server.ItemStack;
+ import net.minecraft.server.NBTTagCompound;
+-import org.oilmod.bukkit.items.itemstackimpl.internal.ModItemStack;
+ 
+ import java.util.Map;
+ 
+ public interface ItemStackCreator {
+-    public ItemStack createStack(Compound compound);
+-    public ItemStack createStack(Item item, int i, int j, NBTTagCompound tag, Compound mTag);
+-    public ModItemStack deserialize(Map<String, Object> args, DeserializationMethod type);
+-    public String getInternalName();
++    ItemStack createStack(Compound compound);
++    ItemStack createStack(Item item, int i, int j, NBTTagCompound tag, Compound mTag);
++    RealItemStack deserialize(Map<String, Object> args, DeserializationMethod type); //TODO: make use of
++    String getInternalName();
+ }
+diff --git a/src/main/java/org/oilmod/bukkit/items/RealItem.java b/src/main/java/org/oilmod/bukkit/items/RealItem.java
+index 4b454d2c..ef03d11a 100644
+--- a/src/main/java/org/oilmod/bukkit/items/RealItem.java
++++ b/src/main/java/org/oilmod/bukkit/items/RealItem.java
+@@ -1,6 +1,8 @@
+ package org.oilmod.bukkit.items;
+ 
++import com.google.common.collect.Multimap;
+ import net.minecraft.server.*;
++import org.bukkit.craftbukkit.enchantments.CraftEnchantment;
+ import org.bukkit.craftbukkit.inventory.CraftItemStack;
+ import org.bukkit.craftbukkit.util.CraftMagicNumbers;
+ import org.bukkit.entity.LivingEntity;
+@@ -13,6 +15,8 @@ import org.oilmod.api.items.type.IVDAdapter;
+ import org.oilmod.bukkit.block.RealOilBlockState;
+ import org.oilmod.bukkit.util.OilSpigotUtil;
+ 
++import static org.oilmod.bukkit.util.OilSpigotUtil.toBukkit;
++
+ public class RealItem extends Item {
+     private final OilItem apiItem;
+     private final MinecraftKey key;
+@@ -47,12 +51,25 @@ public class RealItem extends Item {
+         return key;
+     }
+ 
++    public float getAttackDamage() {
++        return 0;
++    } //TODO
++
++    public int getSwingSpeed() {
++        return 0;
++    } //TODO
++
++
++    public boolean canEnchantSpecial(Enchantment enchantment, boolean anvil) {
++        return getApiItem().canEnchantSpecial(OilSpigotUtil. toBukkit(enchantment), anvil);
++    }
++
+     //NMS
+ 
+     @Override
+     public float getDestroySpeed(ItemStack itemstack, IBlockData iblockdata) {
+         if (apiItem instanceof IToolBlockBreaking) {
+-            return ((IToolBlockBreaking)apiItem).getDestroySpeed(((RealItemStack)itemstack).getOilItemStack(), OilSpigotUtil.toBukkit(iblockdata), iblockdata.getMaterial().getOilBlockType());
++            return ((IToolBlockBreaking)apiItem).getDestroySpeed(((RealItemStack)itemstack).getOilItemStack(), toBukkit(iblockdata), iblockdata.getMaterial().getOilBlockType());
+         }
+         return super.getDestroySpeed(itemstack, iblockdata);
+     }
+@@ -60,7 +77,7 @@ public class RealItem extends Item {
+     @Override
+     public boolean canDestroySpecialBlock(IBlockData iblockdata) {
+         if (apiItem instanceof IToolBlockBreaking) {
+-            return ((IToolBlockBreaking)apiItem).canHarvestBlock(OilSpigotUtil.toBukkit(iblockdata), iblockdata.getMaterial().getOilBlockType());
++            return ((IToolBlockBreaking)apiItem).canHarvestBlock(toBukkit(iblockdata), iblockdata.getMaterial().getOilBlockType());
+         }
+         return super.canDestroySpecialBlock(iblockdata);
+     }
+@@ -77,28 +94,12 @@ public class RealItem extends Item {
+     }
+ 
+     //OilSpigot Pail b -> getDisplayName
++    @Override
+     public  final String b(ItemStack itemstack) {return getDisplayName(itemstack);}
+     public String getDisplayName(ItemStack itemstack) {
+         return LocaleI18n.get(this.j(itemstack) + ".name").trim();
+     }
+ 
+-    //OilSpigot Pail g -> getBaseDamage
+-    public final float g() {
+-        return this.getBaseDamage();
+-    }
+-    public float getBaseDamage() {
+-        return 0;
+-    }
+-
+-    //OilSpigot Pail g -> getSwingSpeed
+-    public final int csaf() { //TODO: wrong name
+-        return this.getSwingSpeed();
+-    }
+-    public int getSwingSpeed() {
+-        return 0;
+-    }
+-
+-
+     //OilSpigot Pail a -> onItemUseOnBlock
+     @Override
+     public final EnumInteractionResult a(EntityHuman human, World world, BlockPosition pos, EnumHand hand, EnumDirection facing, float hitX, float hitY, float hitZ) {
+@@ -108,7 +109,7 @@ public class RealItem extends Item {
+ 
+     public EnumInteractionResult onItemUseOnBlock(EntityHuman human, World w, BlockPosition pos, EnumHand hand, EnumDirection facing, float hitX, float hitY, float hitZ) {
+         RealItemStack itemstack = (RealItemStack) human.b(hand);
+-        return OilSpigotUtil.toNMS(apiItem.onItemUseOnBlock(itemstack.getOilItemStack(), human.getBukkitEntity(), OilSpigotUtil.toBukkit(w, pos), hand==EnumHand.OFF_HAND, OilSpigotUtil.toBukkit(facing), hitX, hitY, hitZ));
++        return OilSpigotUtil.toNMS(apiItem.onItemUseOnBlock(itemstack.getOilItemStack(), human.getBukkitEntity(), toBukkit(w, pos), hand==EnumHand.OFF_HAND, toBukkit(facing), hitX, hitY, hitZ));
+     }
+ 
+     //OilSpigot Pail a -> onEntityHit
+@@ -128,10 +129,11 @@ public class RealItem extends Item {
+     }
+ 
+     public boolean onBlockDestroyed(ItemStack stack, World w, IBlockData data, BlockPosition pos, EntityLiving entity) {
+-        return apiItem.onBlockDestroyed(((RealItemStack)stack).getOilItemStack(), new RealOilBlockState(data), OilSpigotUtil.toBukkit(w, pos), (LivingEntity)entity.getBukkitEntity());
++        return apiItem.onBlockDestroyed(((RealItemStack)stack).getOilItemStack(), new RealOilBlockState(data), toBukkit(w, pos), (LivingEntity)entity.getBukkitEntity());
+     }
+ 
+     //OilSpigot Pail a -> onItemRightClick
++    @Override
+     public final InteractionResultWrapper<ItemStack> a(World w, EntityHuman human, EnumHand hand) {
+         return onItemRightClick(w, human, hand);
+     }
+@@ -142,4 +144,20 @@ public class RealItem extends Item {
+ 
+         return new InteractionResultWrapper<>(OilSpigotUtil.toNMS(result.getInteractionResult()), CraftItemStack.asNMSCopy(result.getItemStack()));
+     }
++
++    @Override
++    public String j(ItemStack itemstack) {
++        return getApiItem().getDisplayName();
++    }
++
++    public Multimap<String, AttributeModifier> a(EnumItemSlot enumitemslot) {
++        Multimap<String, AttributeModifier> multimap = super.a(enumitemslot);
++
++        if (enumitemslot == EnumItemSlot.MAINHAND) {
++            multimap.put(GenericAttributes.ATTACK_DAMAGE.getName(), new AttributeModifier(ItemSword.h, "Weapon modifier", (double) this.getAttackDamage(), 0));
++            multimap.put(GenericAttributes.g.getName(), new AttributeModifier(ItemSword.i, "Weapon modifier", getSwingSpeed(), 0));
++        }
++
++        return multimap;
++    }
+ }
+diff --git a/src/main/java/org/oilmod/bukkit/items/RealItemStack.java b/src/main/java/org/oilmod/bukkit/items/RealItemStack.java
+index 1a21d8de..7e53be95 100644
+--- a/src/main/java/org/oilmod/bukkit/items/RealItemStack.java
++++ b/src/main/java/org/oilmod/bukkit/items/RealItemStack.java
+@@ -15,6 +15,8 @@ import org.oilmod.bukkit.config.nbttag.NBTCompound;
+ import java.lang.ref.WeakReference;
+ import java.util.Map;
+ 
++import static org.oilmod.bukkit.util.OilSpigotUtil.*;
++
+ public class RealItemStack extends ItemStack implements NMSItemStack {
+     private WeakReference<RealCraftItemStack> craftItemStack = null;
+     private OilItemStack oilItemStack;
+@@ -149,6 +151,26 @@ public class RealItemStack extends ItemStack implements NMSItemStack {
+         return hasName()?getName():null;
+     }
+ 
++
++
++    //Anvils
++    public int prepareRepairAnvil(ItemStack itemStack, EntityHuman human, int usedItems, int oldDurability) {
++        return getApiItem().prepareRepairAnvil(oilItemStack, toBukkit(itemStack), human.getBukkitEntity(), usedItems, oldDurability);
++    }
++
++    public void repairAnvil(ItemStack itemStack, EntityHuman human) {
++        getApiItem().repairAnvil(oilItemStack, toBukkit(itemStack), human.getBukkitEntity());
++    }
++
++    //TODO: actually implement
++    public int prepareCombineAnvil(ItemStack itemStack, EntityHuman human, int cost) {
++        return getApiItem().prepareCombineAnvil(oilItemStack, toBukkit(itemStack), human.getBukkitEntity(), cost);
++    }
++
++    public void combineAnvil(ItemStack itemStack, EntityHuman human) {
++        getApiItem().combineAnvil(oilItemStack, toBukkit(itemStack), human.getBukkitEntity());
++    }
++
+     //OilAPI end
+ 
+ 
+@@ -279,7 +301,7 @@ public class RealItemStack extends ItemStack implements NMSItemStack {
+     protected boolean handleDamage(int damage, EntityLiving entityliving) {
+         if (getOilItem() instanceof IDurable) {
+             //noinspection unchecked
+-            return ((IDurable) getOilItem()).handleDamage(getOilItemStack(), damage, (LivingEntity) entityliving.getBukkitEntity());
++            return ((IDurable) getOilItem()).handleItemDamage(getOilItemStack(), damage, (LivingEntity) entityliving.getBukkitEntity());
+         }
+         return handleDamageVanilla(damage, entityliving);
+     }
+@@ -314,4 +336,14 @@ public class RealItemStack extends ItemStack implements NMSItemStack {
+     //Util overrides end
+ 
+ 
++    //NMS
++
++    //OilSpigot Pail i -> getItemDamage
++    @Override
++    public int i() {return getItemDamage();}
++    public int getItemDamage() {
++        return getOilItem().getItemDamage(oilItemStack);
++    }
++
++    //NMS end
+ }
+diff --git a/src/main/java/org/oilmod/bukkit/items/RealItemTypeHelper.java b/src/main/java/org/oilmod/bukkit/items/RealItemTypeHelper.java
+index 3d0fceee..0b7fb2cd 100644
+--- a/src/main/java/org/oilmod/bukkit/items/RealItemTypeHelper.java
++++ b/src/main/java/org/oilmod/bukkit/items/RealItemTypeHelper.java
+@@ -15,4 +15,9 @@ public class RealItemTypeHelper extends ItemTypeHelper {
+     public void damageItem(OilItemStack stack, int damage, LivingEntity entity) {
+         ((RealItemStack)stack.getNmsItemStack()).damageVanilla(damage, ((CraftLivingEntity)entity).getHandle());
+     }
++
++    @Override
++    public int getItemDamage(OilItemStack stack) {
++        return ((RealItemStack)stack.getNmsItemStack()).getData(); //in 1.12 durability is handled by data
++    }
+ }
+diff --git a/src/main/java/org/oilmod/bukkit/items/itemstackimpl/internal/ModCraftItemStack.java b/src/main/java/org/oilmod/bukkit/items/itemstackimpl/internal/ModCraftItemStack.java
+index f6737aa3..98a91541 100644
+--- a/src/main/java/org/oilmod/bukkit/items/itemstackimpl/internal/ModCraftItemStack.java
++++ b/src/main/java/org/oilmod/bukkit/items/itemstackimpl/internal/ModCraftItemStack.java
+@@ -12,10 +12,12 @@ import java.util.LinkedHashMap;
+ import java.util.Map;
+ 
+ 
++//todo be adjusted and just in the future
++
+ /**
+  * Subclasses need to add the annotation @DelegateDeserialization(ModCraftItemStack.class) or add the method public static [? extends ModCraftItemStack] deserialize(Map<String, Object> args) {...}
+  */
+-public class ModCraftItemStack extends CraftItemStack {
++/*public class ModCraftItemStack extends CraftItemStack {
+     protected ModCraftItemStack(ModItemStack item) {
+         super(item);
+     }
+@@ -86,4 +88,4 @@ public class ModCraftItemStack extends CraftItemStack {
+     public int getMaxStackSize() {
+         return getHandle().getMaxStackSize();
+     }
+-}
++}*/
+diff --git a/src/main/java/org/oilmod/bukkit/items/itemstackimpl/internal/ModItem.java b/src/main/java/org/oilmod/bukkit/items/itemstackimpl/internal/ModItem.java
+deleted file mode 100644
+index bcfbe320..00000000
+--- a/src/main/java/org/oilmod/bukkit/items/itemstackimpl/internal/ModItem.java
++++ /dev/null
+@@ -1,20 +0,0 @@
+-package org.oilmod.bukkit.items.itemstackimpl.internal;
+-
+-import net.minecraft.server.MinecraftKey;
+-import org.oilmod.api.items.OilItem;
+-import net.minecraft.server.Item;
+-import net.minecraft.server.NBTTagCompound;
+-import org.oilmod.bukkit.items.ItemStackCreator;
+-
+-/**
+- * Created by sirati97 on 15.01.2016.
+- */
+-public interface ModItem {
+-    MinecraftKey getKey();
+-    ModItemStack createNMSItemStackForCloning(Item item, int i, int j, Object... objects);
+-    ModItemStack createNMSItemStack(NBTTagCompound nbttagcompound);
+-    ModItemStack createNMSItemStack(OilItem apiItem, int size, String displayName);
+-    int getMaxStackSize();
+-    boolean hasNBTCreator();
+-    ItemStackCreator getCreator();
+-}
+diff --git a/src/main/java/org/oilmod/bukkit/items/itemstackimpl/internal/ModItemStack.java b/src/main/java/org/oilmod/bukkit/items/itemstackimpl/internal/ModItemStack.java
+deleted file mode 100644
+index 73455c92..00000000
+--- a/src/main/java/org/oilmod/bukkit/items/itemstackimpl/internal/ModItemStack.java
++++ /dev/null
+@@ -1,257 +0,0 @@
+-package org.oilmod.bukkit.items.itemstackimpl.internal;
+-
+-import org.oilmod.api.config.Compound;
+-import org.oilmod.bukkit.config.nbttag.NBTCompound;
+-import de.sirati97.spigot.optimisation.ItemStackFreeze;
+-import net.minecraft.server.BlockPosition;
+-import net.minecraft.server.Enchantment;
+-import net.minecraft.server.EntityHuman;
+-import net.minecraft.server.EnumDirection;
+-import net.minecraft.server.Item;
+-import net.minecraft.server.ItemStack;
+-import net.minecraft.server.NBTTagCompound;
+-import org.bukkit.craftbukkit.inventory.CraftItemStack;
+-import org.bukkit.event.block.Action;
+-
+-import java.lang.ref.WeakReference;
+-
+-/**
+- * Created by sirati97 on 10.01.2016.
+- */
+-public class ModItemStack extends ItemStack {
+-    private ModItem modItem;
+-    private WeakReference<ModCraftItemStack> craftItemStack = null;
+-    private long lastChange=System.currentTimeMillis();
+-
+-    public ModItemStack(ModItem modItem, Item item, int count, int data) {
+-        super(item, count, data, false); //don't convert - this cannot go well as we aren't even initialised properly.  //TODO: add support in future version
+-        this.modItem = modItem;
+-    }
+-    public ModItemStack(ModItem modItem, Compound compound) {
+-        super(compound);
+-        this.modItem = modItem;
+-        if (compound.containsKey("mTag") && modItem != null) {
+-            loadModData(compound.getCompound("mTag"));
+-        }
+-    }
+-
+-    public ModItemStack(ModItem modItem, Item item, int count, int data, NBTTagCompound tag, Compound mTag) {
+-        super(item, count, data, false); //don't convert - this cannot go well as we aren't even initialised properly.  //TODO: add support in future version
+-        this.modItem = modItem;
+-        setTag(tag);
+-        loadModData(mTag);
+-    }
+-
+-    public ModItemStack(ModItem modItem, ItemStackDescription description, Compound mTag) {
+-        this(modItem, description.item, description.size, description.data, description.tag, mTag);
+-    }
+-
+-
+-    protected Object[] getCloneMeta() {
+-        return new Object[]{};
+-    }
+-
+-    @Override
+-    public ModItemStack cloneItemStack() {
+-        ModItemStack itemstack = getModItem().createNMSItemStackForCloning(this.getItem(), this.getCount(), this.getData(), getCloneMeta());
+-        if (this.getTag() != null) {
+-            itemstack.setTag(((NBTTagCompound) this.getTag().clone()));
+-        }
+-        itemstack.onCloned(this);
+-        return itemstack;
+-    }
+-
+-    @Override
+-    public ModItemStack cloneAndSubtract(int i) {
+-        ModItemStack itemstack = getModItem().createNMSItemStackForCloning(this.getItem(), i, this.getData(), getCloneMeta());
+-        if (this.getTag() != null) {
+-            itemstack.setTag(((NBTTagCompound) this.getTag().clone()));
+-        }
+-        this.subtract(i);
+-        itemstack.onCloned(this);
+-        return itemstack;
+-    }
+-
+-    protected void onCloned(ModItemStack original) {}
+-
+-
+-    public ModItem getModItem() {
+-        return modItem;
+-    }
+-
+-    public static ModItemStack getBukkitHandle(org.bukkit.inventory.ItemStack bukkitItem) {
+-        ItemStack handle = getBukkitHandleNMS(bukkitItem);
+-        if (handle instanceof ModItemStack) return (ModItemStack) handle;
+-        return null;
+-    }
+-
+-    public static ItemStack getBukkitHandleNMS(org.bukkit.inventory.ItemStack bukkitItem) {
+-        if (!(bukkitItem instanceof CraftItemStack))return ItemStack.a;
+-        return ((CraftItemStack) bukkitItem).getHandle();
+-    }
+-
+-    @Override
+-    public void load(NBTTagCompound nbttagcompound) {
+-        super.load(nbttagcompound);
+-        if (nbttagcompound.hasKeyOfType("mTag", 10) && modItem != null) {
+-            loadModData(new NBTCompound(nbttagcompound.getCompound("mTag")));
+-        }
+-    }
+-
+-    @Override
+-    public void load(Compound compound) {
+-        super.load(compound);
+-        if (compound.containsKey("mTag") && modItem != null) {
+-            loadModData(compound.getCompound("mTag"));
+-        }
+-    }
+-
+-    @Override
+-    public NBTTagCompound save(NBTTagCompound nbttagcompound) {
+-        super.save(nbttagcompound);
+-        try {
+-            if (getModItem().hasNBTCreator()) {
+-                NBTCompound compound = new NBTCompound(nbttagcompound);
+-                saveModBaseCompound(compound);
+-            }
+-        } catch (Exception ex) {
+-            ex.printStackTrace();
+-            throw ex;
+-        }
+-
+-        return nbttagcompound;
+-    }
+-
+-    @Override
+-    public Compound save(Compound compound) {
+-        super.save(compound);
+-        try {
+-            if (getModItem().hasNBTCreator()) {
+-                saveModBaseCompound(compound);
+-            }
+-        } catch (Exception ex) {
+-            ex.printStackTrace();
+-            throw ex;
+-        }
+-        return compound;
+-    }
+-
+-
+-    public Compound saveModBaseCompound(Compound compound) {
+-        if (getModItem().hasNBTCreator()) {
+-            compound.setString("mType", getModItem().getCreator().getInternalName());
+-            Compound mTag = compound.createCompound();
+-            mTag.setString("mItemId", getModItem().getKey().getKey());
+-            compound.set("mTag", saveModData(mTag));
+-        }
+-        return compound;
+-    }
+-
+-    public Compound saveModData(Compound compound) {
+-        return compound;
+-    }
+-
+-    public Compound loadModData(Compound compound) {
+-        return compound;
+-    }
+-
+-    @Override
+-    public int getMaxStackSize() {
+-        return modItem.getMaxStackSize()>0?modItem.getMaxStackSize():super.getMaxStackSize();
+-    }
+-
+-    public boolean onUse(EntityHuman who, Action action) {
+-        return false;
+-    }
+-
+-    public boolean onUseOnBlock(EntityHuman who, Action action, BlockPosition position, EnumDirection direction) {
+-        return false;
+-    }
+-
+-    public boolean onLeftClick(EntityHuman who, Action action) {
+-        return false;
+-    }
+-
+-    public boolean onLeftClickOnBlock(EntityHuman who, Action action, BlockPosition position, EnumDirection direction) {
+-        return false;
+-    }
+-
+-    public ModCraftItemStack asCraftItemStack() {
+-        if (craftItemStack == null || craftItemStack.get() == null) {
+-            craftItemStack = new WeakReference<ModCraftItemStack>(createCraftItemStack());
+-        }
+-        return craftItemStack.get();
+-    }
+-
+-    public ModCraftItemStack createCraftItemStack() {
+-        return new ModCraftItemStack(this);
+-    }
+-
+-
+-    public boolean canEnchant(Enchantment enchantment) {
+-        return false;
+-    }
+-
+-    public boolean isEnchantable() {
+-        return false;
+-    }
+-
+-    public int getEnchantSelectModifier() {
+-        return 0;
+-    }
+-
+-    @Override
+-    public boolean canEnchant() {
+-        return isEnchantable() && !this.hasEnchantments();
+-    }
+-
+-    public long getLastChange() {
+-        return lastChange;
+-    }
+-
+-    /**
+-     *Used to indicate that this item needs the be resynchronised with the client */
+-    protected void setChanged() {
+-        this.lastChange = System.currentTimeMillis();
+-    }
+-
+-    @Override
+-    public ItemStackFreeze createFreeze() {
+-        return isDegenerate()?ItemStackFreeze.EMPTY:new ModItemStackFreeze<>(getTag(),getItem(),getCount(),getData(), getModItem(), getLastChange());
+-    }
+-
+-    public String getCorrectDisplayName() {
+-        return "";
+-    }
+-
+-    public boolean canRepairAnvil(ItemStack itemStack, EntityHuman human) {
+-        return false;
+-    }
+-
+-    public int prepareRepairAnvil(ItemStack itemStack, EntityHuman human) {
+-        return 0;
+-    }
+-
+-    public void repairAnvil(ItemStack itemStack, EntityHuman human) {
+-    }
+-
+-    public boolean canCombineAnvil(ItemStack itemStack, EntityHuman human) {
+-        return false;
+-    }
+-
+-    public void combineAnvil(ItemStack itemStack, EntityHuman human) {
+-
+-    }
+-
+-    public void prepareCombineAnvil(ItemStack itemStack, EntityHuman human) {
+-
+-    }
+-
+-
+-    @Override
+-    public String toString() {
+-        return super.toString() + (isDegenerate()?"":( "-ModItem:" + getModItem().getKey().toString()));
+-    }
+-
+-
+-}
+diff --git a/src/main/java/org/oilmod/bukkit/items/itemstackimpl/internal/ModItemStackFreeze.java b/src/main/java/org/oilmod/bukkit/items/itemstackimpl/internal/ModItemStackFreeze.java
+deleted file mode 100644
+index eb68fc5f..00000000
+--- a/src/main/java/org/oilmod/bukkit/items/itemstackimpl/internal/ModItemStackFreeze.java
++++ /dev/null
+@@ -1,38 +0,0 @@
+-package org.oilmod.bukkit.items.itemstackimpl.internal;
+-
+-import de.sirati97.spigot.optimisation.ItemStackFreeze;
+-import net.minecraft.server.Item;
+-import net.minecraft.server.ItemStack;
+-import net.minecraft.server.NBTTagCompound;
+-
+-/**
+- * Created by sirati97 on 14.03.2016.
+- */
+-public class ModItemStackFreeze<T extends ModItemStack> extends ItemStackFreeze {
+-    public final ModItem modItem;
+-    public final long lastChange;
+-
+-    public ModItemStackFreeze(NBTTagCompound tag, Item item, int count, int damage, ModItem modItem, long lastChange) {
+-        super(tag, item, count, damage);
+-        this.modItem = modItem;
+-        this.lastChange = lastChange;
+-    }
+-
+-    @Override
+-    public boolean fastMatchTo(ItemStack itemstack) {
+-        return super.fastMatchTo(itemstack) && checkClass(itemstack) && checkSpecific((T) itemstack);
+-    }
+-
+-    protected boolean checkSpecific(T itemstack) {
+-        return modItem.equals(itemstack.getModItem()) && lastChange==itemstack.getLastChange();
+-    }
+-
+-    protected boolean checkClass(ItemStack itemStack) {
+-        return itemStack instanceof ModItemStack;
+-    }
+-
+-    @Override
+-    public String toString() {
+-        return super.toString() + "-ModItem:" + modItem.getKey().toString();
+-    }
+-}
+diff --git a/src/main/java/org/oilmod/bukkit/items/itemstackimpl/internal/RealItemClassMap.java b/src/main/java/org/oilmod/bukkit/items/itemstackimpl/internal/RealItemClassMap.java
+deleted file mode 100644
+index f04dd468..00000000
+--- a/src/main/java/org/oilmod/bukkit/items/itemstackimpl/internal/RealItemClassMap.java
++++ /dev/null
+@@ -1,35 +0,0 @@
+-package org.oilmod.bukkit.items.itemstackimpl.internal;
+-
+-import org.oilmod.api.items.OilItem;
+-import org.oilmod.api.items.internal.ItemClassMap;
+-import gnu.trove.map.TMap;
+-import gnu.trove.map.hash.THashMap;
+-import gnu.trove.set.hash.THashSet;
+-
+-import java.lang.reflect.Array;
+-import java.util.Set;
+-
+-/**
+- * Created by sirati97 on 02.04.2016.
+- */
+-public class RealItemClassMap extends ItemClassMap {
+-    private TMap<Class<? extends OilItem>,Set<? extends OilItem>> itemClassMap = new THashMap<>();
+-
+-    @Override
+-    public <T extends OilItem> T[] getOilItemsByClass(Class<T> clazz) {
+-        Set<T> set = (Set<T>) itemClassMap.get(clazz);
+-        return set==null||set.size()==0?array(clazz, 0):set.toArray(array(clazz, set.size()));
+-    }
+-
+-    public <T extends OilItem> void register(T item) {
+-        Class<T> clazz = (Class<T>) item.getClass();
+-        Set<T> newSet = new THashSet<>();
+-        Set<T> set = (Set<T>) itemClassMap.putIfAbsent(clazz, newSet);
+-        set = set==null?newSet:set;
+-        set.add(item);
+-    }
+-
+-    private <T extends OilItem> T[] array(Class<T> clazz, int capacity) {
+-        return (T[]) Array.newInstance(clazz, capacity);
+-    }
+-}
+diff --git a/src/main/java/org/oilmod/bukkit/items/itemstackimpl/internal/RealItemFactory.java b/src/main/java/org/oilmod/bukkit/items/itemstackimpl/internal/RealItemFactory.java
+deleted file mode 100644
+index f3c9ac7e..00000000
+--- a/src/main/java/org/oilmod/bukkit/items/itemstackimpl/internal/RealItemFactory.java
++++ /dev/null
+@@ -1,20 +0,0 @@
+-package org.oilmod.bukkit.items.itemstackimpl.internal;
+-
+-import org.oilmod.api.items.OilItem;
+-import org.oilmod.api.items.internal.ItemFactory;
+-import org.bukkit.craftbukkit.inventory.CraftItemStack;
+-import org.bukkit.entity.Player;
+-import org.bukkit.inventory.ItemStack;
+-
+-/**
+- * Created by sirati97 on 15.01.2016.
+- */
+-public class RealItemFactory extends ItemFactory {
+-    @Override
+-    public ItemStack createStack(OilItem apiItem, Player player, int count, int data) {
+-        String displayName = apiItem.getDisplayName(player);
+-        ModItem modItem = (ModItem) apiItem.getNmsItem();
+-        ModItemStack itemStack = modItem.createNMSItemStack(apiItem, count, displayName);
+-        return CraftItemStack.asCraftMirror(itemStack);
+-    }
+-}
+diff --git a/src/main/java/org/oilmod/bukkit/util/OilSpigotUtil.java b/src/main/java/org/oilmod/bukkit/util/OilSpigotUtil.java
+index 36a6aa86..834c97ca 100644
+--- a/src/main/java/org/oilmod/bukkit/util/OilSpigotUtil.java
++++ b/src/main/java/org/oilmod/bukkit/util/OilSpigotUtil.java
+@@ -8,6 +8,7 @@ import org.bukkit.block.BlockFace;
+ import org.bukkit.craftbukkit.block.CraftBlock;
+ import org.bukkit.craftbukkit.block.CraftBlockState;
+ import org.bukkit.craftbukkit.util.CraftMagicNumbers;
++import org.bukkit.enchantments.Enchantment;
+ import org.oilmod.api.userinterface.ClickType;
+ import org.oilmod.api.userinterface.IInteractableUIElement;
+ import org.oilmod.api.userinterface.IUIElement;
+@@ -216,4 +217,8 @@ public final class OilSpigotUtil {
+     public static NotImplementedException NotImplementedException() {
+         return new NotImplementedException("If you see that message sirati97 with an error log");
+     }
++
++    public static Enchantment toBukkit(net.minecraft.server.Enchantment enchantment) {
++        return org.bukkit.enchantments.Enchantment.getById(net.minecraft.server.Enchantment.getId(enchantment)); //TODO: replace with own reference when custom enchantment api was added
++    }
+ }
+-- 
+2.20.1.windows.1
+

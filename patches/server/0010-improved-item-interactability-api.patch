@@ -1,0 +1,217 @@
+From 42c449c02649148a7c93b1681d933c0f36b2d139 Mon Sep 17 00:00:00 2001
+From: sirati97 <TheSirati97@gmail.com>
+Date: Thu, 24 Jan 2019 04:01:35 +0000
+Subject: [PATCH] improved item interactability api
+
+---
+ .../minecraft/server/PlayerConnection.java    | 14 ++++++++++-
+ .../server/PlayerInteractManager.java         | 18 +++++++++++----
+ .../craftbukkit/event/CraftEventFactory.java  | 23 -------------------
+ .../org/oilmod/bukkit/items/RealItem.java     | 21 +++++++++++++----
+ .../oilmod/bukkit/items/RealItemStack.java    |  9 ++++++++
+ 5 files changed, 53 insertions(+), 32 deletions(-)
+
+diff --git a/src/main/java/net/minecraft/server/PlayerConnection.java b/src/main/java/net/minecraft/server/PlayerConnection.java
+index 39596f24..f69f2b43 100644
+--- a/src/main/java/net/minecraft/server/PlayerConnection.java
++++ b/src/main/java/net/minecraft/server/PlayerConnection.java
+@@ -62,6 +62,8 @@ import co.aikar.timings.MinecraftTimings; // Paper
+ //OilSpigot start
+ import org.bukkit.craftbukkit.inventory.CraftInventory;
+ import org.oilmod.bukkit.inventory.FilteredInventory;
++import org.oilmod.bukkit.items.RealItem;
++import org.oilmod.bukkit.items.RealItemStack;
+ //OilSpigot end
+ 
+ public class PlayerConnection implements PacketListenerPlayIn, ITickable {
+@@ -1516,7 +1518,17 @@ public class PlayerConnection implements PacketListenerPlayIn, ITickable {
+         MovingObjectPosition movingobjectposition = this.player.world.rayTrace(vec3d, vec3d1, false);
+ 
+         if (movingobjectposition == null || movingobjectposition.type != MovingObjectPosition.EnumMovingObjectType.BLOCK) {
+-            CraftEventFactory.callPlayerInteractEvent(this.player, Action.LEFT_CLICK_AIR, this.player.inventory.getItemInHand(), EnumHand.MAIN_HAND);
++            //OilSpigot - start
++            /* make items know that they where used */
++            boolean cancel = CraftEventFactory.callPlayerInteractEvent(this.player, Action.LEFT_CLICK_AIR, this.player.inventory.getItemInHand(), EnumHand.MAIN_HAND).isCancelled();
++            if (!cancel && this.player.getItemInMainHand() instanceof RealItemStack) {
++                EnumInteractionResult result = ((RealItem) this.player.getItemInMainHand().getItem()).onItemLeftClick(this.player.world, this.player,  EnumHand.MAIN_HAND);
++                if (result == EnumInteractionResult.PASS)cancel = true;
++            }
++            if (!cancel && this.player.getItemInOffHand() instanceof RealItemStack) {
++                EnumInteractionResult result = ((RealItem) this.player.getItemInOffHand().getItem()).onItemLeftClick(this.player.world, this.player, EnumHand.OFF_HAND);
++            }
++            //OilSpigot - end
+         }
+ 
+         // Arm swing animation
+diff --git a/src/main/java/net/minecraft/server/PlayerInteractManager.java b/src/main/java/net/minecraft/server/PlayerInteractManager.java
+index f290ae4e..b462b1d3 100644
+--- a/src/main/java/net/minecraft/server/PlayerInteractManager.java
++++ b/src/main/java/net/minecraft/server/PlayerInteractManager.java
+@@ -8,6 +8,10 @@ import org.bukkit.event.Event;
+ import org.bukkit.event.block.Action;
+ import org.bukkit.event.player.PlayerInteractEvent;
+ import org.oilmod.bukkit.items.RealItem;
++import org.oilmod.bukkit.items.RealItemStack;
++import org.oilmod.bukkit.util.OilSpigotUtil;
++
++import static org.oilmod.bukkit.util.OilSpigotUtil.toBukkit;
+ // CraftBukkit end
+ 
+ public class PlayerInteractManager {
+@@ -137,9 +141,7 @@ public class PlayerInteractManager {
+             awaitNextTry = false;
+             //isModItem here is not really needed and will actually behave unexpectedly for a oilmod considerate client. For vanilla it looks smoother this way tho. (also simplifies all custom race conditions here as we don't need the worry about a block partially broken by a modded item and partially by a vanilla item.)
+             if (isModItem && blockposition.equals(this.f) && MinecraftServer.currentTick-this.player.lastSwing <= 2) {
+-                System.out.println("next try gap: " + (MinecraftServer.currentTick-this.player.lastSwing) );
+                 a(); //call normal progress function
+-                return;
+             } else {
+                 e(); //reset client
+             }
+@@ -152,7 +154,15 @@ public class PlayerInteractManager {
+ 
+         //OilSpigot start - allow item to react to LEFT_CLICK_BLOCK
+         //TODO
+-
++        if (!event.isCancelled() && this.player.getItemInMainHand() instanceof RealItemStack) {
++            //TODO calculate actual hitting position
++            EnumInteractionResult result = ((RealItem) this.player.getItemInMainHand().getItem()).onItemLeftClickOnBlock(this.player, world, blockposition, EnumHand.MAIN_HAND, enumdirection, 0.5f, 0.5f, 0.5f);
++            if (result == EnumInteractionResult.PASS)event.setCancelled(true);
++        }
++        if (!event.isCancelled() && this.player.getItemInOffHand() instanceof RealItemStack) {
++            EnumInteractionResult result = ((RealItem) this.player.getItemInOffHand().getItem()).onItemLeftClickOnBlock(this.player, world, blockposition, EnumHand.OFF_HAND, enumdirection, 0.5f, 0.5f, 0.5f);
++            if (result == EnumInteractionResult.PASS)event.setCancelled(true);
++        }
+         //OilSpigot end
+ 
+         if (event.isCancelled()) {
+@@ -219,7 +229,7 @@ public class PlayerInteractManager {
+ 
+             if (event.useItemInHand() == Event.Result.DENY) {
+                 // If we 'insta destroyed' then the client needs to be informed.
+-                if (f > 1.0f) { //OilSpigpt TODO: ensure that moditems dont create a desync
++                if (f > 1.0f) { //OilSpigpt TODO: ensure that moditems dont create a desync (case item slower than client, now server thinks no insta but client disagrees)
+                     ((EntityPlayer) this.player).playerConnection.sendPacket(new PacketPlayOutBlockChange(this.world, blockposition));
+                 }
+                 return;
+diff --git a/src/main/java/org/bukkit/craftbukkit/event/CraftEventFactory.java b/src/main/java/org/bukkit/craftbukkit/event/CraftEventFactory.java
+index dd9af4c2..83f1e3e9 100644
+--- a/src/main/java/org/bukkit/craftbukkit/event/CraftEventFactory.java
++++ b/src/main/java/org/bukkit/craftbukkit/event/CraftEventFactory.java
+@@ -247,29 +247,6 @@ public class CraftEventFactory {
+         //OilSpigot end
+ 
+         craftServer.getPluginManager().callEvent(event);
+-
+-
+-        //OilSpigot start
+-        if ((!event.isCancelled() || cancelledBlock) && itemstack != null && itemstack instanceof RealItemStack) {
+-            OilMain.printTrace(action.toString());
+-            /*RealItemStack modItemStack = (RealItemStack) itemstack;
+-            boolean handled = false;
+-            if (action == Action.RIGHT_CLICK_AIR || action == Action.RIGHT_CLICK_BLOCK) {
+-                handled = modItemStack.onUse(who, action);
+-            }
+-            if (action == Action.RIGHT_CLICK_BLOCK) {
+-                handled |= modItemStack.onUseOnBlock(who, action, position, direction);
+-            }
+-            if (action == Action.LEFT_CLICK_AIR || action == Action.LEFT_CLICK_BLOCK) {
+-                handled |= modItemStack.onLeftClick(who, action);
+-            }
+-            if (action == Action.LEFT_CLICK_BLOCK) {
+-                handled |= modItemStack.onLeftClickOnBlock(who, action, position, direction);
+-            }
+-            event.setCancelled(handled || event.isCancelled());*/
+-            //TODO: do this at a better location! / Do not abuse bukkit code for it
+-        }
+-        //OilSpigot end
+         return event;
+     }
+ 
+diff --git a/src/main/java/org/oilmod/bukkit/items/RealItem.java b/src/main/java/org/oilmod/bukkit/items/RealItem.java
+index ef03d11a..98360fa9 100644
+--- a/src/main/java/org/oilmod/bukkit/items/RealItem.java
++++ b/src/main/java/org/oilmod/bukkit/items/RealItem.java
+@@ -2,12 +2,10 @@ package org.oilmod.bukkit.items;
+ 
+ import com.google.common.collect.Multimap;
+ import net.minecraft.server.*;
+-import org.bukkit.craftbukkit.enchantments.CraftEnchantment;
+ import org.bukkit.craftbukkit.inventory.CraftItemStack;
+ import org.bukkit.craftbukkit.util.CraftMagicNumbers;
+ import org.bukkit.entity.LivingEntity;
+ import org.oilmod.api.items.ItemInteractionResult;
+-import org.oilmod.api.items.NMSItem;
+ import org.oilmod.api.items.OilItem;
+ import org.oilmod.api.items.type.IDurable;
+ import org.oilmod.api.items.type.IToolBlockBreaking;
+@@ -16,6 +14,7 @@ import org.oilmod.bukkit.block.RealOilBlockState;
+ import org.oilmod.bukkit.util.OilSpigotUtil;
+ 
+ import static org.oilmod.bukkit.util.OilSpigotUtil.toBukkit;
++import static org.oilmod.bukkit.util.OilSpigotUtil.toNMS;
+ 
+ public class RealItem extends Item {
+     private final OilItem apiItem;
+@@ -64,6 +63,20 @@ public class RealItem extends Item {
+         return getApiItem().canEnchantSpecial(OilSpigotUtil. toBukkit(enchantment), anvil);
+     }
+ 
++    public EnumInteractionResult onItemLeftClickOnBlock(EntityHuman human, World w, BlockPosition pos, EnumHand hand, EnumDirection facing, float hitX, float hitY, float hitZ) {
++        RealItemStack itemstack = (RealItemStack) human.b(hand);
++        EnumInteractionResult result = onItemLeftClick(w, human, hand);
++        if (result != EnumInteractionResult.PASS) return result;
++        return toNMS(apiItem.onItemLeftClickOnBlock(itemstack.getOilItemStack(), human.getBukkitEntity(), toBukkit(w, pos), hand==EnumHand.OFF_HAND, toBukkit(facing), hitX, hitY, hitZ));
++    }
++
++
++    public final EnumInteractionResult onItemLeftClick(World w, EntityHuman human, EnumHand hand) {
++        RealItemStack itemstack = (RealItemStack) human.b(hand);
++        return toNMS(apiItem.onItemLeftClick(itemstack.getOilItemStack(), w.getWorld(), human.getBukkitEntity(), hand==EnumHand.OFF_HAND).getInteractionResult());
++    }
++
++
+     //NMS
+ 
+     @Override
+@@ -109,7 +122,7 @@ public class RealItem extends Item {
+ 
+     public EnumInteractionResult onItemUseOnBlock(EntityHuman human, World w, BlockPosition pos, EnumHand hand, EnumDirection facing, float hitX, float hitY, float hitZ) {
+         RealItemStack itemstack = (RealItemStack) human.b(hand);
+-        return OilSpigotUtil.toNMS(apiItem.onItemUseOnBlock(itemstack.getOilItemStack(), human.getBukkitEntity(), toBukkit(w, pos), hand==EnumHand.OFF_HAND, toBukkit(facing), hitX, hitY, hitZ));
++        return toNMS(apiItem.onItemUseOnBlock(itemstack.getOilItemStack(), human.getBukkitEntity(), toBukkit(w, pos), hand==EnumHand.OFF_HAND, toBukkit(facing), hitX, hitY, hitZ));
+     }
+ 
+     //OilSpigot Pail a -> onEntityHit
+@@ -142,7 +155,7 @@ public class RealItem extends Item {
+         RealItemStack itemstack = (RealItemStack) human.b(hand);
+         ItemInteractionResult result = apiItem.onItemRightClick(itemstack.getOilItemStack(), w.getWorld(), human.getBukkitEntity(), hand==EnumHand.OFF_HAND);
+ 
+-        return new InteractionResultWrapper<>(OilSpigotUtil.toNMS(result.getInteractionResult()), CraftItemStack.asNMSCopy(result.getItemStack()));
++        return new InteractionResultWrapper<>(toNMS(result.getInteractionResult()), CraftItemStack.asNMSCopy(result.getItemStack()));
+     }
+ 
+     @Override
+diff --git a/src/main/java/org/oilmod/bukkit/items/RealItemStack.java b/src/main/java/org/oilmod/bukkit/items/RealItemStack.java
+index 7e53be95..e3d2e812 100644
+--- a/src/main/java/org/oilmod/bukkit/items/RealItemStack.java
++++ b/src/main/java/org/oilmod/bukkit/items/RealItemStack.java
+@@ -151,6 +151,15 @@ public class RealItemStack extends ItemStack implements NMSItemStack {
+         return hasName()?getName():null;
+     }
+ 
++    @Override
++    public void setRenameNMS(String name) {
++        setDisplayName(name);
++    }
++
++    @Override
++    public boolean isRenamedNMS() {
++        return hasName();
++    }
+ 
+ 
+     //Anvils
+-- 
+2.20.1.windows.1
+

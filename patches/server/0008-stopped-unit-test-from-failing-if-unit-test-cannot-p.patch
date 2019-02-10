@@ -5,7 +5,7 @@ Subject: [PATCH] stopped unit test from failing if unit test cannot perform
  test
 
 ---
- .../craftbukkit/inventory/ItemFactoryTest.java     | 24 +++++++++++++++++++++-
+ .../inventory/ItemFactoryTest.java            | 24 ++++++++++++++++++-
  1 file changed, 23 insertions(+), 1 deletion(-)
 
 diff --git a/src/test/java/org/bukkit/craftbukkit/inventory/ItemFactoryTest.java b/src/test/java/org/bukkit/craftbukkit/inventory/ItemFactoryTest.java
@@ -62,5 +62,5 @@ index 3190cadf..77184b08 100644
  
          assertThat("Extra values detected", CraftItemFactory.KNOWN_NBT_ATTRIBUTE_NAMES, is(names));
 -- 
-2.14.2.windows.3
+2.20.1.windows.1
 

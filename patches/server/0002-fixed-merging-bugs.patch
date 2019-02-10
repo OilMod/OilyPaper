@@ -4,12 +4,12 @@ Date: Fri, 18 Jan 2019 15:22:14 +0000
 Subject: [PATCH] fixed merging bugs
 
 ---
- src/main/java/de/sirati97/spigot/optimisation/ItemStackFreeze.java  | 3 +++
- src/main/java/net/minecraft/server/EntityLiving.java                | 6 +++---
- src/main/java/net/minecraft/server/EntityLlama.java                 | 3 ++-
- src/main/java/net/minecraft/server/RecipeBookServer.java            | 2 +-
- src/main/java/org/oilmod/spigot/bukkit/stubs/OilBlockStub.java      | 5 +++++
- src/main/java/org/oilmod/spigot/inventory/OilSlotFurnaceResult.java | 2 +-
+ .../de/sirati97/spigot/optimisation/ItemStackFreeze.java    | 3 +++
+ src/main/java/net/minecraft/server/EntityLiving.java        | 6 +++---
+ src/main/java/net/minecraft/server/EntityLlama.java         | 3 ++-
+ src/main/java/net/minecraft/server/RecipeBookServer.java    | 2 +-
+ .../java/org/oilmod/spigot/bukkit/stubs/OilBlockStub.java   | 5 +++++
+ .../org/oilmod/spigot/inventory/OilSlotFurnaceResult.java   | 2 +-
  6 files changed, 15 insertions(+), 6 deletions(-)
 
 diff --git a/src/main/java/de/sirati97/spigot/optimisation/ItemStackFreeze.java b/src/main/java/de/sirati97/spigot/optimisation/ItemStackFreeze.java
@@ -98,5 +98,5 @@ index 7bd0e847..eb810d13 100644
          }
  
 -- 
-2.14.2.windows.3
+2.20.1.windows.1
 
