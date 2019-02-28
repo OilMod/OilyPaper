@@ -1,24 +1,24 @@
-From 3608fe5af312024770ad42d55f1da1218cc69b66 Mon Sep 17 00:00:00 2001
+From df5d79d0c44bc0b3ee7f5ea949dafdd5b1988955 Mon Sep 17 00:00:00 2001
 From: sirati97 <TheSirati97@gmail.com>
 Date: Sun, 20 Jan 2019 08:55:54 +0000
 Subject: [PATCH] fixed crafting help
 
 ---
- .../net/minecraft/server/PlayerConnection.java     |   1 +
- .../oilmod/bukkit/crafting/OilShapedRecipe.java    |   1 +
- .../org/oilmod/bukkit/crafting/help/CHView.java    |   4 +-
- .../org/oilmod/bukkit/crafting/help/OilCHView.java |   4 +-
- .../bukkit/crafting/help/ShapelessCHView.java      |   1 -
- .../crafting/help/VanillaArmorDyeChView.java       |   3 +-
- .../crafting/help/VanillaBannerAddCHView.java      |   3 +-
- .../help/VanillaBannerDuplicateCHView.java         |   3 +-
- .../oilmod/bukkit/crafting/help/VanillaCHView.java |   3 +-
- .../crafting/help/VanillaFireworksCHView.java      |   3 +-
- .../bukkit/crafting/help/VanillaRepairCHView.java  |   3 +-
- .../crafting/help/VanillaShieldBannerCHView.java   |   3 +-
- .../crafting/help/VanillaTippedArrowCHView.java    |   3 +-
- .../bukkit/inventory/custom/ClickExtraData.java    |   2 +-
- .../org/oilmod/bukkit/util/BetterNonNullList.java  | 115 ++++++++++++++++++++-
+ .../minecraft/server/PlayerConnection.java    |   1 +
+ .../bukkit/crafting/OilShapedRecipe.java      |   1 +
+ .../oilmod/bukkit/crafting/help/CHView.java   |   4 +-
+ .../bukkit/crafting/help/OilCHView.java       |   4 +-
+ .../bukkit/crafting/help/ShapelessCHView.java |   1 -
+ .../crafting/help/VanillaArmorDyeChView.java  |   3 +-
+ .../crafting/help/VanillaBannerAddCHView.java |   3 +-
+ .../help/VanillaBannerDuplicateCHView.java    |   3 +-
+ .../bukkit/crafting/help/VanillaCHView.java   |   3 +-
+ .../crafting/help/VanillaFireworksCHView.java |   3 +-
+ .../crafting/help/VanillaRepairCHView.java    |   3 +-
+ .../help/VanillaShieldBannerCHView.java       |   3 +-
+ .../help/VanillaTippedArrowCHView.java        |   3 +-
+ .../inventory/custom/ClickExtraData.java      |   2 +-
+ .../oilmod/bukkit/util/BetterNonNullList.java | 115 +++++++++++++++++-
  15 files changed, 136 insertions(+), 16 deletions(-)
 
 diff --git a/src/main/java/net/minecraft/server/PlayerConnection.java b/src/main/java/net/minecraft/server/PlayerConnection.java
@@ -416,5 +416,5 @@ index 0503cae7..f434fc57 100644
 +    }
  }
 -- 
-2.14.2.windows.3
+2.20.1.windows.1
 

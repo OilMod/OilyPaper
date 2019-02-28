@@ -1,10 +1,10 @@
-From 3e2f83a2a39e07369511f6c39d2ed0d8408d4a75 Mon Sep 17 00:00:00 2001
+From 179255cf7141425c4bddb8f2acf9bdfef800276a Mon Sep 17 00:00:00 2001
 From: sirati97 <TheSirati97@gmail.com>
 Date: Sun, 20 Jan 2019 05:04:18 +0000
 Subject: [PATCH] Added EnchantmentType API, Moved OilMod
 
 ---
- src/main/java/org/bukkit/Material.java | 27 ++++++++++++++++++++-------
+ src/main/java/org/bukkit/Material.java | 27 +++++++++++++++++++-------
  1 file changed, 20 insertions(+), 7 deletions(-)
 
 diff --git a/src/main/java/org/bukkit/Material.java b/src/main/java/org/bukkit/Material.java
@@ -55,5 +55,5 @@ index fcc76e19..d78e3f17 100644
      /**
       * @return True if this material represents a playable music disk.
 -- 
-2.14.2.windows.3
+2.20.1.windows.1
 

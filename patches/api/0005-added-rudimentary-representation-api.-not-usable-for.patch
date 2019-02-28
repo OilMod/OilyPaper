@@ -1,0 +1,640 @@
+From e4e01a4b34e740a540ebeb1bcae0d8deb8fa38bb Mon Sep 17 00:00:00 2001
+From: sirati97 <me@sirati97.de>
+Date: Sat, 9 Feb 2019 07:55:23 +0000
+Subject: [PATCH] added rudimentary representation api. not usable for modding
+ yet, but enough for development
+
+---
+ pom.xml                                       |  6 +++
+ src/main/java/org/bukkit/World.java           | 19 +++++++-
+ src/main/java/org/bukkit/block/Block.java     |  8 ++--
+ .../org/bukkit/enchantments/Enchantment.java  |  3 +-
+ .../enchantments/EnchantmentWrapper.java      | 19 ++++++++
+ src/main/java/org/bukkit/entity/Entity.java   | 47 ++++++++++++++++++-
+ .../java/org/bukkit/entity/HumanEntity.java   | 20 +++++++-
+ .../java/org/bukkit/entity/LivingEntity.java  |  3 +-
+ src/main/java/org/bukkit/entity/Player.java   |  4 +-
+ .../bukkit/event/block/BlockFromToEvent.java  |  4 +-
+ .../event/entity/ProjectileHitEvent.java      |  2 +-
+ .../event/player/PlayerInteractEvent.java     |  2 +-
+ .../org/bukkit/inventory/InventoryView.java   |  3 +-
+ .../java/org/bukkit/inventory/ItemStack.java  | 45 +++++++++++++++++-
+ .../java/org/bukkit/material/Attachable.java  |  2 +-
+ src/main/java/org/bukkit/material/Button.java |  2 +-
+ src/main/java/org/bukkit/material/Door.java   |  2 +-
+ src/main/java/org/bukkit/material/Ladder.java |  2 +-
+ src/main/java/org/bukkit/material/Lever.java  |  2 +-
+ src/main/java/org/bukkit/material/Sign.java   |  4 +-
+ src/main/java/org/bukkit/material/Torch.java  |  2 +-
+ src/main/java/org/bukkit/material/Tree.java   | 10 ++--
+ .../oilmod/api/rep/bukkit/util/LocUtil.java   | 47 +++++++++++++++++++
+ 23 files changed, 229 insertions(+), 29 deletions(-)
+ create mode 100644 src/main/java/org/oilmod/api/rep/bukkit/util/LocUtil.java
+
+diff --git a/pom.xml b/pom.xml
+index 14d07e8a..b1bd5896 100644
+--- a/pom.xml
++++ b/pom.xml
+@@ -57,6 +57,12 @@
+             <version>1.5.25</version> <!-- keep in sync with major MC versions -->
+             <scope>compile</scope> <!-- expose to Plugins -->
+         </dependency>
++        <dependency>
++            <groupId>org.oilmod</groupId>
++            <artifactId>oilmod-representation-api</artifactId>
++            <version>1.0-SNAPSHOT</version> <!-- keep in sync with major MC versions -->
++            <scope>compile</scope> <!-- expose to Plugins -->
++        </dependency>
+         <dependency>
+             <groupId>co.aikar</groupId>
+             <artifactId>fastutil-lite</artifactId>
+diff --git a/src/main/java/org/bukkit/World.java b/src/main/java/org/bukkit/World.java
+index d5058634..ad508075 100644
+--- a/src/main/java/org/bukkit/World.java
++++ b/src/main/java/org/bukkit/World.java
+@@ -21,11 +21,12 @@ import org.bukkit.metadata.Metadatable;
+ import org.bukkit.plugin.messaging.PluginMessageRecipient;
+ import org.bukkit.util.Consumer;
+ import org.bukkit.util.Vector;
++import org.oilmod.api.rep.world.WorldRep;
+ 
+ /**
+  * Represents a world, which may contain entities, chunks and blocks
+  */
+-public interface World extends PluginMessageRecipient, Metadatable {
++public interface World extends PluginMessageRecipient, Metadatable, WorldRep {
+ 
+     // Paper start
+     /**
+@@ -2164,4 +2165,20 @@ public interface World extends PluginMessageRecipient, Metadatable {
+             }
+         }
+     }
++
++    //OilyPaper - start
++    public class OilRep implements WorldRep {
++        private final World outer;
++
++        public OilRep(World outer) {
++            this.outer = outer;
++        }
++
++        public World bukkit() {
++            return outer;
++        }
++    }
++
++    OilRep OilRep();
++    //OilyPaper - end
+ }
+diff --git a/src/main/java/org/bukkit/block/Block.java b/src/main/java/org/bukkit/block/Block.java
+index 2dbc784c..734f201e 100644
+--- a/src/main/java/org/bukkit/block/Block.java
++++ b/src/main/java/org/bukkit/block/Block.java
+@@ -55,7 +55,7 @@ public interface Block extends Metadatable {
+      *
+      * <pre>
+      * Block block = world.getBlockAt(100, 100, 100);
+-     * Block shower = block.getRelative(BlockFace.UP, 2);
++     * Block shower = block.getRelative(BlockFaceRep.UP, 2);
+      * shower.setType(Material.WATER);
+      * </pre>
+      *
+@@ -259,13 +259,13 @@ public interface Block extends Metadatable {
+      * Block current = world.getBlockAt(100, 100, 100);
+      * Block target = world.getBlockAt(100, 101, 100);
+      *
+-     * current.getFace(target) == BlockFace.Up;
++     * current.getFace(target) == BlockFaceRep.Up;
+      * }</pre>
+      * <br>
+      * If the given block is not connected to this block, null may be returned
+      *
+      * @param block Block to compare against this block
+-     * @return BlockFace of this block which has the requested block, or null
++     * @return BlockFaceRep of this block which has the requested block, or null
+      */
+     BlockFace getFace(Block block);
+ 
+@@ -336,7 +336,7 @@ public interface Block extends Metadatable {
+     /**
+      * Returns the redstone power being provided to this block face
+      *
+-     * @param face the face of the block to query or BlockFace.SELF for the
++     * @param face the face of the block to query or BlockFaceRep.SELF for the
+      *     block itself
+      * @return The power level.
+      */
+diff --git a/src/main/java/org/bukkit/enchantments/Enchantment.java b/src/main/java/org/bukkit/enchantments/Enchantment.java
+index ac3a7f99..93b6d48c 100644
+--- a/src/main/java/org/bukkit/enchantments/Enchantment.java
++++ b/src/main/java/org/bukkit/enchantments/Enchantment.java
+@@ -4,11 +4,12 @@ import java.util.HashMap;
+ import java.util.Map;
+ 
+ import org.bukkit.inventory.ItemStack;
++import org.oilmod.api.rep.enchant.EnchantmentRep;
+ 
+ /**
+  * The various type of enchantments that may be added to armour or weapons
+  */
+-public abstract class Enchantment {
++public abstract class Enchantment implements EnchantmentRep {
+     /**
+      * Provides protection against environmental damage
+      */
+diff --git a/src/main/java/org/bukkit/enchantments/EnchantmentWrapper.java b/src/main/java/org/bukkit/enchantments/EnchantmentWrapper.java
+index 3984e919..f3f24d5e 100644
+--- a/src/main/java/org/bukkit/enchantments/EnchantmentWrapper.java
++++ b/src/main/java/org/bukkit/enchantments/EnchantmentWrapper.java
+@@ -1,6 +1,8 @@
+ package org.bukkit.enchantments;
+ 
+ import org.bukkit.inventory.ItemStack;
++import org.oilmod.api.rep.enchant.EnchantmentRep;
++import org.oilmod.api.rep.item.ItemRep;
+ 
+ /**
+  * A simple wrapper for ease of selecting {@link Enchantment}s
+@@ -58,4 +60,21 @@ public class EnchantmentWrapper extends Enchantment {
+     public boolean conflictsWith(Enchantment other) {
+         return getEnchantment().conflictsWith(other);
+     }
++
++    //OilyPaper - start
++    @Override
++    public boolean isCurse() {
++        return isCursed();
++    }
++
++    @Override
++    public boolean conflictsWith(EnchantmentRep other) {
++        return getEnchantment().conflictsWith(other);
++    }
++
++    @Override
++    public boolean canEnchantItem(ItemRep item) {
++        return getEnchantment().canEnchantItem(item);
++    }
++    //OilyPaper - end
+ }
+diff --git a/src/main/java/org/bukkit/entity/Entity.java b/src/main/java/org/bukkit/entity/Entity.java
+index e2a2b78c..905d8236 100644
+--- a/src/main/java/org/bukkit/entity/Entity.java
++++ b/src/main/java/org/bukkit/entity/Entity.java
+@@ -16,11 +16,22 @@ import java.util.UUID;
+ import org.bukkit.block.PistonMoveReaction;
+ import org.bukkit.command.CommandSender;
+ import org.bukkit.event.player.PlayerTeleportEvent.TeleportCause;
++import org.oilmod.api.rep.entity.EntityRep;
++import org.oilmod.api.rep.entity.PassengerRep;
++import org.oilmod.api.rep.entity.VehicleRep;
++import org.oilmod.api.rep.world.LocationEntityRep;
++import org.oilmod.api.rep.world.LocationRep;
++import org.oilmod.api.rep.world.VectorRep;
++import org.oilmod.api.rep.world.WorldRep;
++
++import static org.oilmod.api.rep.bukkit.util.LocUtil.toBukkit;
++import static org.oilmod.api.rep.bukkit.util.LocUtil.toOil;
++import static org.oilmod.api.rep.bukkit.util.LocUtil.toOilEntity;
+ 
+ /**
+  * Represents a base entity in the world
+  */
+-public interface Entity extends Metadatable, CommandSender, Nameable {
++public interface Entity extends Metadatable, CommandSender, Nameable, EntityRep, VehicleRep, PassengerRep {
+ 
+     /**
+      * Gets the entity's current position
+@@ -523,4 +534,38 @@ public interface Entity extends Metadatable, CommandSender, Nameable {
+      */
+     Chunk getChunk();
+     // Paper end
++
++    //OilyPaper - start
++
++    @Override
++    default LocationEntityRep getLocationRep() {
++        return toOilEntity(getLocation());
++    }
++
++    @Override
++    default void setVelocity(VectorRep velocity) {
++        setVelocity(toBukkit(velocity));
++    }
++
++    @Override
++    default VectorRep getVelocityRep() {
++        return toOil(getVelocity());
++    }
++
++    @Override
++    default boolean teleport(LocationRep location) {
++        return teleport(toBukkit(location));
++    }
++
++    @Override
++    default boolean addPassenger(PassengerRep passenger) {
++        return addPassenger((Entity)passenger);
++    }
++
++    @Override
++    default boolean removePassenger(PassengerRep passenger) {
++        return removePassenger((Entity)passenger);
++    }
++
++    //OilyPaper - end
+ }
+diff --git a/src/main/java/org/bukkit/entity/HumanEntity.java b/src/main/java/org/bukkit/entity/HumanEntity.java
+index 8fe01e47..82a21c95 100644
+--- a/src/main/java/org/bukkit/entity/HumanEntity.java
++++ b/src/main/java/org/bukkit/entity/HumanEntity.java
+@@ -11,11 +11,15 @@ import org.bukkit.inventory.InventoryView;
+ import org.bukkit.inventory.ItemStack;
+ import org.bukkit.inventory.PlayerInventory;
+ import org.bukkit.permissions.Permissible;
++import org.oilmod.api.rep.entity.EntityHumanRep;
++import org.oilmod.api.rep.inventory.InventoryRep;
++import org.oilmod.api.rep.inventory.InventoryUIRep;
++import org.oilmod.api.rep.itemstack.ItemStackRep;
+ 
+ /**
+  * Represents a human entity, such as an NPC or a player
+  */
+-public interface HumanEntity extends LivingEntity, AnimalTamer, Permissible, InventoryHolder {
++public interface HumanEntity extends LivingEntity, AnimalTamer, Permissible, InventoryHolder, EntityHumanRep {
+ 
+     /**
+      * Returns the name of this player
+@@ -353,4 +357,18 @@ public interface HumanEntity extends LivingEntity, AnimalTamer, Permissible, Inv
+      */
+     void openSign(org.bukkit.block.Sign sign);
+     // Paper end
++
++    //OilyPaper - start
++
++    @Override
++    default InventoryUIRep openInventory(InventoryRep inventory) {
++        return openInventory((Inventory)inventory);
++    }
++
++    @Override
++    default void setItemOnCursor(ItemStackRep item) {
++        setItemOnCursor((ItemStack)item);
++    }
++
++    //OilyPaper - end
+ }
+diff --git a/src/main/java/org/bukkit/entity/LivingEntity.java b/src/main/java/org/bukkit/entity/LivingEntity.java
+index 9c542951..90d8ad84 100644
+--- a/src/main/java/org/bukkit/entity/LivingEntity.java
++++ b/src/main/java/org/bukkit/entity/LivingEntity.java
+@@ -14,13 +14,14 @@ import org.bukkit.inventory.ItemStack;
+ import org.bukkit.potion.PotionEffect;
+ import org.bukkit.potion.PotionEffectType;
+ import org.bukkit.projectiles.ProjectileSource;
++import org.oilmod.api.rep.entity.EntityLivingRep;
+ 
+ import javax.annotation.Nullable;
+ 
+ /**
+  * Represents a living entity, such as a monster or player
+  */
+-public interface LivingEntity extends Attributable, Entity, Damageable, ProjectileSource {
++public interface LivingEntity extends Attributable, Entity, Damageable, ProjectileSource, EntityLivingRep {
+ 
+     /**
+      * Gets the height of the living entity's eyes above its Location.
+diff --git a/src/main/java/org/bukkit/entity/Player.java b/src/main/java/org/bukkit/entity/Player.java
+index fac5ded7..5b4e4834 100644
+--- a/src/main/java/org/bukkit/entity/Player.java
++++ b/src/main/java/org/bukkit/entity/Player.java
+@@ -31,11 +31,13 @@ import org.bukkit.map.MapView;
+ import org.bukkit.plugin.Plugin;
+ import org.bukkit.plugin.messaging.PluginMessageRecipient;
+ import org.bukkit.scoreboard.Scoreboard;
++import org.oilmod.api.rep.entity.EntityHumanRep;
++import org.oilmod.api.rep.entity.EntityPlayerRep;
+ 
+ /**
+  * Represents a player, connected or not
+  */
+-public interface Player extends HumanEntity, Conversable, CommandSender, OfflinePlayer, PluginMessageRecipient, com.destroystokyo.paper.network.NetworkClient { // Paper - Extend NetworkClient
++public interface Player extends HumanEntity, Conversable, CommandSender, OfflinePlayer, PluginMessageRecipient, com.destroystokyo.paper.network.NetworkClient, EntityPlayerRep { // Paper - Extend NetworkClient
+ 
+     /**
+      * Gets the "friendly" name to display of this player. This may include
+diff --git a/src/main/java/org/bukkit/event/block/BlockFromToEvent.java b/src/main/java/org/bukkit/event/block/BlockFromToEvent.java
+index f976bea4..a642f51e 100644
+--- a/src/main/java/org/bukkit/event/block/BlockFromToEvent.java
++++ b/src/main/java/org/bukkit/event/block/BlockFromToEvent.java
+@@ -32,9 +32,9 @@ public class BlockFromToEvent extends BlockEvent implements Cancellable {
+     }
+ 
+     /**
+-     * Gets the BlockFace that the block is moving to.
++     * Gets the BlockFaceRep that the block is moving to.
+      *
+-     * @return The BlockFace that the block is moving to
++     * @return The BlockFaceRep that the block is moving to
+      */
+     public BlockFace getFace() {
+         return face;
+diff --git a/src/main/java/org/bukkit/event/entity/ProjectileHitEvent.java b/src/main/java/org/bukkit/event/entity/ProjectileHitEvent.java
+index db105e76..908eed4a 100644
+--- a/src/main/java/org/bukkit/event/entity/ProjectileHitEvent.java
++++ b/src/main/java/org/bukkit/event/entity/ProjectileHitEvent.java
+@@ -27,7 +27,7 @@ public class ProjectileHitEvent extends EntityEvent {
+     }
+ 
+     public ProjectileHitEvent(final Projectile projectile, Entity hitEntity, Block hitBlock) {
+-        // Paper Start - Add a constructor that includes a BlockFace parameter
++        // Paper Start - Add a constructor that includes a BlockFaceRep parameter
+         this(projectile, hitEntity, hitBlock, null);
+     }
+ 
+diff --git a/src/main/java/org/bukkit/event/player/PlayerInteractEvent.java b/src/main/java/org/bukkit/event/player/PlayerInteractEvent.java
+index 0c841fb1..b2a3fe41 100644
+--- a/src/main/java/org/bukkit/event/player/PlayerInteractEvent.java
++++ b/src/main/java/org/bukkit/event/player/PlayerInteractEvent.java
+@@ -145,7 +145,7 @@ public class PlayerInteractEvent extends PlayerEvent implements Cancellable {
+     /**
+      * Returns the face of the block that was clicked
+      *
+-     * @return BlockFace returns the face of the block that was clicked
++     * @return BlockFaceRep returns the face of the block that was clicked
+      */
+     public BlockFace getBlockFace() {
+         return blockFace;
+diff --git a/src/main/java/org/bukkit/inventory/InventoryView.java b/src/main/java/org/bukkit/inventory/InventoryView.java
+index 647b804e..a8589409 100644
+--- a/src/main/java/org/bukkit/inventory/InventoryView.java
++++ b/src/main/java/org/bukkit/inventory/InventoryView.java
+@@ -2,6 +2,7 @@ package org.bukkit.inventory;
+ 
+ import org.bukkit.entity.HumanEntity;
+ import org.bukkit.event.inventory.InventoryType;
++import org.oilmod.api.rep.inventory.InventoryUIRep;
+ 
+ /**
+  * Represents a view linking two inventories and a single player (whose
+@@ -11,7 +12,7 @@ import org.bukkit.event.inventory.InventoryType;
+  * contracts of certain methods, there's no guarantee that the game will work
+  * as it should.
+  */
+-public abstract class InventoryView {
++public abstract class InventoryView implements InventoryUIRep {
+     public final static int OUTSIDE = -999;
+     /**
+      * Represents various extra properties of certain inventory windows.
+diff --git a/src/main/java/org/bukkit/inventory/ItemStack.java b/src/main/java/org/bukkit/inventory/ItemStack.java
+index 574cdf3b..43343b63 100644
+--- a/src/main/java/org/bukkit/inventory/ItemStack.java
++++ b/src/main/java/org/bukkit/inventory/ItemStack.java
+@@ -14,13 +14,16 @@ import org.bukkit.configuration.serialization.ConfigurationSerializable;
+ import org.bukkit.enchantments.Enchantment;
+ import org.bukkit.inventory.meta.ItemMeta;
+ import org.bukkit.material.MaterialData;
++import org.oilmod.api.rep.enchant.EnchantmentRep;
++import org.oilmod.api.rep.item.ItemRep;
++import org.oilmod.api.rep.itemstack.ItemStackRep;
+ 
+ import javax.annotation.Nullable;
+ 
+ /**
+  * Represents a stack of items
+  */
+-public class ItemStack implements Cloneable, ConfigurationSerializable {
++public class ItemStack implements Cloneable, ConfigurationSerializable, ItemStackRep {
+     private int type = 0;
+     private int amount = 0;
+     private MaterialData data = null;
+@@ -774,4 +777,44 @@ public class ItemStack implements Cloneable, ConfigurationSerializable {
+         return itemMeta.hasItemFlag(flag);
+     }
+     // Paper end
++
++    //OilyPaper - start
++
++    @Override
++    public ItemRep getItem() {
++        return null;
++    }
++
++    @Override
++    public void addEnchantment(EnchantmentRep ench, int level, boolean force) {
++        if (force) {
++            addUnsafeEnchantment((Enchantment)ench, level);
++        } else {
++            addEnchantment((Enchantment)ench, level);
++        }
++    }
++
++    @Override
++    public int removeEnchantment(EnchantmentRep ench) {
++        return removeEnchantment((Enchantment)ench);
++    }
++
++    @Override
++    public boolean isSimilar(ItemStackRep stack) {
++        return false;
++    }
++
++    @Override
++    public int getEnchantmentLevel(EnchantmentRep ench) {
++        return getEnchantmentLevel((Enchantment)ench);
++    }
++
++
++
++    @Override
++    public boolean isEmpty() {
++        return getType()==Material.AIR;
++    }
++
++    //OilyPaper - end
+ }
+diff --git a/src/main/java/org/bukkit/material/Attachable.java b/src/main/java/org/bukkit/material/Attachable.java
+index 1d3f1076..40715e84 100644
+--- a/src/main/java/org/bukkit/material/Attachable.java
++++ b/src/main/java/org/bukkit/material/Attachable.java
+@@ -10,7 +10,7 @@ public interface Attachable extends Directional {
+     /**
+      * Gets the face that this block is attached on
+      *
+-     * @return BlockFace attached to
++     * @return BlockFaceRep attached to
+      */
+     public BlockFace getAttachedFace();
+ }
+diff --git a/src/main/java/org/bukkit/material/Button.java b/src/main/java/org/bukkit/material/Button.java
+index fd6a7db8..3af98937 100644
+--- a/src/main/java/org/bukkit/material/Button.java
++++ b/src/main/java/org/bukkit/material/Button.java
+@@ -67,7 +67,7 @@ public class Button extends SimpleAttachableMaterialData implements Redstone {
+     /**
+      * Gets the face that this block is attached on
+      *
+-     * @return BlockFace attached to
++     * @return BlockFaceRep attached to
+      */
+     public BlockFace getAttachedFace() {
+         byte data = (byte) (getData() & 0x7);
+diff --git a/src/main/java/org/bukkit/material/Door.java b/src/main/java/org/bukkit/material/Door.java
+index 07a40a00..7755bb04 100644
+--- a/src/main/java/org/bukkit/material/Door.java
++++ b/src/main/java/org/bukkit/material/Door.java
+@@ -247,7 +247,7 @@ public class Door extends MaterialData implements Directional, Openable {
+     }
+ 
+     /**
+-     * @return BlockFace.SELF
++     * @return BlockFaceRep.SELF
+      * @deprecated This method should not be used; use hinge and facing accessors instead.
+      */
+     @Deprecated
+diff --git a/src/main/java/org/bukkit/material/Ladder.java b/src/main/java/org/bukkit/material/Ladder.java
+index cd4d6911..570f3e0c 100644
+--- a/src/main/java/org/bukkit/material/Ladder.java
++++ b/src/main/java/org/bukkit/material/Ladder.java
+@@ -47,7 +47,7 @@ public class Ladder extends SimpleAttachableMaterialData {
+     /**
+      * Gets the face that this block is attached on
+      *
+-     * @return BlockFace attached to
++     * @return BlockFaceRep attached to
+      */
+     public BlockFace getAttachedFace() {
+         byte data = getData();
+diff --git a/src/main/java/org/bukkit/material/Lever.java b/src/main/java/org/bukkit/material/Lever.java
+index c6d3882c..f29bb54c 100644
+--- a/src/main/java/org/bukkit/material/Lever.java
++++ b/src/main/java/org/bukkit/material/Lever.java
+@@ -66,7 +66,7 @@ public class Lever extends SimpleAttachableMaterialData implements Redstone {
+     /**
+      * Gets the face that this block is attached on
+      *
+-     * @return BlockFace attached to
++     * @return BlockFaceRep attached to
+      */
+     public BlockFace getAttachedFace() {
+         byte data = (byte) (getData() & 0x7);
+diff --git a/src/main/java/org/bukkit/material/Sign.java b/src/main/java/org/bukkit/material/Sign.java
+index 0accdbce..8f6001e0 100644
+--- a/src/main/java/org/bukkit/material/Sign.java
++++ b/src/main/java/org/bukkit/material/Sign.java
+@@ -57,7 +57,7 @@ public class Sign extends MaterialData implements Attachable {
+     /**
+      * Gets the face that this block is attached on
+      *
+-     * @return BlockFace attached to
++     * @return BlockFaceRep attached to
+      */
+     public BlockFace getAttachedFace() {
+         if (isWallSign()) {
+@@ -86,7 +86,7 @@ public class Sign extends MaterialData implements Attachable {
+     /**
+      * Gets the direction that this sign is currently facing
+      *
+-     * @return BlockFace indicating where this sign is facing
++     * @return BlockFaceRep indicating where this sign is facing
+      */
+     public BlockFace getFacing() {
+         byte data = getData();
+diff --git a/src/main/java/org/bukkit/material/Torch.java b/src/main/java/org/bukkit/material/Torch.java
+index 60be6bd1..3c4a6f10 100644
+--- a/src/main/java/org/bukkit/material/Torch.java
++++ b/src/main/java/org/bukkit/material/Torch.java
+@@ -47,7 +47,7 @@ public class Torch extends SimpleAttachableMaterialData {
+     /**
+      * Gets the face that this block is attached on
+      *
+-     * @return BlockFace attached to
++     * @return BlockFaceRep attached to
+      */
+     public BlockFace getAttachedFace() {
+         byte data = getData();
+diff --git a/src/main/java/org/bukkit/material/Tree.java b/src/main/java/org/bukkit/material/Tree.java
+index e28499d0..eb28547e 100644
+--- a/src/main/java/org/bukkit/material/Tree.java
++++ b/src/main/java/org/bukkit/material/Tree.java
+@@ -107,10 +107,10 @@ public class Tree extends Wood {
+      *
+      * @return one of:
+      * <ul>
+-     * <li>BlockFace.TOP for upright (default)
+-     * <li>BlockFace.NORTH (east-west)
+-     * <li>BlockFace.WEST (north-south)
+-     * <li>BlockFace.SELF (directionless)
++     * <li>BlockFaceRep.TOP for upright (default)
++     * <li>BlockFaceRep.NORTH (east-west)
++     * <li>BlockFaceRep.WEST (north-south)
++     * <li>BlockFaceRep.SELF (directionless)
+      * </ul>
+      */
+     @SuppressWarnings("deprecation")
+@@ -131,7 +131,7 @@ public class Tree extends Wood {
+     /**
+      * Set direction of the log
+      *
+-     * @param dir - direction of end of log (BlockFace.SELF for no direction)
++     * @param dir - direction of end of log (BlockFaceRep.SELF for no direction)
+      */
+     @SuppressWarnings("deprecation")
+     public void setDirection(BlockFace dir) {
+diff --git a/src/main/java/org/oilmod/api/rep/bukkit/util/LocUtil.java b/src/main/java/org/oilmod/api/rep/bukkit/util/LocUtil.java
+new file mode 100644
+index 00000000..5d6fd698
+--- /dev/null
++++ b/src/main/java/org/oilmod/api/rep/bukkit/util/LocUtil.java
+@@ -0,0 +1,47 @@
++package org.oilmod.api.rep.bukkit.util;
++
++import org.bukkit.Location;
++import org.bukkit.World;
++import org.bukkit.util.Vector;
++import org.oilmod.api.rep.stdimpl.world.LocFactoryImpl;
++import org.oilmod.api.rep.world.LocationBlockRep;
++import org.oilmod.api.rep.world.LocationEntityRep;
++import org.oilmod.api.rep.world.LocationRep;
++import org.oilmod.api.rep.world.VectorRep;
++import org.oilmod.api.rep.world.WorldRep;
++import org.oilmod.api.rep.world.internal.GeneralVector;
++
++public final class LocUtil {
++
++    public static Vector toBukkit(GeneralVector v) {
++        return new Vector(v.getX(), v.getY(), v.getZ());
++    }
++
++    public static World toBukkit(WorldRep rep) {
++        return ((World.OilRep)rep).bukkit();
++    }
++
++    public static Location toBukkit(LocationRep v) {
++        return new Location(toBukkit(v.getWorld()), v.getX(), v.getY(), v.getZ());
++    }
++
++    public static Location toBukkit(LocationEntityRep v) {
++        return new Location(toBukkit(v.getWorld()), v.getX(), v.getY(), v.getZ(), (float)v.getYaw(), (float)v.getPitch());
++    }
++
++    public static LocationEntityRep toOilEntity(Location loc) {
++        return LocFactoryImpl.INSTANCE.createEntityLocation(loc.getX(), loc.getY(), loc.getZ(), loc.getYaw(), loc.getPitch(), loc.getWorld().OilRep());
++    }
++
++    public static LocationRep toOil(Location loc) {
++        return LocFactoryImpl.INSTANCE.createLocation(loc.getX(), loc.getY(), loc.getZ(), loc.getWorld().OilRep());
++    }
++
++    public static VectorRep toOil(Vector loc) {
++        return LocFactoryImpl.INSTANCE.createVector(loc.getX(), loc.getY(), loc.getZ());
++    }
++
++    public static LocationBlockRep toOilBlock(Location loc) {
++        return LocFactoryImpl.INSTANCE.createBlockLocation(loc.getBlockX(), loc.getBlockY(), loc.getBlockZ(), loc.getWorld().OilRep());
++    }
++}
+-- 
+2.20.1.windows.1
+

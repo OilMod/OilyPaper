@@ -1,11 +1,11 @@
-From f27067fa19d339f48bc8c0ca9de6bf9d37264013 Mon Sep 17 00:00:00 2001
+From ad451333960b4826e44ae9bd170cb8f72a6f7778 Mon Sep 17 00:00:00 2001
 From: sirati97 <TheSirati97@gmail.com>
 Date: Sun, 20 Jan 2019 09:15:03 +0000
 Subject: [PATCH] stopped unit test from failing if unit test cannot perform
  test
 
 ---
- .../craftbukkit/inventory/ItemFactoryTest.java     | 24 +++++++++++++++++++++-
+ .../inventory/ItemFactoryTest.java            | 24 ++++++++++++++++++-
  1 file changed, 23 insertions(+), 1 deletion(-)
 
 diff --git a/src/test/java/org/bukkit/craftbukkit/inventory/ItemFactoryTest.java b/src/test/java/org/bukkit/craftbukkit/inventory/ItemFactoryTest.java
@@ -62,5 +62,5 @@ index 3190cadf..77184b08 100644
  
          assertThat("Extra values detected", CraftItemFactory.KNOWN_NBT_ATTRIBUTE_NAMES, is(names));
 -- 
-2.14.2.windows.3
+2.20.1.windows.1
 

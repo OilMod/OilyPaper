@@ -1,56 +1,56 @@
-From ec1391c0ddc68b793afe5eb1559b2d3aee6dd586 Mon Sep 17 00:00:00 2001
+From 5e7f39fce967ffd6e58fcd926bb3eb9afd70027a Mon Sep 17 00:00:00 2001
 From: sirati97 <TheSirati97@gmail.com>
 Date: Sun, 20 Jan 2019 07:50:07 +0000
 Subject: [PATCH] Fixed crafting api, moved crafting package to correct
  location
 
 ---
- src/main/java/net/minecraft/server/CraftingManager.java  |  6 +++---
- .../java/net/minecraft/server/EnchantmentSlotType.java   |  1 -
- src/main/java/net/minecraft/server/IRecipe.java          |  2 +-
- src/main/java/net/minecraft/server/PlayerConnection.java | 10 +++++++++-
- src/main/java/net/minecraft/server/RecipeArmorDye.java   |  4 ++--
- src/main/java/net/minecraft/server/RecipeBookClone.java  |  2 +-
- src/main/java/net/minecraft/server/RecipeMapClone.java   |  2 +-
- src/main/java/net/minecraft/server/RecipeRepair.java     |  4 ++--
- .../java/net/minecraft/server/RecipeTippedArrow.java     |  4 ++--
- src/main/java/net/minecraft/server/RecipiesShield.java   |  4 ++--
- src/main/java/net/minecraft/server/ShapedRecipes.java    | 16 +++++++++++-----
- src/main/java/net/minecraft/server/ShapelessRecipes.java | 16 +++++++++++-----
- .../net/minecraft/server/oilmod/IInventoryCrafting.java  |  2 +-
- .../craftbukkit/inventory/CraftInventoryCrafting.java    |  8 +++++---
- src/main/java/org/oilmod/bukkit/OilMain.java             |  4 ++--
- .../crafting/BukkitCraftingIngredient.java               |  2 +-
- .../crafting/BukkitCraftingResultFactory.java            |  2 +-
- .../crafting/ItemStackCraftingInventoryReference.java    |  2 +-
- .../crafting/NMSCraftingIngredient.java                  |  2 +-
- .../crafting/NMSCraftingResultFactory.java               |  2 +-
- .../{items/itemstackimpl => }/crafting/OilRecipe.java    | 11 ++++++-----
- .../itemstackimpl => }/crafting/OilShapedRecipe.java     | 11 ++++++-----
- .../itemstackimpl => }/crafting/OilShapelessRecipe.java  | 11 ++++++-----
- .../crafting/RealItemCraftingFactory.java                |  2 +-
- .../itemstackimpl => }/crafting/help/CHCollection.java   |  2 +-
- .../itemstackimpl => }/crafting/help/CHCommand.java      |  2 +-
- .../itemstackimpl => }/crafting/help/CHContainer.java    |  2 +-
- .../crafting/help/CHDisplaySlotView.java                 |  2 +-
- .../crafting/help/CHSelectorSlotView.java                |  2 +-
- .../{items/itemstackimpl => }/crafting/help/CHView.java  |  2 +-
- .../itemstackimpl => }/crafting/help/OilCHView.java      |  2 +-
- .../itemstackimpl => }/crafting/help/ShapedCHView.java   |  2 +-
- .../crafting/help/ShapelessCHView.java                   |  2 +-
- .../crafting/help/VanillaArmorDyeChView.java             |  2 +-
- .../crafting/help/VanillaBannerAddCHView.java            |  2 +-
- .../crafting/help/VanillaBannerDuplicateCHView.java      |  2 +-
- .../itemstackimpl => }/crafting/help/VanillaCHView.java  |  2 +-
- .../crafting/help/VanillaFireworksCHView.java            |  2 +-
- .../crafting/help/VanillaRepairCHView.java               |  2 +-
- .../crafting/help/VanillaShapedCHView.java               |  2 +-
- .../crafting/help/VanillaShapelessCHView.java            |  2 +-
- .../crafting/help/VanillaShieldBannerCHView.java         |  4 ++--
- .../crafting/help/VanillaTippedArrowCHView.java          |  2 +-
- .../itemstackimpl => }/crafting/nms/NMS_OilRecipe.java   |  4 ++--
- .../crafting/nms/NMS_OilShapedRecipe.java                | 10 +++++-----
- .../crafting/nms/NMS_OilShapelessRecipe.java             |  8 ++++----
+ .../net/minecraft/server/CraftingManager.java    |  6 +++---
+ .../minecraft/server/EnchantmentSlotType.java    |  1 -
+ src/main/java/net/minecraft/server/IRecipe.java  |  2 +-
+ .../net/minecraft/server/PlayerConnection.java   | 10 +++++++++-
+ .../net/minecraft/server/RecipeArmorDye.java     |  4 ++--
+ .../net/minecraft/server/RecipeBookClone.java    |  2 +-
+ .../net/minecraft/server/RecipeMapClone.java     |  2 +-
+ .../java/net/minecraft/server/RecipeRepair.java  |  4 ++--
+ .../net/minecraft/server/RecipeTippedArrow.java  |  4 ++--
+ .../net/minecraft/server/RecipiesShield.java     |  4 ++--
+ .../java/net/minecraft/server/ShapedRecipes.java | 16 +++++++++++-----
+ .../net/minecraft/server/ShapelessRecipes.java   | 16 +++++++++++-----
+ .../server/oilmod/IInventoryCrafting.java        |  2 +-
+ .../inventory/CraftInventoryCrafting.java        |  8 +++++---
+ src/main/java/org/oilmod/bukkit/OilMain.java     |  4 ++--
+ .../crafting/BukkitCraftingIngredient.java       |  2 +-
+ .../crafting/BukkitCraftingResultFactory.java    |  2 +-
+ .../ItemStackCraftingInventoryReference.java     |  2 +-
+ .../crafting/NMSCraftingIngredient.java          |  2 +-
+ .../crafting/NMSCraftingResultFactory.java       |  2 +-
+ .../itemstackimpl => }/crafting/OilRecipe.java   | 11 ++++++-----
+ .../crafting/OilShapedRecipe.java                | 11 ++++++-----
+ .../crafting/OilShapelessRecipe.java             | 11 ++++++-----
+ .../crafting/RealItemCraftingFactory.java        |  2 +-
+ .../crafting/help/CHCollection.java              |  2 +-
+ .../crafting/help/CHCommand.java                 |  2 +-
+ .../crafting/help/CHContainer.java               |  2 +-
+ .../crafting/help/CHDisplaySlotView.java         |  2 +-
+ .../crafting/help/CHSelectorSlotView.java        |  2 +-
+ .../itemstackimpl => }/crafting/help/CHView.java |  2 +-
+ .../crafting/help/OilCHView.java                 |  2 +-
+ .../crafting/help/ShapedCHView.java              |  2 +-
+ .../crafting/help/ShapelessCHView.java           |  2 +-
+ .../crafting/help/VanillaArmorDyeChView.java     |  2 +-
+ .../crafting/help/VanillaBannerAddCHView.java    |  2 +-
+ .../help/VanillaBannerDuplicateCHView.java       |  2 +-
+ .../crafting/help/VanillaCHView.java             |  2 +-
+ .../crafting/help/VanillaFireworksCHView.java    |  2 +-
+ .../crafting/help/VanillaRepairCHView.java       |  2 +-
+ .../crafting/help/VanillaShapedCHView.java       |  2 +-
+ .../crafting/help/VanillaShapelessCHView.java    |  2 +-
+ .../crafting/help/VanillaShieldBannerCHView.java |  4 ++--
+ .../crafting/help/VanillaTippedArrowCHView.java  |  2 +-
+ .../crafting/nms/NMS_OilRecipe.java              |  4 ++--
+ .../crafting/nms/NMS_OilShapedRecipe.java        | 10 +++++-----
+ .../crafting/nms/NMS_OilShapelessRecipe.java     |  8 ++++----
  46 files changed, 108 insertions(+), 84 deletions(-)
  rename src/main/java/org/oilmod/bukkit/{items/itemstackimpl => }/crafting/BukkitCraftingIngredient.java (95%)
  rename src/main/java/org/oilmod/bukkit/{items/itemstackimpl => }/crafting/BukkitCraftingResultFactory.java (95%)
@@ -900,5 +900,5 @@ index 84d3d47c..82c7d0fa 100644
      }
  
 -- 
-2.14.2.windows.3
+2.20.1.windows.1
 

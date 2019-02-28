@@ -1,12 +1,12 @@
-From 83e3d6ba131e864ef89ed489687061cbe1f46f4d Mon Sep 17 00:00:00 2001
+From 0482777bdc4e3194746cec7258c3ca84aea4892d Mon Sep 17 00:00:00 2001
 From: sirati97 <TheSirati97@gmail.com>
 Date: Sun, 20 Jan 2019 07:50:44 +0000
 Subject: [PATCH] modified unit tests to allow for placeholder
 
 ---
- src/test/java/org/bukkit/PerMaterialTest.java                          | 3 +++
- .../java/org/bukkit/craftbukkit/inventory/FactoryItemMaterialTest.java | 2 ++
- src/test/java/org/bukkit/support/AbstractTestingBase.java              | 3 ++-
+ src/test/java/org/bukkit/PerMaterialTest.java                  | 3 +++
+ .../bukkit/craftbukkit/inventory/FactoryItemMaterialTest.java  | 2 ++
+ src/test/java/org/bukkit/support/AbstractTestingBase.java      | 3 ++-
  3 files changed, 7 insertions(+), 1 deletion(-)
 
 diff --git a/src/test/java/org/bukkit/PerMaterialTest.java b/src/test/java/org/bukkit/PerMaterialTest.java
@@ -72,5 +72,5 @@ index 86c2b971..cae9c98b 100644
  
      @BeforeClass
 -- 
-2.14.2.windows.3
+2.20.1.windows.1
 
