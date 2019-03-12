@@ -1,4 +1,4 @@
-From ce5c7a32241ec5cc8d523c84f158d47f2ced7034 Mon Sep 17 00:00:00 2001
+From ab479d02e107fb5ad9dc18bc7ed74f94ccaf67ff Mon Sep 17 00:00:00 2001
 From: sirati97 <TheSirati97@gmail.com>
 Date: Tue, 12 Mar 2019 05:05:48 +0000
 Subject: [PATCH] started to update paper implementation to use rep api instead
@@ -23,8 +23,8 @@ Subject: [PATCH] started to update paper implementation to use rep api instead
  .../api/OilInteractableElementWrapper.java    |  8 +-
  .../inventory/custom/slot/ViewSlotBase.java   |  2 +-
  .../org/oilmod/bukkit/items/RealItem.java     | 12 ++-
+ .../oilmod/bukkit/items/RealItemFactory.java  |  5 +-
  .../items/RealSpecificItemStackFactory.java   |  2 +-
- .../internal/RealItemFactory.java             |  3 +-
  .../oilmod/bukkit/items/itemtype/RealAxe.java | 14 ++--
  .../bukkit/items/itemtype/RealPickaxe.java    | 14 ++--
  .../bukkit/items/itemtype/RealShears.java     | 22 +++---
@@ -41,7 +41,7 @@ Subject: [PATCH] started to update paper implementation to use rep api instead
  .../minecraft/MC112BlockProvider.java         | 48 +++++++++++
  .../java/org/oilmod/rep/world/WorldBR.java    | 17 ++++
  .../bukkit/blocks/MaterialToolTest.java       |  6 +-
- 36 files changed, 439 insertions(+), 132 deletions(-)
+ 36 files changed, 440 insertions(+), 133 deletions(-)
  delete mode 100644 src/main/java/org/oilmod/bukkit/block/RealOilBlockState.java
  create mode 100644 src/main/java/org/oilmod/rep/block/BlockBR.java
  create mode 100644 src/main/java/org/oilmod/rep/block/BlockStateBR.java
@@ -527,11 +527,11 @@ index ca96e3c3..648daefa 100644
  
      @Override
 diff --git a/src/main/java/org/oilmod/bukkit/items/RealItem.java b/src/main/java/org/oilmod/bukkit/items/RealItem.java
-index 3bb23d9f..76d79a17 100644
+index 4c40d5a8..9760f23f 100644
 --- a/src/main/java/org/oilmod/bukkit/items/RealItem.java
 +++ b/src/main/java/org/oilmod/bukkit/items/RealItem.java
-@@ -2,14 +2,12 @@ package org.oilmod.bukkit.items;
- 
+@@ -3,14 +3,12 @@ package org.oilmod.bukkit.items;
+ import com.google.common.collect.Multimap;
  import net.minecraft.server.*;
  import org.bukkit.craftbukkit.inventory.CraftItemStack;
 -import org.bukkit.craftbukkit.util.CraftMagicNumbers;
@@ -544,8 +544,8 @@ index 3bb23d9f..76d79a17 100644
 -import org.oilmod.bukkit.block.RealOilBlockState;
  import org.oilmod.bukkit.util.OilSpigotUtil;
  
- public class RealItem extends Item {
-@@ -34,7 +32,7 @@ public class RealItem extends Item {
+ import static org.oilmod.bukkit.util.OilSpigotUtil.toBukkit;
+@@ -38,7 +36,7 @@ public class RealItem extends Item {
      //OilAPI
      public Item getVanillaFakeItem(RealItemStack stack) {
          //noinspection unchecked
@@ -554,42 +554,66 @@ index 3bb23d9f..76d79a17 100644
      }
  
      public int getVanillaFakeData(RealItemStack stack) {
-@@ -51,7 +49,7 @@ public class RealItem extends Item {
+@@ -82,7 +80,7 @@ public class RealItem extends Item {
      @Override
      public float getDestroySpeed(ItemStack itemstack, IBlockData iblockdata) {
          if (apiItem instanceof IToolBlockBreaking) {
--            return ((IToolBlockBreaking)apiItem).getDestroySpeed(((RealItemStack)itemstack).getOilItemStack(), OilSpigotUtil.toBukkit(iblockdata), iblockdata.getMaterial().getOilBlockType());
+-            return ((IToolBlockBreaking)apiItem).getDestroySpeed(((RealItemStack)itemstack).getOilItemStack(), toBukkit(iblockdata), iblockdata.getMaterial().getOilBlockType());
 +            return ((IToolBlockBreaking)apiItem).getDestroySpeed(((RealItemStack)itemstack).getOilItemStack(), OilSpigotUtil.toRep(iblockdata), iblockdata.getMaterial().getOilBlockType());
          }
          return super.getDestroySpeed(itemstack, iblockdata);
      }
-@@ -59,7 +57,7 @@ public class RealItem extends Item {
+@@ -90,7 +88,7 @@ public class RealItem extends Item {
      @Override
      public boolean canDestroySpecialBlock(IBlockData iblockdata) {
          if (apiItem instanceof IToolBlockBreaking) {
--            return ((IToolBlockBreaking)apiItem).canHarvestBlock(OilSpigotUtil.toBukkit(iblockdata), iblockdata.getMaterial().getOilBlockType());
+-            return ((IToolBlockBreaking)apiItem).canHarvestBlock(toBukkit(iblockdata), iblockdata.getMaterial().getOilBlockType());
 +            return ((IToolBlockBreaking)apiItem).canHarvestBlock(OilSpigotUtil.toRep(iblockdata), iblockdata.getMaterial().getOilBlockType());
          }
          return super.canDestroySpecialBlock(iblockdata);
      }
-@@ -107,7 +105,7 @@ public class RealItem extends Item {
+@@ -122,7 +120,7 @@ public class RealItem extends Item {
  
      public EnumInteractionResult onItemUseOnBlock(EntityHuman human, World w, BlockPosition pos, EnumHand hand, EnumDirection facing, float hitX, float hitY, float hitZ) {
          RealItemStack itemstack = (RealItemStack) human.b(hand);
--        return OilSpigotUtil.toNMS(apiItem.onItemUseOnBlock(itemstack.getOilItemStack(), human.getBukkitEntity(), OilSpigotUtil.toBukkit(w, pos), hand==EnumHand.OFF_HAND, OilSpigotUtil.toBukkit(facing), hitX, hitY, hitZ));
+-        return toNMS(apiItem.onItemUseOnBlock(itemstack.getOilItemStack(), human.getBukkitEntity(), toBukkit(w, pos), hand==EnumHand.OFF_HAND, toBukkit(facing), hitX, hitY, hitZ));
 +        return OilSpigotUtil.toNMS(apiItem.onItemUseOnBlock(itemstack.getOilItemStack(), human.getBukkitEntity(), OilSpigotUtil.toRep(w, pos), hand==EnumHand.OFF_HAND, OilSpigotUtil.toRep(facing), hitX, hitY, hitZ));
      }
  
      //OilSpigot Pail a -> onEntityHit
-@@ -127,7 +125,7 @@ public class RealItem extends Item {
+@@ -142,7 +140,7 @@ public class RealItem extends Item {
      }
  
      public boolean onBlockDestroyed(ItemStack stack, World w, IBlockData data, BlockPosition pos, EntityLiving entity) {
--        return apiItem.onBlockDestroyed(((RealItemStack)stack).getOilItemStack(), new RealOilBlockState(data), OilSpigotUtil.toBukkit(w, pos), (LivingEntity)entity.getBukkitEntity());
+-        return apiItem.onBlockDestroyed(((RealItemStack)stack).getOilItemStack(), new RealOilBlockState(data), toBukkit(w, pos), (LivingEntity)entity.getBukkitEntity());
 +        return apiItem.onBlockDestroyed(((RealItemStack)stack).getOilItemStack(), new RealOilBlockState(data), OilSpigotUtil.toRep(w, pos), (LivingEntity)entity.getBukkitEntity());
      }
  
      //OilSpigot Pail a -> onItemRightClick
+diff --git a/src/main/java/org/oilmod/bukkit/items/RealItemFactory.java b/src/main/java/org/oilmod/bukkit/items/RealItemFactory.java
+index 3572377d..7ccba94e 100644
+--- a/src/main/java/org/oilmod/bukkit/items/RealItemFactory.java
++++ b/src/main/java/org/oilmod/bukkit/items/RealItemFactory.java
+@@ -5,16 +5,17 @@ import org.bukkit.entity.Player;
+ import org.bukkit.inventory.ItemStack;
+ import org.oilmod.api.items.OilItem;
+ import org.oilmod.api.items.internal.ItemFactory;
++import org.oilmod.api.rep.entity.EntityHumanRep;
+ 
+ /**
+  * Created by sirati97 on 15.01.2016.
+  */
+ public class RealItemFactory extends ItemFactory {
+     @Override
+-    public ItemStack createStack(OilItem apiItem, Player player, int count, int damage) {
++    public ItemStack createStack(OilItem apiItem, EntityHumanRep player, int count, int data) {
+         String displayName = apiItem.getDisplayName(player);
+         RealItem modItem = (RealItem) apiItem.getNmsItem();
+-        RealItemStack itemStack = ItemUtil.createOil(apiItem, count, damage);
++        RealItemStack itemStack = ItemUtil.createOil(apiItem, count, data);
+         return CraftItemStack.asCraftMirror(itemStack);
+     }
+ }
 diff --git a/src/main/java/org/oilmod/bukkit/items/RealSpecificItemStackFactory.java b/src/main/java/org/oilmod/bukkit/items/RealSpecificItemStackFactory.java
 index 4ec80d0c..5cfaf4b5 100644
 --- a/src/main/java/org/oilmod/bukkit/items/RealSpecificItemStackFactory.java
@@ -602,26 +626,6 @@ index 4ec80d0c..5cfaf4b5 100644
 +        return ((ItemStackBR)oil.create());
      }
  }
-diff --git a/src/main/java/org/oilmod/bukkit/items/itemstackimpl/internal/RealItemFactory.java b/src/main/java/org/oilmod/bukkit/items/itemstackimpl/internal/RealItemFactory.java
-index f3c9ac7e..9bcf535b 100644
---- a/src/main/java/org/oilmod/bukkit/items/itemstackimpl/internal/RealItemFactory.java
-+++ b/src/main/java/org/oilmod/bukkit/items/itemstackimpl/internal/RealItemFactory.java
-@@ -5,13 +5,14 @@ import org.oilmod.api.items.internal.ItemFactory;
- import org.bukkit.craftbukkit.inventory.CraftItemStack;
- import org.bukkit.entity.Player;
- import org.bukkit.inventory.ItemStack;
-+import org.oilmod.api.rep.entity.EntityHumanRep;
- 
- /**
-  * Created by sirati97 on 15.01.2016.
-  */
- public class RealItemFactory extends ItemFactory {
-     @Override
--    public ItemStack createStack(OilItem apiItem, Player player, int count, int data) {
-+    public ItemStack createStack(OilItem apiItem, EntityHumanRep player, int count, int data) {
-         String displayName = apiItem.getDisplayName(player);
-         ModItem modItem = (ModItem) apiItem.getNmsItem();
-         ModItemStack itemStack = modItem.createNMSItemStack(apiItem, count, displayName);
 diff --git a/src/main/java/org/oilmod/bukkit/items/itemtype/RealAxe.java b/src/main/java/org/oilmod/bukkit/items/itemtype/RealAxe.java
 index 21995036..ab6ed052 100644
 --- a/src/main/java/org/oilmod/bukkit/items/itemtype/RealAxe.java
@@ -952,7 +956,7 @@ index cc926592..3df9f0b1 100644
  
      public ItemStack getItemStackNMS() {
 diff --git a/src/main/java/org/oilmod/bukkit/util/OilSpigotUtil.java b/src/main/java/org/oilmod/bukkit/util/OilSpigotUtil.java
-index 36a6aa86..aef2a0b5 100644
+index 834c97ca..5662afb9 100644
 --- a/src/main/java/org/oilmod/bukkit/util/OilSpigotUtil.java
 +++ b/src/main/java/org/oilmod/bukkit/util/OilSpigotUtil.java
 @@ -8,6 +8,8 @@ import org.bukkit.block.BlockFace;
@@ -961,10 +965,10 @@ index 36a6aa86..aef2a0b5 100644
  import org.bukkit.craftbukkit.util.CraftMagicNumbers;
 +import org.oilmod.api.rep.block.BlockFaceRep;
 +import org.oilmod.api.rep.block.BlockStateRep;
+ import org.bukkit.enchantments.Enchantment;
  import org.oilmod.api.userinterface.ClickType;
  import org.oilmod.api.userinterface.IInteractableUIElement;
- import org.oilmod.api.userinterface.IUIElement;
-@@ -29,6 +31,7 @@ import org.bukkit.craftbukkit.entity.CraftHumanEntity;
+@@ -30,6 +32,7 @@ import org.bukkit.craftbukkit.entity.CraftHumanEntity;
  import org.bukkit.craftbukkit.entity.CraftPlayer;
  import org.bukkit.craftbukkit.inventory.CraftItemStack;
  import org.bukkit.entity.Player;
@@ -972,7 +976,7 @@ index 36a6aa86..aef2a0b5 100644
  
  import java.util.HashMap;
  import java.util.Map;
-@@ -54,7 +57,7 @@ public final class OilSpigotUtil {
+@@ -55,7 +58,7 @@ public final class OilSpigotUtil {
      }
  
  
@@ -981,7 +985,7 @@ index 36a6aa86..aef2a0b5 100644
          CraftHumanEntity bukkit = human.getBukkitEntity();
          if (bukkit instanceof Player) {
              return (Player) bukkit;
-@@ -131,7 +134,7 @@ public final class OilSpigotUtil {
+@@ -132,7 +135,7 @@ public final class OilSpigotUtil {
          }
      }
  
@@ -990,7 +994,7 @@ index 36a6aa86..aef2a0b5 100644
          return CraftItemStack.asCraftMirror(itemStack);
      }
  
-@@ -156,33 +159,48 @@ public final class OilSpigotUtil {
+@@ -157,33 +160,48 @@ public final class OilSpigotUtil {
          return clickTypeNMSToOilMap.get(type);
      }
  

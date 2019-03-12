@@ -1,4 +1,4 @@
-From 4249ed8feda1904c42952820b9b33f3496c66f45 Mon Sep 17 00:00:00 2001
+From 06ac0a56b5b9415bcd78b51f59209e98788d76d6 Mon Sep 17 00:00:00 2001
 From: sirati97 <TheSirati97@gmail.com>
 Date: Tue, 12 Mar 2019 15:43:16 +0000
 Subject: [PATCH] improved itemstack api & impl

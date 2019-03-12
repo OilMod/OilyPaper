@@ -1,4 +1,4 @@
-From 42c449c02649148a7c93b1681d933c0f36b2d139 Mon Sep 17 00:00:00 2001
+From 296fc46e13e7356ee8d0d44f94c76b9883fad4f2 Mon Sep 17 00:00:00 2001
 From: sirati97 <TheSirati97@gmail.com>
 Date: Thu, 24 Jan 2019 04:01:35 +0000
 Subject: [PATCH] improved item interactability api
@@ -7,9 +7,9 @@ Subject: [PATCH] improved item interactability api
  .../minecraft/server/PlayerConnection.java    | 14 ++++++++++-
  .../server/PlayerInteractManager.java         | 18 +++++++++++----
  .../craftbukkit/event/CraftEventFactory.java  | 23 -------------------
- .../org/oilmod/bukkit/items/RealItem.java     | 21 +++++++++++++----
- .../oilmod/bukkit/items/RealItemStack.java    |  9 ++++++++
- 5 files changed, 53 insertions(+), 32 deletions(-)
+ .../org/oilmod/bukkit/items/RealItem.java     | 20 +++++++++++++---
+ .../oilmod/bukkit/items/RealItemStack.java    |  1 -
+ 5 files changed, 44 insertions(+), 32 deletions(-)
 
 diff --git a/src/main/java/net/minecraft/server/PlayerConnection.java b/src/main/java/net/minecraft/server/PlayerConnection.java
 index 39596f24..f69f2b43 100644
@@ -95,7 +95,7 @@ index f290ae4e..b462b1d3 100644
                  }
                  return;
 diff --git a/src/main/java/org/bukkit/craftbukkit/event/CraftEventFactory.java b/src/main/java/org/bukkit/craftbukkit/event/CraftEventFactory.java
-index dd9af4c2..83f1e3e9 100644
+index bdc1189c..11e55fb2 100644
 --- a/src/main/java/org/bukkit/craftbukkit/event/CraftEventFactory.java
 +++ b/src/main/java/org/bukkit/craftbukkit/event/CraftEventFactory.java
 @@ -247,29 +247,6 @@ public class CraftEventFactory {
@@ -129,10 +129,10 @@ index dd9af4c2..83f1e3e9 100644
      }
  
 diff --git a/src/main/java/org/oilmod/bukkit/items/RealItem.java b/src/main/java/org/oilmod/bukkit/items/RealItem.java
-index ef03d11a..98360fa9 100644
+index 0cb24e74..4c40d5a8 100644
 --- a/src/main/java/org/oilmod/bukkit/items/RealItem.java
 +++ b/src/main/java/org/oilmod/bukkit/items/RealItem.java
-@@ -2,12 +2,10 @@ package org.oilmod.bukkit.items;
+@@ -2,7 +2,6 @@ package org.oilmod.bukkit.items;
  
  import com.google.common.collect.Multimap;
  import net.minecraft.server.*;
@@ -140,12 +140,7 @@ index ef03d11a..98360fa9 100644
  import org.bukkit.craftbukkit.inventory.CraftItemStack;
  import org.bukkit.craftbukkit.util.CraftMagicNumbers;
  import org.bukkit.entity.LivingEntity;
- import org.oilmod.api.items.ItemInteractionResult;
--import org.oilmod.api.items.NMSItem;
- import org.oilmod.api.items.OilItem;
- import org.oilmod.api.items.type.IDurable;
- import org.oilmod.api.items.type.IToolBlockBreaking;
-@@ -16,6 +14,7 @@ import org.oilmod.bukkit.block.RealOilBlockState;
+@@ -15,6 +14,7 @@ import org.oilmod.bukkit.block.RealOilBlockState;
  import org.oilmod.bukkit.util.OilSpigotUtil;
  
  import static org.oilmod.bukkit.util.OilSpigotUtil.toBukkit;
@@ -153,7 +148,7 @@ index ef03d11a..98360fa9 100644
  
  public class RealItem extends Item {
      private final OilItem apiItem;
-@@ -64,6 +63,20 @@ public class RealItem extends Item {
+@@ -63,6 +63,20 @@ public class RealItem extends Item {
          return getApiItem().canEnchantSpecial(OilSpigotUtil. toBukkit(enchantment), anvil);
      }
  
@@ -174,7 +169,7 @@ index ef03d11a..98360fa9 100644
      //NMS
  
      @Override
-@@ -109,7 +122,7 @@ public class RealItem extends Item {
+@@ -108,7 +122,7 @@ public class RealItem extends Item {
  
      public EnumInteractionResult onItemUseOnBlock(EntityHuman human, World w, BlockPosition pos, EnumHand hand, EnumDirection facing, float hitX, float hitY, float hitZ) {
          RealItemStack itemstack = (RealItemStack) human.b(hand);
@@ -183,7 +178,7 @@ index ef03d11a..98360fa9 100644
      }
  
      //OilSpigot Pail a -> onEntityHit
-@@ -142,7 +155,7 @@ public class RealItem extends Item {
+@@ -141,7 +155,7 @@ public class RealItem extends Item {
          RealItemStack itemstack = (RealItemStack) human.b(hand);
          ItemInteractionResult result = apiItem.onItemRightClick(itemstack.getOilItemStack(), w.getWorld(), human.getBukkitEntity(), hand==EnumHand.OFF_HAND);
  
@@ -193,25 +188,17 @@ index ef03d11a..98360fa9 100644
  
      @Override
 diff --git a/src/main/java/org/oilmod/bukkit/items/RealItemStack.java b/src/main/java/org/oilmod/bukkit/items/RealItemStack.java
-index 7e53be95..e3d2e812 100644
+index 6e73946e..e3d2e812 100644
 --- a/src/main/java/org/oilmod/bukkit/items/RealItemStack.java
 +++ b/src/main/java/org/oilmod/bukkit/items/RealItemStack.java
-@@ -151,6 +151,15 @@ public class RealItemStack extends ItemStack implements NMSItemStack {
-         return hasName()?getName():null;
+@@ -162,7 +162,6 @@ public class RealItemStack extends ItemStack implements NMSItemStack {
      }
  
-+    @Override
-+    public void setRenameNMS(String name) {
-+        setDisplayName(name);
-+    }
-+
-+    @Override
-+    public boolean isRenamedNMS() {
-+        return hasName();
-+    }
  
- 
+-
      //Anvils
+     public int prepareRepairAnvil(ItemStack itemStack, EntityHuman human, int usedItems, int oldDurability) {
+         return getApiItem().prepareRepairAnvil(oilItemStack, toBukkit(itemStack), human.getBukkitEntity(), usedItems, oldDurability);
 -- 
 2.20.1.windows.1
 

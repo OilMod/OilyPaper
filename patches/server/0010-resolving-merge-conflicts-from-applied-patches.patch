@@ -1,8 +1,7 @@
-From b2b426864fde448124f6aef5b814b9b99447cce5 Mon Sep 17 00:00:00 2001
-From: sirati97 <me@sirati97.de>
-Date: Thu, 28 Feb 2019 20:12:55 +0000
-Subject: [PATCH] refactoring and applying renamed conventions from
- representation api (does not compile)
+From 5f0ddb4dc26015ec8348482dc29492a5b084aae5 Mon Sep 17 00:00:00 2001
+From: sirati97 <TheSirati97@gmail.com>
+Date: Tue, 12 Mar 2019 16:10:54 +0000
+Subject: [PATCH] resolving merge conflicts from applied patches
 
 ---
  .../net/minecraft/server/BlockPiston.java     |   2 +-
@@ -22,10 +21,9 @@ Subject: [PATCH] refactoring and applying renamed conventions from
  .../oilmod/bukkit/inv2/VanillaSlotView.java   |  56 +++
  .../org/oilmod/bukkit/inv2/VanillaView.java   |  15 +
  .../org/oilmod/bukkit/items/RealItem.java     |   3 +-
- .../oilmod/bukkit/items/RealItemStack.java    |  12 +-
- .../bukkit/items/RealItemTypeHelper.java      |   5 +
+ .../oilmod/bukkit/items/RealItemStack.java    |  10 +
  .../org/oilmod/bukkit/util/RealOilUtil.java   |   2 +-
- 20 files changed, 715 insertions(+), 27 deletions(-)
+ 19 files changed, 709 insertions(+), 26 deletions(-)
  create mode 100644 src/main/java/org/oilmod/bukkit/inv2/Behaviour.java
  create mode 100644 src/main/java/org/oilmod/bukkit/inv2/ContainerState.java
  create mode 100644 src/main/java/org/oilmod/bukkit/inv2/Interaction.java
@@ -126,10 +124,10 @@ index d59d86ef..cbaab36e 100644
      @Override
      public void loadData() {
 diff --git a/src/main/java/org/bukkit/craftbukkit/event/CraftEventFactory.java b/src/main/java/org/bukkit/craftbukkit/event/CraftEventFactory.java
-index 6c9ad2a4..6a97b2e3 100644
+index dd9af4c2..bdc1189c 100644
 --- a/src/main/java/org/bukkit/craftbukkit/event/CraftEventFactory.java
 +++ b/src/main/java/org/bukkit/craftbukkit/event/CraftEventFactory.java
-@@ -908,7 +908,7 @@ public class CraftEventFactory {
+@@ -912,7 +912,7 @@ public class CraftEventFactory {
              hitBlock = entity.getBukkitEntity().getWorld().getBlockAt(blockposition.getX(), blockposition.getY(), blockposition.getZ());
          }
  
@@ -887,10 +885,10 @@ index 00000000..0b2f7ec4
 +    int getMaxStackSize(int vanillaSlot, ItemStack stack);
 +}
 diff --git a/src/main/java/org/oilmod/bukkit/items/RealItem.java b/src/main/java/org/oilmod/bukkit/items/RealItem.java
-index 4b454d2c..3bb23d9f 100644
+index ef03d11a..0cb24e74 100644
 --- a/src/main/java/org/oilmod/bukkit/items/RealItem.java
 +++ b/src/main/java/org/oilmod/bukkit/items/RealItem.java
-@@ -5,7 +5,6 @@ import org.bukkit.craftbukkit.inventory.CraftItemStack;
+@@ -7,7 +7,6 @@ import org.bukkit.craftbukkit.inventory.CraftItemStack;
  import org.bukkit.craftbukkit.util.CraftMagicNumbers;
  import org.bukkit.entity.LivingEntity;
  import org.oilmod.api.items.ItemInteractionResult;
@@ -898,7 +896,7 @@ index 4b454d2c..3bb23d9f 100644
  import org.oilmod.api.items.OilItem;
  import org.oilmod.api.items.type.IDurable;
  import org.oilmod.api.items.type.IToolBlockBreaking;
-@@ -35,7 +34,7 @@ public class RealItem extends Item {
+@@ -39,7 +38,7 @@ public class RealItem extends Item {
      //OilAPI
      public Item getVanillaFakeItem(RealItemStack stack) {
          //noinspection unchecked
@@ -908,10 +906,10 @@ index 4b454d2c..3bb23d9f 100644
  
      public int getVanillaFakeData(RealItemStack stack) {
 diff --git a/src/main/java/org/oilmod/bukkit/items/RealItemStack.java b/src/main/java/org/oilmod/bukkit/items/RealItemStack.java
-index 1a21d8de..5dad0be6 100644
+index 7e53be95..6e73946e 100644
 --- a/src/main/java/org/oilmod/bukkit/items/RealItemStack.java
 +++ b/src/main/java/org/oilmod/bukkit/items/RealItemStack.java
-@@ -149,6 +149,16 @@ public class RealItemStack extends ItemStack implements NMSItemStack {
+@@ -151,6 +151,16 @@ public class RealItemStack extends ItemStack implements NMSItemStack {
          return hasName()?getName():null;
      }
  
@@ -925,32 +923,9 @@ index 1a21d8de..5dad0be6 100644
 +        return hasName();
 +    }
 +
-     //OilAPI end
  
  
-@@ -279,7 +289,7 @@ public class RealItemStack extends ItemStack implements NMSItemStack {
-     protected boolean handleDamage(int damage, EntityLiving entityliving) {
-         if (getOilItem() instanceof IDurable) {
-             //noinspection unchecked
--            return ((IDurable) getOilItem()).handleDamage(getOilItemStack(), damage, (LivingEntity) entityliving.getBukkitEntity());
-+            return ((IDurable) getOilItem()).handleItemDamage(getOilItemStack(), damage, (LivingEntity) entityliving.getBukkitEntity());
-         }
-         return handleDamageVanilla(damage, entityliving);
-     }
-diff --git a/src/main/java/org/oilmod/bukkit/items/RealItemTypeHelper.java b/src/main/java/org/oilmod/bukkit/items/RealItemTypeHelper.java
-index 3d0fceee..95dd621b 100644
---- a/src/main/java/org/oilmod/bukkit/items/RealItemTypeHelper.java
-+++ b/src/main/java/org/oilmod/bukkit/items/RealItemTypeHelper.java
-@@ -15,4 +15,9 @@ public class RealItemTypeHelper extends ItemTypeHelper {
-     public void damageItem(OilItemStack stack, int damage, LivingEntity entity) {
-         ((RealItemStack)stack.getNmsItemStack()).damageVanilla(damage, ((CraftLivingEntity)entity).getHandle());
-     }
-+
-+    @Override
-+    public int getItemDamage(OilItemStack stack) {
-+        return stack.getData();
-+    }
- }
+     //Anvils
 diff --git a/src/main/java/org/oilmod/bukkit/util/RealOilUtil.java b/src/main/java/org/oilmod/bukkit/util/RealOilUtil.java
 index 70ca50b5..d5553f80 100644
 --- a/src/main/java/org/oilmod/bukkit/util/RealOilUtil.java
