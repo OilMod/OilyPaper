@@ -1,0 +1,38 @@
+From 9bd4f31f99b143f8588d7b22ac060bc697e19131 Mon Sep 17 00:00:00 2001
+From: sirati97 <TheSirati97@gmail.com>
+Date: Tue, 12 Mar 2019 05:05:49 +0000
+Subject: [PATCH] started to update paper implementation to use rep api instead
+ of bukkit
+
+---
+ src/main/java/org/bukkit/World.java | 16 ----------------
+ 1 file changed, 16 deletions(-)
+
+diff --git a/src/main/java/org/bukkit/World.java b/src/main/java/org/bukkit/World.java
+index ad508075..81ab08ac 100644
+--- a/src/main/java/org/bukkit/World.java
++++ b/src/main/java/org/bukkit/World.java
+@@ -2165,20 +2165,4 @@ public interface World extends PluginMessageRecipient, Metadatable, WorldRep {
+             }
+         }
+     }
+-
+-    //OilyPaper - start
+-    public class OilRep implements WorldRep {
+-        private final World outer;
+-
+-        public OilRep(World outer) {
+-            this.outer = outer;
+-        }
+-
+-        public World bukkit() {
+-            return outer;
+-        }
+-    }
+-
+-    OilRep OilRep();
+-    //OilyPaper - end
+ }
+-- 
+2.20.1.windows.1
+

@@ -1,0 +1,1388 @@
+From ce5c7a32241ec5cc8d523c84f158d47f2ced7034 Mon Sep 17 00:00:00 2001
+From: sirati97 <TheSirati97@gmail.com>
+Date: Tue, 12 Mar 2019 05:05:48 +0000
+Subject: [PATCH] started to update paper implementation to use rep api instead
+ of bukkit
+
+---
+ pom.xml                                       |  4 +-
+ src/main/java/net/minecraft/server/Block.java | 11 +++
+ src/main/java/net/minecraft/server/Item.java  |  7 ++
+ .../java/net/minecraft/server/ItemAxe.java    |  4 +-
+ .../net/minecraft/server/ItemPickaxe.java     |  4 +-
+ .../java/net/minecraft/server/ItemSpade.java  |  4 +-
+ src/main/java/net/minecraft/server/Slot.java  |  2 +-
+ .../java/net/minecraft/server/SlotResult.java |  2 +-
+ .../oilmod/bukkit/block/RealBlockType.java    | 18 +++--
+ .../bukkit/block/RealOilBlockState.java       | 38 ---------
+ .../crafting/BukkitCraftingIngredient.java    |  4 +-
+ .../org/oilmod/bukkit/inv2/RealContainer.java |  6 +-
+ .../bukkit/inventory/ItemStackDataImpl.java   |  2 +-
+ .../bukkit/inventory/OilInventoryBase.java    |  9 +++
+ .../custom/api/OilElementWrapper.java         |  9 ++-
+ .../api/OilInteractableElementWrapper.java    |  8 +-
+ .../inventory/custom/slot/ViewSlotBase.java   |  2 +-
+ .../org/oilmod/bukkit/items/RealItem.java     | 12 ++-
+ .../items/RealSpecificItemStackFactory.java   |  2 +-
+ .../internal/RealItemFactory.java             |  3 +-
+ .../oilmod/bukkit/items/itemtype/RealAxe.java | 14 ++--
+ .../bukkit/items/itemtype/RealPickaxe.java    | 14 ++--
+ .../bukkit/items/itemtype/RealShears.java     | 22 +++---
+ .../bukkit/items/itemtype/RealShovel.java     | 20 +++--
+ .../bukkit/items/itemtype/RealSword.java      | 17 ++--
+ .../bukkit/items/itemtype/RealTBBTool.java    | 18 ++++-
+ .../java/org/oilmod/bukkit/ui/SlotState.java  |  2 +-
+ .../org/oilmod/bukkit/util/OilSpigotUtil.java | 38 ++++++---
+ .../java/org/oilmod/rep/block/BlockBR.java    | 29 +++++++
+ .../org/oilmod/rep/block/BlockStateBR.java    | 36 +++++++++
+ .../org/oilmod/rep/inventory/InventoryBR.java | 39 +++++++++
+ src/main/java/org/oilmod/rep/item/ItemBR.java | 21 +++++
+ .../java/org/oilmod/rep/item/ItemStackBR.java | 79 +++++++++++++++++++
+ .../minecraft/MC112BlockProvider.java         | 48 +++++++++++
+ .../java/org/oilmod/rep/world/WorldBR.java    | 17 ++++
+ .../bukkit/blocks/MaterialToolTest.java       |  6 +-
+ 36 files changed, 439 insertions(+), 132 deletions(-)
+ delete mode 100644 src/main/java/org/oilmod/bukkit/block/RealOilBlockState.java
+ create mode 100644 src/main/java/org/oilmod/rep/block/BlockBR.java
+ create mode 100644 src/main/java/org/oilmod/rep/block/BlockStateBR.java
+ create mode 100644 src/main/java/org/oilmod/rep/inventory/InventoryBR.java
+ create mode 100644 src/main/java/org/oilmod/rep/item/ItemBR.java
+ create mode 100644 src/main/java/org/oilmod/rep/item/ItemStackBR.java
+ create mode 100644 src/main/java/org/oilmod/rep/providers/minecraft/MC112BlockProvider.java
+ create mode 100644 src/main/java/org/oilmod/rep/world/WorldBR.java
+
+diff --git a/pom.xml b/pom.xml
+index e158005a..e2f7e290 100644
+--- a/pom.xml
++++ b/pom.xml
+@@ -147,7 +147,7 @@
+ 
+     <!-- This builds a completely 'ready to start' jar with all dependencies inside -->
+     <build>
+-        <finalName>paper-${minecraft.version}</finalName>
++        <finalName>oilypaper-${minecraft.version}</finalName>
+         <defaultGoal>clean install</defaultGoal> <!-- Paper -->
+         <plugins>
+             <plugin>
+@@ -176,7 +176,7 @@
+                     <archive>
+                         <manifestEntries>
+                             <Main-Class>org.bukkit.craftbukkit.Main</Main-Class>
+-                            <Implementation-Title>OilSpigot</Implementation-Title>
++                            <Implementation-Title>OilyPaper</Implementation-Title>
+                             <Implementation-Version>${describe}</Implementation-Version>
+                             <Implementation-Vendor>${maven.build.timestamp}</Implementation-Vendor>
+                             <Specification-Title>Bukkit/OilMod</Specification-Title>
+diff --git a/src/main/java/net/minecraft/server/Block.java b/src/main/java/net/minecraft/server/Block.java
+index 448fb687..96140055 100644
+--- a/src/main/java/net/minecraft/server/Block.java
++++ b/src/main/java/net/minecraft/server/Block.java
+@@ -2,6 +2,8 @@ package net.minecraft.server;
+ 
+ import com.google.common.collect.Sets;
+ import com.google.common.collect.UnmodifiableIterator;
++import org.oilmod.rep.block.BlockBR;
++
+ import java.util.HashSet;
+ import java.util.Iterator;
+ import java.util.List;
+@@ -1056,6 +1058,15 @@ public class Block {
+         this.hardness = hardness;
+         return this;
+     }
++
++
++
++    private final BlockBR blockRep = new BlockBR(this);
++
++    public BlockBR getBlockRep() {
++        return blockRep;
++    }
++
+     //OilSpigot end
+ 
+     public static enum EnumRandomOffset {
+diff --git a/src/main/java/net/minecraft/server/Item.java b/src/main/java/net/minecraft/server/Item.java
+index 676cee10..25c3ce88 100644
+--- a/src/main/java/net/minecraft/server/Item.java
++++ b/src/main/java/net/minecraft/server/Item.java
+@@ -4,6 +4,7 @@ import com.google.common.collect.HashMultimap;
+ import com.google.common.collect.Maps;
+ import com.google.common.collect.Multimap;
+ import org.oilmod.api.items.NMSItem;
++import org.oilmod.rep.item.ItemBR;
+ 
+ import java.util.Map;
+ import java.util.Random;
+@@ -784,6 +785,12 @@ public class Item implements NMSItem {
+         Item.REGISTRY.a(i, minecraftkey, item);
+     }
+ 
++    private final ItemBR itemRep = new ItemBR(this);
++
++    public ItemBR getItemRep() {
++        return itemRep;
++    }
++
+     //OilSpigot
+     public static int getHighestId() {
+         return highestId;
+diff --git a/src/main/java/net/minecraft/server/ItemAxe.java b/src/main/java/net/minecraft/server/ItemAxe.java
+index d89d5b18..b83f68b1 100644
+--- a/src/main/java/net/minecraft/server/ItemAxe.java
++++ b/src/main/java/net/minecraft/server/ItemAxe.java
+@@ -22,7 +22,7 @@ public class ItemAxe extends ItemTool {
+     public float getDestroySpeed(ItemStack itemstack, IBlockData iblockdata) {
+         Material material = iblockdata.getMaterial();
+ 
+-        return material != Material.WOOD && material != Material.PLANT && material != Material.REPLACEABLE_PLANT  && !material.getOilBlockType().breakableAxe(OilSpigotUtil.toBukkit(iblockdata.getBlock())) ? super.getDestroySpeed(itemstack, iblockdata) : this.a;
++        return material != Material.WOOD && material != Material.PLANT && material != Material.REPLACEABLE_PLANT  && !material.getOilBlockType().breakableAxe(OilSpigotUtil.toRep(iblockdata.getBlock())) ? super.getDestroySpeed(itemstack, iblockdata) : this.a;
+     }
+ 
+     //OilSpigot start
+@@ -30,7 +30,7 @@ public class ItemAxe extends ItemTool {
+     public boolean canDestroySpecialBlock(IBlockData iblockdata) {
+         Block block = iblockdata.getBlock();
+         BlockType blockType = iblockdata.getMaterial().getOilBlockType();
+-        return (!block.isVanilla() && blockType.breakableAxe(OilSpigotUtil.toBukkit(block))) || super.canDestroySpecialBlock(iblockdata);
++        return (!block.isVanilla() && blockType.breakableAxe(OilSpigotUtil.toRep(block))) || super.canDestroySpecialBlock(iblockdata);
+     }
+     //OilSpigot end
+ }
+diff --git a/src/main/java/net/minecraft/server/ItemPickaxe.java b/src/main/java/net/minecraft/server/ItemPickaxe.java
+index b3b307f4..2195bfe9 100644
+--- a/src/main/java/net/minecraft/server/ItemPickaxe.java
++++ b/src/main/java/net/minecraft/server/ItemPickaxe.java
+@@ -24,7 +24,7 @@ public class ItemPickaxe extends ItemTool {
+ 
+         //OilSpigot auto-simplify + added own check
+         boolean result = material == Material.STONE || material == Material.ORE || material == Material.HEAVY || //Materials
+-                (!block.isVanilla() && material.getOilBlockType().breakablePickaxe(OilSpigotUtil.toBukkit(block))); //Modded support
++                (!block.isVanilla() && material.getOilBlockType().breakablePickaxe(OilSpigotUtil.toRep(block))); //Modded support
+ 
+         //OilSpigot use new method getHardness instead of doing this weird if
+         return result && block.getHardness() >= 0 ? this.d.d() >= block.getHardness() : result;
+@@ -34,6 +34,6 @@ public class ItemPickaxe extends ItemTool {
+         Material material = iblockdata.getMaterial();
+ 
+         //OilSpigot added own check
+-        return material != Material.ORE && material != Material.HEAVY && material != Material.STONE  && !(!iblockdata.getBlock().isVanilla() && material.getOilBlockType().breakablePickaxe(OilSpigotUtil.toBukkit(iblockdata.getBlock()))) ? super.getDestroySpeed(itemstack, iblockdata) : this.a;
++        return material != Material.ORE && material != Material.HEAVY && material != Material.STONE  && !(!iblockdata.getBlock().isVanilla() && material.getOilBlockType().breakablePickaxe(OilSpigotUtil.toRep(iblockdata.getBlock()))) ? super.getDestroySpeed(itemstack, iblockdata) : this.a;
+     }
+ }
+diff --git a/src/main/java/net/minecraft/server/ItemSpade.java b/src/main/java/net/minecraft/server/ItemSpade.java
+index 2d6ef2a1..4e72776d 100644
+--- a/src/main/java/net/minecraft/server/ItemSpade.java
++++ b/src/main/java/net/minecraft/server/ItemSpade.java
+@@ -19,7 +19,7 @@ public class ItemSpade extends ItemTool {
+         Block block = iblockdata.getBlock();
+ 
+         //OilSpigot use material.breakableShovel
+-        return block == Blocks.SNOW_LAYER || block == Blocks.SNOW || (!block.isVanilla() && iblockdata.getMaterial().getOilBlockType().breakableShovel(OilSpigotUtil.toBukkit(block)));
++        return block == Blocks.SNOW_LAYER || block == Blocks.SNOW || (!block.isVanilla() && iblockdata.getMaterial().getOilBlockType().breakableShovel(OilSpigotUtil.toRep(block)));
+     }
+ 
+     //OilSpigot start
+@@ -59,7 +59,7 @@ public class ItemSpade extends ItemTool {
+     public float getDestroySpeed(ItemStack itemstack, IBlockData iblockdata) {
+         Block block = iblockdata.getBlock();
+         BlockType blockType = iblockdata.getMaterial().getOilBlockType();
+-        return !block.isVanilla() && blockType.breakableShovel(OilSpigotUtil.toBukkit(block)) ? this.a : super.getDestroySpeed(itemstack, iblockdata);
++        return !block.isVanilla() && blockType.breakableShovel(OilSpigotUtil.toRep(block)) ? this.a : super.getDestroySpeed(itemstack, iblockdata);
+     }
+     //OilSpigot end
+ }
+diff --git a/src/main/java/net/minecraft/server/Slot.java b/src/main/java/net/minecraft/server/Slot.java
+index b79106b6..3af95165 100644
+--- a/src/main/java/net/minecraft/server/Slot.java
++++ b/src/main/java/net/minecraft/server/Slot.java
+@@ -26,7 +26,7 @@ public class Slot {
+ 
+     protected void a(ItemStack itemstack, int i) {}
+ 
+-    protected void b(int i) {}
++    public void b(int i) {}
+ 
+     protected void c(ItemStack itemstack) {}
+ 
+diff --git a/src/main/java/net/minecraft/server/SlotResult.java b/src/main/java/net/minecraft/server/SlotResult.java
+index d5768266..b16a35db 100644
+--- a/src/main/java/net/minecraft/server/SlotResult.java
++++ b/src/main/java/net/minecraft/server/SlotResult.java
+@@ -33,7 +33,7 @@ public class SlotResult extends Slot {
+         this.c(itemstack);
+     }
+ 
+-    protected void b(int i) {
++    public void b(int i) {
+         this.c += i;
+     }
+ 
+diff --git a/src/main/java/org/oilmod/bukkit/block/RealBlockType.java b/src/main/java/org/oilmod/bukkit/block/RealBlockType.java
+index 36a570f0..ce76a9ca 100644
+--- a/src/main/java/org/oilmod/bukkit/block/RealBlockType.java
++++ b/src/main/java/org/oilmod/bukkit/block/RealBlockType.java
+@@ -6,8 +6,10 @@ import org.oilmod.api.blocks.BlockType;
+ import org.oilmod.api.blocks.MapColor;
+ import org.oilmod.api.blocks.PistonReaction;
+ import net.minecraft.server.Material;
++import org.oilmod.api.rep.block.BlockStateRep;
+ import org.oilmod.bukkit.OilMain;
+ import org.oilmod.bukkit.util.OilSpigotUtil;
++import org.oilmod.rep.block.BlockBR;
+ 
+ public class RealBlockType extends BlockType {
+     public RealBlockType(Material material, BlockTypeEnum blockTypeEnum) {
+@@ -55,8 +57,8 @@ public class RealBlockType extends BlockType {
+     }
+ 
+     @Override
+-    public boolean breakablePickaxe(org.bukkit.Material material) {
+-        Block block = OilSpigotUtil.toNMS(material);
++    public boolean breakablePickaxe(BlockStateRep blockstate) {
++        Block block = ((BlockBR)blockstate.getBlock()).getNMS();
+         switch (getBlockTypeEnum()) {
+             case ANVIL: //Inferred by ItemPickaxe KEEPSYNC
+             case IRON:
+@@ -73,8 +75,8 @@ public class RealBlockType extends BlockType {
+     }
+ 
+     @Override
+-    public boolean breakableAxe(org.bukkit.Material material) {
+-        Block block = OilSpigotUtil.toNMS(material);
++    public boolean breakableAxe(BlockStateRep blockstate) {
++        Block block = ((BlockBR)blockstate.getBlock()).getNMS();
+         switch (getBlockTypeEnum()) {
+             case WOOD: //Inferred by ItemAxe KEEPSYNC
+             case PLANTS:
+@@ -89,8 +91,8 @@ public class RealBlockType extends BlockType {
+     }
+ 
+     @Override
+-    public boolean breakableShovel(org.bukkit.Material material) {
+-        Block block = OilSpigotUtil.toNMS(material);
++    public boolean breakableShovel(BlockStateRep blockstate) {
++        Block block = ((BlockBR)blockstate.getBlock()).getNMS();
+         switch (getBlockTypeEnum()) {
+             case SAND: //Inferred by blocks ItemSpade KEEPSYNC
+             case GROUND:
+@@ -107,7 +109,7 @@ public class RealBlockType extends BlockType {
+     }
+ 
+     @Override
+-    public boolean breakableShears(org.bukkit.Material material) {
++    public boolean breakableShears(BlockStateRep block) {
+         switch (getBlockTypeEnum()) {
+             case PLANTS: //Inferred by blocks ItemShears KEEPSYNC
+             case VINE:
+@@ -123,7 +125,7 @@ public class RealBlockType extends BlockType {
+     }
+ 
+     @Override
+-    public boolean breakableBlade(org.bukkit.Material material) {
++    public boolean breakableBlade(BlockStateRep block) {
+         switch (getBlockTypeEnum()) {
+             case PLANTS: //Inferred by ItemSword KEEPSYNC
+             case VINE:
+diff --git a/src/main/java/org/oilmod/bukkit/block/RealOilBlockState.java b/src/main/java/org/oilmod/bukkit/block/RealOilBlockState.java
+deleted file mode 100644
+index 7c162fea..00000000
+--- a/src/main/java/org/oilmod/bukkit/block/RealOilBlockState.java
++++ /dev/null
+@@ -1,38 +0,0 @@
+-package org.oilmod.bukkit.block;
+-
+-import net.minecraft.server.BlockPosition;
+-import net.minecraft.server.IBlockData;
+-import org.bukkit.Location;
+-import org.bukkit.Material;
+-import org.bukkit.craftbukkit.CraftWorld;
+-import org.oilmod.api.blocks.BlockType;
+-import org.oilmod.api.blocks.IBlockState;
+-import org.oilmod.bukkit.util.OilSpigotUtil;
+-
+-public class RealOilBlockState implements IBlockState {
+-    private final IBlockData nms;
+-
+-    public RealOilBlockState(IBlockData nms) {
+-        this.nms = nms;
+-    }
+-
+-    @Override
+-    public BlockType getBlockType() {
+-        return nms.getMaterial().getOilBlockType();
+-    }
+-
+-    @Override
+-    public Material getBlock() {
+-        return OilSpigotUtil.toBukkit(nms.getBlock());
+-    }
+-
+-    @Override
+-    public float getBlockHardness(Location location) {
+-        return nms.b(((CraftWorld)location.getWorld()).getHandle(), new BlockPosition(location.getBlockX(), location.getBlockY(), location.getBlockZ()));
+-    }
+-
+-    @Override
+-    public IBlockData getNMS() {
+-        return nms;
+-    }
+-}
+diff --git a/src/main/java/org/oilmod/bukkit/crafting/BukkitCraftingIngredient.java b/src/main/java/org/oilmod/bukkit/crafting/BukkitCraftingIngredient.java
+index 36e32fbd..a6329552 100644
+--- a/src/main/java/org/oilmod/bukkit/crafting/BukkitCraftingIngredient.java
++++ b/src/main/java/org/oilmod/bukkit/crafting/BukkitCraftingIngredient.java
+@@ -20,7 +20,7 @@ public class BukkitCraftingIngredient implements NMSCraftingIngredient {
+ 
+     @Override
+     public boolean match(ItemStack itemStack, DataHolder dataHolder) {
+-        return oilCraftingIngredient.match(OilSpigotUtil.toBukkit(itemStack), dataHolder);
++        return oilCraftingIngredient.match(OilSpigotUtil.toRep(itemStack), dataHolder);
+     }
+ 
+     @Override
+@@ -29,7 +29,7 @@ public class BukkitCraftingIngredient implements NMSCraftingIngredient {
+     }
+ 
+     public ItemStack onCrafted(ItemStack oldItemStack, DataHolder dataHolder) {
+-        return CraftItemStack.asNMSCopy(oilCraftingIngredient.onCrafted(OilSpigotUtil.toBukkit(oldItemStack), dataHolder));
++        return CraftItemStack.asNMSCopy(oilCraftingIngredient.onCrafted(OilSpigotUtil.toRep(oldItemStack), dataHolder));
+     }
+ 
+     @Override
+diff --git a/src/main/java/org/oilmod/bukkit/inv2/RealContainer.java b/src/main/java/org/oilmod/bukkit/inv2/RealContainer.java
+index db33ca8c..e106ba00 100644
+--- a/src/main/java/org/oilmod/bukkit/inv2/RealContainer.java
++++ b/src/main/java/org/oilmod/bukkit/inv2/RealContainer.java
+@@ -18,6 +18,7 @@ import java.util.HashMap;
+ import java.util.Iterator;
+ import java.util.Map;
+ 
++/*
+ @SuppressWarnings("Duplicates")
+ public class RealContainer extends Container {
+ 
+@@ -354,6 +355,9 @@ public class RealContainer extends Container {
+     }
+ 
+     private void processQuickCraft(int i, int j, EntityHuman entityhuman, PlayerInventory playerinventory) {
++        /* //todo uncomment
++
++
+         ItemStack itemstack1;
+         ItemStack itemstack2;
+         int l;
+@@ -466,4 +470,4 @@ public class RealContainer extends Container {
+     public boolean canUse(EntityHuman entityhuman) {
+         return false;
+     }
+-}
++}*/
+diff --git a/src/main/java/org/oilmod/bukkit/inventory/ItemStackDataImpl.java b/src/main/java/org/oilmod/bukkit/inventory/ItemStackDataImpl.java
+index 45573ebe..5a406ec7 100644
+--- a/src/main/java/org/oilmod/bukkit/inventory/ItemStackDataImpl.java
++++ b/src/main/java/org/oilmod/bukkit/inventory/ItemStackDataImpl.java
+@@ -31,7 +31,7 @@ public class ItemStackDataImpl extends ItemStackData {
+     @Override
+     public void loadFrom(Compound parent, String name) {
+         if (parent.containsKey(name, DataType.Subsection)) {
+-            itemStack = OilSpigotUtil.toBukkit(net.minecraft.server.ItemStack.createStack(parent.getCompound(name)));
++            itemStack = OilSpigotUtil.toRep(net.minecraft.server.ItemStack.createStack(parent.getCompound(name)));
+         } else {
+             itemStack = null;
+         }
+diff --git a/src/main/java/org/oilmod/bukkit/inventory/OilInventoryBase.java b/src/main/java/org/oilmod/bukkit/inventory/OilInventoryBase.java
+index 611b5a04..2518a9f9 100644
+--- a/src/main/java/org/oilmod/bukkit/inventory/OilInventoryBase.java
++++ b/src/main/java/org/oilmod/bukkit/inventory/OilInventoryBase.java
+@@ -6,6 +6,7 @@ import org.oilmod.api.config.CompoundSerializable;
+ import org.oilmod.api.config.DataList;
+ import org.oilmod.api.config.DataType;
+ import org.oilmod.api.inventory.ModInventoryObjectBase;
++import org.oilmod.api.rep.inventory.InventoryRep;
+ import org.oilmod.api.userinterface.IInteractableUIElement;
+ import org.oilmod.api.util.WeakReferenceTicker;
+ import org.oilmod.bukkit.inventory.custom.slot.OilInventoryViewSlot;
+@@ -16,6 +17,7 @@ import org.bukkit.craftbukkit.entity.CraftHumanEntity;
+ import org.bukkit.craftbukkit.inventory.CraftInventory;
+ import org.bukkit.entity.HumanEntity;
+ import org.bukkit.inventory.InventoryHolder;
++import org.oilmod.rep.inventory.InventoryBR;
+ 
+ import java.lang.ref.WeakReference;
+ import java.util.Iterator;
+@@ -30,6 +32,7 @@ public abstract class OilInventoryBase<APIObject extends ModInventoryObjectBase>
+     private String title;
+     private final WeakReference<InventoryHolder> owner;
+     private final CraftInventory bukkitInventory;
++    private final InventoryBR inventoryRep;
+     private final IItemFilter itemFilter;
+     public final NonNullList<ItemStack> items;
+     private WeakReference<APIObject> modInventoryObject;
+@@ -44,6 +47,7 @@ public abstract class OilInventoryBase<APIObject extends ModInventoryObjectBase>
+         this.title = title;
+         this.owner = new WeakReference<InventoryHolder>(owner);
+         this.bukkitInventory = createBukkit();
++        this.inventoryRep = new InventoryBR(this);
+         this.itemFilter = itemFilter==null?new NoItemFilter():itemFilter;
+         this.ticker = ticker;
+         this.needsOwner = needsOwner;
+@@ -151,6 +155,11 @@ public abstract class OilInventoryBase<APIObject extends ModInventoryObjectBase>
+         return bukkitInventory;
+     }
+ 
++    @Override
++    public InventoryBR getInventoryRep() {
++        return inventoryRep;
++    }
++
+     @Override
+     public boolean itemstackAddable(ItemStack itemStack) {
+         return itemFilter.allowed(itemStack);
+diff --git a/src/main/java/org/oilmod/bukkit/inventory/custom/api/OilElementWrapper.java b/src/main/java/org/oilmod/bukkit/inventory/custom/api/OilElementWrapper.java
+index d081d0fa..7e972b28 100644
+--- a/src/main/java/org/oilmod/bukkit/inventory/custom/api/OilElementWrapper.java
++++ b/src/main/java/org/oilmod/bukkit/inventory/custom/api/OilElementWrapper.java
+@@ -1,5 +1,6 @@
+ package org.oilmod.bukkit.inventory.custom.api;
+ 
++import org.oilmod.api.rep.itemstack.ItemStackRep;
+ import org.oilmod.api.userinterface.Click;
+ import org.oilmod.api.userinterface.IUIElement;
+ import org.oilmod.api.userinterface.internal.NMSClickData;
+@@ -26,8 +27,8 @@ public class OilElementWrapper implements IViewSlot {
+ 
+     @Override
+     public ItemStack getItem(int index) {
+-        CraftItemStack cStack = getDisplayed(index);
+-        return cStack==null?ItemStack.a:cStack.getHandle();
++        ItemStackRep cStack = getDisplayed(index);
++        return cStack==null?ItemStack.a:((ItemStackBR)cStack).getNMS();
+     }
+ 
+     @Override
+@@ -35,7 +36,7 @@ public class OilElementWrapper implements IViewSlot {
+         return !this.getItem(index).isEmpty();
+     }
+ 
+-    @Override
++    /*@Override
+     public CraftItemStack getDisplayed(int index) {
+         org.bukkit.inventory.ItemStack result = element.getDisplayed(index);
+         CraftItemStack craftResult;
+@@ -51,7 +52,7 @@ public class OilElementWrapper implements IViewSlot {
+             }
+         }
+         return craftResult;
+-    }
++    }*/
+ 
+     @Override
+     public void setDisplayed(int index, org.bukkit.inventory.ItemStack itemStack) {
+diff --git a/src/main/java/org/oilmod/bukkit/inventory/custom/api/OilInteractableElementWrapper.java b/src/main/java/org/oilmod/bukkit/inventory/custom/api/OilInteractableElementWrapper.java
+index f7db6415..55e5e544 100644
+--- a/src/main/java/org/oilmod/bukkit/inventory/custom/api/OilInteractableElementWrapper.java
++++ b/src/main/java/org/oilmod/bukkit/inventory/custom/api/OilInteractableElementWrapper.java
+@@ -18,17 +18,17 @@ public class OilInteractableElementWrapper extends OilElementWrapper implements
+ 
+     @Override
+     public void setItem(int index, ItemStack itemStack) {
+-        setDisplayed(index, OilSpigotUtil.toBukkit(itemStack));
++        setDisplayed(index, OilSpigotUtil.toRep(itemStack));
+     }
+ 
+     @Override
+     public boolean isItemstackAllowed(int index, ItemStack itemStack) {
+-        return isItemstackAllowed(index, OilSpigotUtil.toBukkit(itemStack));
++        return isItemstackAllowed(index, OilSpigotUtil.toRep(itemStack));
+     }
+ 
+     @Override
+     public boolean isHumanAllowed(int index, EntityHuman human) {
+-        return isPlayerAllowed(index, OilSpigotUtil.toBukkit(human));
++        return isPlayerAllowed(index, OilSpigotUtil.toRep(human));
+     }
+ 
+     @Override
+@@ -53,7 +53,7 @@ public class OilInteractableElementWrapper extends OilElementWrapper implements
+ 
+     @Override
+     public int getMaxStackSize(int index, ItemStack itemStack) {
+-        return getMaxStackSize(index, OilSpigotUtil.toBukkit(itemStack));
++        return getMaxStackSize(index, OilSpigotUtil.toRep(itemStack));
+     }
+ 
+     @Override
+diff --git a/src/main/java/org/oilmod/bukkit/inventory/custom/slot/ViewSlotBase.java b/src/main/java/org/oilmod/bukkit/inventory/custom/slot/ViewSlotBase.java
+index ca96e3c3..648daefa 100644
+--- a/src/main/java/org/oilmod/bukkit/inventory/custom/slot/ViewSlotBase.java
++++ b/src/main/java/org/oilmod/bukkit/inventory/custom/slot/ViewSlotBase.java
+@@ -25,7 +25,7 @@ public abstract class ViewSlotBase implements IViewSlot{
+ 
+     @Override
+     public final org.bukkit.inventory.ItemStack getDisplayed(int index) {
+-        return OilSpigotUtil.toBukkit(getItem(index));
++        return OilSpigotUtil.toRep(getItem(index));
+     }
+ 
+     @Override
+diff --git a/src/main/java/org/oilmod/bukkit/items/RealItem.java b/src/main/java/org/oilmod/bukkit/items/RealItem.java
+index 3bb23d9f..76d79a17 100644
+--- a/src/main/java/org/oilmod/bukkit/items/RealItem.java
++++ b/src/main/java/org/oilmod/bukkit/items/RealItem.java
+@@ -2,14 +2,12 @@ package org.oilmod.bukkit.items;
+ 
+ import net.minecraft.server.*;
+ import org.bukkit.craftbukkit.inventory.CraftItemStack;
+-import org.bukkit.craftbukkit.util.CraftMagicNumbers;
+ import org.bukkit.entity.LivingEntity;
+ import org.oilmod.api.items.ItemInteractionResult;
+ import org.oilmod.api.items.OilItem;
+ import org.oilmod.api.items.type.IDurable;
+ import org.oilmod.api.items.type.IToolBlockBreaking;
+ import org.oilmod.api.items.type.IVDAdapter;
+-import org.oilmod.bukkit.block.RealOilBlockState;
+ import org.oilmod.bukkit.util.OilSpigotUtil;
+ 
+ public class RealItem extends Item {
+@@ -34,7 +32,7 @@ public class RealItem extends Item {
+     //OilAPI
+     public Item getVanillaFakeItem(RealItemStack stack) {
+         //noinspection unchecked
+-        return CraftMagicNumbers.getItem(apiItem.getVanillaItem(stack.getOilItemStack()));
++        return ((ItemBR)apiItem.getVanillaItem(stack.getOilItemStack())).getNMS();
+     }
+ 
+     public int getVanillaFakeData(RealItemStack stack) {
+@@ -51,7 +49,7 @@ public class RealItem extends Item {
+     @Override
+     public float getDestroySpeed(ItemStack itemstack, IBlockData iblockdata) {
+         if (apiItem instanceof IToolBlockBreaking) {
+-            return ((IToolBlockBreaking)apiItem).getDestroySpeed(((RealItemStack)itemstack).getOilItemStack(), OilSpigotUtil.toBukkit(iblockdata), iblockdata.getMaterial().getOilBlockType());
++            return ((IToolBlockBreaking)apiItem).getDestroySpeed(((RealItemStack)itemstack).getOilItemStack(), OilSpigotUtil.toRep(iblockdata), iblockdata.getMaterial().getOilBlockType());
+         }
+         return super.getDestroySpeed(itemstack, iblockdata);
+     }
+@@ -59,7 +57,7 @@ public class RealItem extends Item {
+     @Override
+     public boolean canDestroySpecialBlock(IBlockData iblockdata) {
+         if (apiItem instanceof IToolBlockBreaking) {
+-            return ((IToolBlockBreaking)apiItem).canHarvestBlock(OilSpigotUtil.toBukkit(iblockdata), iblockdata.getMaterial().getOilBlockType());
++            return ((IToolBlockBreaking)apiItem).canHarvestBlock(OilSpigotUtil.toRep(iblockdata), iblockdata.getMaterial().getOilBlockType());
+         }
+         return super.canDestroySpecialBlock(iblockdata);
+     }
+@@ -107,7 +105,7 @@ public class RealItem extends Item {
+ 
+     public EnumInteractionResult onItemUseOnBlock(EntityHuman human, World w, BlockPosition pos, EnumHand hand, EnumDirection facing, float hitX, float hitY, float hitZ) {
+         RealItemStack itemstack = (RealItemStack) human.b(hand);
+-        return OilSpigotUtil.toNMS(apiItem.onItemUseOnBlock(itemstack.getOilItemStack(), human.getBukkitEntity(), OilSpigotUtil.toBukkit(w, pos), hand==EnumHand.OFF_HAND, OilSpigotUtil.toBukkit(facing), hitX, hitY, hitZ));
++        return OilSpigotUtil.toNMS(apiItem.onItemUseOnBlock(itemstack.getOilItemStack(), human.getBukkitEntity(), OilSpigotUtil.toRep(w, pos), hand==EnumHand.OFF_HAND, OilSpigotUtil.toRep(facing), hitX, hitY, hitZ));
+     }
+ 
+     //OilSpigot Pail a -> onEntityHit
+@@ -127,7 +125,7 @@ public class RealItem extends Item {
+     }
+ 
+     public boolean onBlockDestroyed(ItemStack stack, World w, IBlockData data, BlockPosition pos, EntityLiving entity) {
+-        return apiItem.onBlockDestroyed(((RealItemStack)stack).getOilItemStack(), new RealOilBlockState(data), OilSpigotUtil.toBukkit(w, pos), (LivingEntity)entity.getBukkitEntity());
++        return apiItem.onBlockDestroyed(((RealItemStack)stack).getOilItemStack(), new RealOilBlockState(data), OilSpigotUtil.toRep(w, pos), (LivingEntity)entity.getBukkitEntity());
+     }
+ 
+     //OilSpigot Pail a -> onItemRightClick
+diff --git a/src/main/java/org/oilmod/bukkit/items/RealSpecificItemStackFactory.java b/src/main/java/org/oilmod/bukkit/items/RealSpecificItemStackFactory.java
+index 4ec80d0c..5cfaf4b5 100644
+--- a/src/main/java/org/oilmod/bukkit/items/RealSpecificItemStackFactory.java
++++ b/src/main/java/org/oilmod/bukkit/items/RealSpecificItemStackFactory.java
+@@ -16,6 +16,6 @@ public class RealSpecificItemStackFactory implements SpecificItemStackFactory {
+ 
+     @Override
+     public ItemStack create() {
+-        return CraftItemStack.asNMSCopy(oil.create());
++        return ((ItemStackBR)oil.create());
+     }
+ }
+diff --git a/src/main/java/org/oilmod/bukkit/items/itemstackimpl/internal/RealItemFactory.java b/src/main/java/org/oilmod/bukkit/items/itemstackimpl/internal/RealItemFactory.java
+index f3c9ac7e..9bcf535b 100644
+--- a/src/main/java/org/oilmod/bukkit/items/itemstackimpl/internal/RealItemFactory.java
++++ b/src/main/java/org/oilmod/bukkit/items/itemstackimpl/internal/RealItemFactory.java
+@@ -5,13 +5,14 @@ import org.oilmod.api.items.internal.ItemFactory;
+ import org.bukkit.craftbukkit.inventory.CraftItemStack;
+ import org.bukkit.entity.Player;
+ import org.bukkit.inventory.ItemStack;
++import org.oilmod.api.rep.entity.EntityHumanRep;
+ 
+ /**
+  * Created by sirati97 on 15.01.2016.
+  */
+ public class RealItemFactory extends ItemFactory {
+     @Override
+-    public ItemStack createStack(OilItem apiItem, Player player, int count, int data) {
++    public ItemStack createStack(OilItem apiItem, EntityHumanRep player, int count, int data) {
+         String displayName = apiItem.getDisplayName(player);
+         ModItem modItem = (ModItem) apiItem.getNmsItem();
+         ModItemStack itemStack = modItem.createNMSItemStack(apiItem, count, displayName);
+diff --git a/src/main/java/org/oilmod/bukkit/items/itemtype/RealAxe.java b/src/main/java/org/oilmod/bukkit/items/itemtype/RealAxe.java
+index 21995036..ab6ed052 100644
+--- a/src/main/java/org/oilmod/bukkit/items/itemtype/RealAxe.java
++++ b/src/main/java/org/oilmod/bukkit/items/itemtype/RealAxe.java
+@@ -7,7 +7,9 @@ import org.bukkit.block.BlockState;
+ import org.oilmod.api.blocks.BlockType;
+ import org.oilmod.api.items.OilItemStack;
+ import org.oilmod.api.items.type.IToolBlockBreaking;
++import org.oilmod.api.rep.block.BlockStateRep;
+ import org.oilmod.bukkit.util.OilSpigotUtil;
++import org.oilmod.rep.block.BlockBR;
+ 
+ 
+ //KEEPSYNC ItemPickaxe
+@@ -17,22 +19,22 @@ public class RealAxe extends RealTBBTool {
+     }
+ 
+     @Override
+-    protected boolean canHarvestBlock(IToolBlockBreaking item, BlockState blockState, BlockType blockType) {
++    protected boolean canHarvestBlock(IToolBlockBreaking item, OilItemStack stack, BlockStateRep blockState, BlockType blockType) {
+ 
+-        Block block = OilSpigotUtil.toNMS(blockState.getType());
++        Block block = ((BlockBR)blockState.getBlock()).getNMS();
+         Material material = (Material) blockType.getNmsBlockType();
+ 
+         //OilSpigot auto-simplify + added own check
+-        return (!block.isVanilla() && blockType.breakableAxe(OilSpigotUtil.toBukkit(block)));
++        return (!block.isVanilla() && blockType.breakableAxe(blockState));
+     }
+ 
+     @Override
+-    protected float getDestroySpeed(IToolBlockBreaking item, OilItemStack itemStack, BlockState blockState, BlockType blockType) {
+-        Block block = OilSpigotUtil.toNMS(blockState.getType());
++    protected float getDestroySpeed(IToolBlockBreaking item, OilItemStack itemStack, BlockStateRep blockState, BlockType blockType) {
++        Block block = ((BlockBR)blockState.getBlock()).getNMS();
+         Material material = (Material) blockType.getNmsBlockType();
+ 
+         boolean result = material == Material.WOOD || material == Material.PLANT || material == Material.REPLACEABLE_PLANT ||
+-                (!block.isVanilla() && blockType.breakableAxe(OilSpigotUtil.toBukkit(block))) ||
++                (!block.isVanilla() && blockType.breakableAxe(blockState)) ||
+                 ItemAxe.BLOCKS.contains(block);
+ 
+         return result? item.getDestroySpeed(itemStack) : 1;
+diff --git a/src/main/java/org/oilmod/bukkit/items/itemtype/RealPickaxe.java b/src/main/java/org/oilmod/bukkit/items/itemtype/RealPickaxe.java
+index 9f927a7b..fe2e12bc 100644
+--- a/src/main/java/org/oilmod/bukkit/items/itemtype/RealPickaxe.java
++++ b/src/main/java/org/oilmod/bukkit/items/itemtype/RealPickaxe.java
+@@ -9,7 +9,9 @@ import org.oilmod.api.items.OilItemStack;
+ import org.oilmod.api.items.type.IPickaxe;
+ import org.oilmod.api.items.type.IToolBlockBreaking;
+ import org.oilmod.api.items.type.TBBType;
++import org.oilmod.api.rep.block.BlockStateRep;
+ import org.oilmod.bukkit.util.OilSpigotUtil;
++import org.oilmod.rep.block.BlockBR;
+ 
+ 
+ //KEEPSYNC ItemPickaxe
+@@ -19,27 +21,27 @@ public class RealPickaxe extends RealTBBTool {
+     }
+ 
+     @Override
+-    protected boolean canHarvestBlock(IToolBlockBreaking item, BlockState blockState, BlockType blockType) {
++    protected boolean canHarvestBlock(IToolBlockBreaking item, OilItemStack stack, BlockStateRep blockState, BlockType blockType) {
+         IPickaxe pickaxe = (IPickaxe) item;
+ 
+-        Block block = OilSpigotUtil.toNMS(blockState.getType());
++        Block block = ((BlockBR)blockState.getBlock()).getNMS();
+         Material material = (Material) blockType.getNmsBlockType();
+ 
+         //OilSpigot auto-simplify + added own check
+         boolean result = material == Material.STONE || material == Material.ORE || material == Material.HEAVY ||
+-                (!block.isVanilla() && blockType.breakablePickaxe(OilSpigotUtil.toBukkit(block)));
++                (!block.isVanilla() && blockType.breakablePickaxe(blockState));
+ 
+         //OilSpigot use new method getHardness instead of doing this weird if
+         return result && block.getHardness() >= 0 ? pickaxe.getPickaxeStrength() >= block.getHardness() : result;
+     }
+ 
+     @Override
+-    protected float getDestroySpeed(IToolBlockBreaking item, OilItemStack itemStack, BlockState blockState, BlockType blockType) {
+-        Block block = OilSpigotUtil.toNMS(blockState.getType());
++    protected float getDestroySpeed(IToolBlockBreaking item, OilItemStack itemStack, BlockStateRep blockState, BlockType blockType) {
++        Block block = ((BlockBR)blockState.getBlock()).getNMS();
+         Material material = (Material) blockType.getNmsBlockType();
+ 
+         boolean result = material == Material.STONE || material == Material.ORE || material == Material.HEAVY ||
+-                (!block.isVanilla() && blockType.breakablePickaxe(OilSpigotUtil.toBukkit(block))) ||
++                (!block.isVanilla() && blockType.breakablePickaxe(blockState)) ||
+                 ItemPickaxe.BLOCKS.contains(block);
+ 
+         return result? item.getDestroySpeed(itemStack) : 1;
+diff --git a/src/main/java/org/oilmod/bukkit/items/itemtype/RealShears.java b/src/main/java/org/oilmod/bukkit/items/itemtype/RealShears.java
+index f6e19f6f..2089041b 100644
+--- a/src/main/java/org/oilmod/bukkit/items/itemtype/RealShears.java
++++ b/src/main/java/org/oilmod/bukkit/items/itemtype/RealShears.java
+@@ -8,10 +8,14 @@ import org.bukkit.Location;
+ import org.bukkit.block.BlockState;
+ import org.bukkit.entity.LivingEntity;
+ import org.oilmod.api.blocks.BlockType;
+-import org.oilmod.api.blocks.IBlockState;
+ import org.oilmod.api.items.OilItemStack;
+ import org.oilmod.api.items.type.IToolBlockBreaking;
++import org.oilmod.api.rep.block.BlockStateRep;
++import org.oilmod.api.rep.entity.EntityLivingRep;
++import org.oilmod.api.rep.world.LocationBlockRep;
+ import org.oilmod.bukkit.util.OilSpigotUtil;
++import org.oilmod.rep.block.BlockBR;
++import org.oilmod.rep.block.BlockStateBR;
+ 
+ 
+ //KEEPSYNC ItemShears
+@@ -21,18 +25,18 @@ public class RealShears extends RealTBBTool {
+     }
+ 
+     @Override
+-    protected boolean canHarvestBlock(IToolBlockBreaking item, BlockState blockState, BlockType blockType) {
++    protected boolean canHarvestBlock(IToolBlockBreaking item, OilItemStack stack, BlockStateRep blockState, BlockType blockType) {
+ 
+-        Block block = OilSpigotUtil.toNMS(blockState.getType());
++        Block block = ((BlockBR)blockState.getBlock()).getNMS();
+ 
+         //OilSpigot auto-simplify + added own check
+         return block == Blocks.WEB || block == Blocks.REDSTONE_WIRE || block == Blocks.TRIPWIRE ||
+-                (!block.isVanilla() && blockType.breakableShovel(OilSpigotUtil.toBukkit(block)));
++                (!block.isVanilla() && blockType.breakableShovel(blockState));
+     }
+ 
+     @Override
+-    protected float getDestroySpeed(IToolBlockBreaking item, OilItemStack itemStack, BlockState blockState, BlockType blockType) {
+-        Block block = OilSpigotUtil.toNMS(blockState.getType());
++    protected float getDestroySpeed(IToolBlockBreaking item, OilItemStack itemStack, BlockStateRep blockState, BlockType blockType) {
++        Block block = ((BlockBR)blockState.getBlock()).getNMS();
+         Material material = (Material) blockType.getNmsBlockType();
+ 
+ 
+@@ -41,14 +45,14 @@ public class RealShears extends RealTBBTool {
+         }
+ 
+         boolean result = material == Material.WEB || material != Material.LEAVES ||
+-                (!block.isVanilla() && blockType.breakableShovel(OilSpigotUtil.toBukkit(block)));
++                (!block.isVanilla() && blockType.breakableShovel(blockState));
+ 
+         return result? item.getDestroySpeed(itemStack) : 1;
+     }
+ 
+     @Override
+-    protected boolean onBlockDestroyed(IToolBlockBreaking item, OilItemStack stack, IBlockState blockState, Location pos, LivingEntity entityLiving) {
+-        IBlockData iblockdata = (IBlockData) blockState.getNMS();
++    protected boolean onBlockDestroyed(IToolBlockBreaking item, OilItemStack stack, BlockStateRep blockState, LocationBlockRep pos, EntityLivingRep entityLiving) {
++        IBlockData iblockdata = ((BlockStateBR) blockState).getNMS();
+ 
+         Block block = iblockdata.getBlock();
+ 
+diff --git a/src/main/java/org/oilmod/bukkit/items/itemtype/RealShovel.java b/src/main/java/org/oilmod/bukkit/items/itemtype/RealShovel.java
+index 0c253324..6a215c3b 100644
+--- a/src/main/java/org/oilmod/bukkit/items/itemtype/RealShovel.java
++++ b/src/main/java/org/oilmod/bukkit/items/itemtype/RealShovel.java
+@@ -10,8 +10,14 @@ import org.bukkit.entity.HumanEntity;
+ import org.oilmod.api.blocks.BlockType;
+ import org.oilmod.api.items.OilItemStack;
+ import org.oilmod.api.items.type.IToolBlockBreaking;
++import org.oilmod.api.rep.block.BlockFaceRep;
++import org.oilmod.api.rep.block.BlockStateRep;
++import org.oilmod.api.rep.entity.EntityHumanRep;
++import org.oilmod.api.rep.entity.EntityLivingRep;
++import org.oilmod.api.rep.world.LocationBlockRep;
+ import org.oilmod.api.util.InteractionResult;
+ import org.oilmod.bukkit.util.OilSpigotUtil;
++import org.oilmod.rep.block.BlockBR;
+ 
+ 
+ //KEEPSYNC ItemSpade
+@@ -21,27 +27,27 @@ public class RealShovel extends RealTBBTool {
+     }
+ 
+     @Override
+-    protected boolean canHarvestBlock(IToolBlockBreaking item, BlockState blockState, BlockType blockType) {
++    protected boolean canHarvestBlock(IToolBlockBreaking item, OilItemStack stack, BlockStateRep blockState, BlockType blockType) {
+ 
+-        Block block = OilSpigotUtil.toNMS(blockState.getType());
++        Block block = ((BlockBR)blockState.getBlock()).getNMS();
+         Material material = (Material) blockType.getNmsBlockType();
+ 
+         //OilSpigot vanilla + added own check
+-        return block == Blocks.SNOW_LAYER || block == Blocks.SNOW || (!block.isVanilla() && material.getOilBlockType().breakableShovel(OilSpigotUtil.toBukkit(block)));
++        return block == Blocks.SNOW_LAYER || block == Blocks.SNOW || (!block.isVanilla() && material.getOilBlockType().breakableShovel(blockState));
+     }
+ 
+     @Override
+-    protected float getDestroySpeed(IToolBlockBreaking item, OilItemStack itemStack, BlockState blockState, BlockType blockType) {
+-        Block block = OilSpigotUtil.toNMS(blockState.getType());
++    protected float getDestroySpeed(IToolBlockBreaking item, OilItemStack itemStack, BlockStateRep blockState, BlockType blockType) {
++        Block block = ((BlockBR)blockState.getBlock()).getNMS();
+ 
+-        boolean result = (!block.isVanilla() && blockType.breakableShovel(OilSpigotUtil.toBukkit(block))) ||
++        boolean result = (!block.isVanilla() && blockType.breakableShovel(blockState)) ||
+                 ItemSpade.BLOCKS.contains(block);
+ 
+         return result? item.getDestroySpeed(itemStack) : 1;
+     }
+ 
+     @Override
+-    protected InteractionResult onItemUseOnBlock(IToolBlockBreaking item, OilItemStack stack, HumanEntity humanEntity, Location pos, boolean offhand, BlockFace facing, float hitX, float hitY, float hitZ) {
++    protected InteractionResult onItemUseOnBlock(IToolBlockBreaking item, OilItemStack stack, EntityLivingRep humanEntity, LocationBlockRep pos, boolean offhand, BlockFaceRep facing, float hitX, float hitY, float hitZ) {
+         EntityHuman entityhuman = ((CraftHumanEntity)humanEntity).getHandle();
+         ItemStack itemstack = (ItemStack) stack.getNmsItemStack();
+         World world = ((CraftWorld)pos.getWorld()).getHandle();
+diff --git a/src/main/java/org/oilmod/bukkit/items/itemtype/RealSword.java b/src/main/java/org/oilmod/bukkit/items/itemtype/RealSword.java
+index be0214d7..ff72c958 100644
+--- a/src/main/java/org/oilmod/bukkit/items/itemtype/RealSword.java
++++ b/src/main/java/org/oilmod/bukkit/items/itemtype/RealSword.java
+@@ -2,14 +2,15 @@ package org.oilmod.bukkit.items.itemtype;
+ 
+ import net.minecraft.server.Block;
+ import net.minecraft.server.Blocks;
+-import net.minecraft.server.ItemPickaxe;
+-import net.minecraft.server.ItemSword;
+ import net.minecraft.server.Material;
+ import org.bukkit.block.BlockState;
+ import org.oilmod.api.blocks.BlockType;
+ import org.oilmod.api.items.OilItemStack;
+ import org.oilmod.api.items.type.IToolBlockBreaking;
++import org.oilmod.api.rep.block.BlockStateRep;
+ import org.oilmod.bukkit.util.OilSpigotUtil;
++import org.oilmod.rep.block.BlockBR;
++import org.oilmod.rep.block.BlockStateBR;
+ 
+ 
+ //KEEPSYNC ItemSword
+@@ -19,18 +20,18 @@ public class RealSword extends RealTBBTool {
+     }
+ 
+     @Override
+-    protected boolean canHarvestBlock(IToolBlockBreaking item, BlockState blockState, BlockType blockType) {
++    protected boolean canHarvestBlock(IToolBlockBreaking item, OilItemStack stack, BlockStateRep blockState, BlockType blockType) {
+ 
+-        Block block = OilSpigotUtil.toNMS(blockState.getType());
++        Block block = ((BlockBR)blockState.getBlock()).getNMS();
+         Material material = (Material) blockType.getNmsBlockType();
+ 
+         //OilSpigot vanilla + added own check
+-        return block == Blocks.WEB || (!block.isVanilla() && material.getOilBlockType().breakableBlade(OilSpigotUtil.toBukkit(block)));
++        return block == Blocks.WEB || (!block.isVanilla() && material.getOilBlockType().breakableBlade(blockState));
+     }
+ 
+     @Override
+-    protected float getDestroySpeed(IToolBlockBreaking item, OilItemStack itemStack, BlockState blockState, BlockType blockType) {
+-        Block block = OilSpigotUtil.toNMS(blockState.getType());
++    protected float getDestroySpeed(IToolBlockBreaking item, OilItemStack itemStack, BlockStateRep blockState, BlockType blockType) {
++        Block block = ((BlockBR)blockState.getBlock()).getNMS();
+         Material material = (Material) blockType.getNmsBlockType();
+ 
+         if (block == Blocks.WEB) {
+@@ -38,7 +39,7 @@ public class RealSword extends RealTBBTool {
+         }
+ 
+         boolean result = material == Material.PLANT || material == Material.REPLACEABLE_PLANT || material == Material.CORAL || material == Material.LEAVES || material == Material.PUMPKIN ||
+-                (!block.isVanilla() && blockType.breakableBlade(OilSpigotUtil.toBukkit(block)));
++                (!block.isVanilla() && blockType.breakableBlade(blockState));
+ 
+         return result? item.getDestroySpeed(itemStack) : 1;
+     }
+diff --git a/src/main/java/org/oilmod/bukkit/items/itemtype/RealTBBTool.java b/src/main/java/org/oilmod/bukkit/items/itemtype/RealTBBTool.java
+index 20b54fe0..f8aaefd7 100644
+--- a/src/main/java/org/oilmod/bukkit/items/itemtype/RealTBBTool.java
++++ b/src/main/java/org/oilmod/bukkit/items/itemtype/RealTBBTool.java
+@@ -5,11 +5,16 @@ import org.bukkit.block.BlockFace;
+ import org.bukkit.craftbukkit.CraftWorld;
+ import org.bukkit.entity.HumanEntity;
+ import org.bukkit.entity.LivingEntity;
+-import org.oilmod.api.blocks.IBlockState;
+ import org.oilmod.api.items.OilItemStack;
+ import org.oilmod.api.items.type.IDurable;
+ import org.oilmod.api.items.type.IToolBlockBreaking;
++import org.oilmod.api.items.type.ImplementationProvider;
+ import org.oilmod.api.items.type.TBBType;
++import org.oilmod.api.rep.block.BlockFaceRep;
++import org.oilmod.api.rep.block.BlockStateRep;
++import org.oilmod.api.rep.entity.EntityHumanRep;
++import org.oilmod.api.rep.entity.EntityLivingRep;
++import org.oilmod.api.rep.world.LocationBlockRep;
+ import org.oilmod.api.util.InteractionResult;
+ 
+ 
+@@ -26,7 +31,7 @@ public abstract class RealTBBTool extends TBBType{
+     }
+ 
+     @Override
+-    protected boolean onEntityHit(IToolBlockBreaking item, OilItemStack stack, LivingEntity target, LivingEntity attacker) {
++    protected boolean onEntityHit(IToolBlockBreaking item, OilItemStack stack, EntityLivingRep target, EntityLivingRep attacker) {
+         if (item instanceof IDurable) {
+             IDurable durable = (IDurable) item;
+             durable.damageItem(stack, entityToolDamage, attacker);
+@@ -35,7 +40,7 @@ public abstract class RealTBBTool extends TBBType{
+     }
+ 
+     @Override
+-    protected boolean onBlockDestroyed(IToolBlockBreaking item, OilItemStack stack, IBlockState blockState, Location pos, LivingEntity entityLiving) {
++    protected boolean onBlockDestroyed(IToolBlockBreaking item, OilItemStack stack, BlockStateRep blockState, LocationBlockRep pos, EntityLivingRep entityLiving) {
+         net.minecraft.server.World world = ((CraftWorld)pos.getWorld()).getHandle();
+ 
+         if (!world.isClientSide &&  item instanceof IDurable && blockState.getBlockHardness(pos) != 0) {
+@@ -46,7 +51,12 @@ public abstract class RealTBBTool extends TBBType{
+     }
+ 
+     @Override
+-    protected InteractionResult onItemUseOnBlock(IToolBlockBreaking item, OilItemStack stack, HumanEntity humanEntity, Location pos, boolean offhand, BlockFace facing, float hitX, float hitY, float hitZ) {
++    protected InteractionResult onItemUseOnBlock(IToolBlockBreaking item, OilItemStack stack, EntityLivingRep humanEntity, LocationBlockRep pos, boolean offhand, BlockFaceRep facing, float hitX, float hitY, float hitZ) {
+         return InteractionResult.NONE;
+     }
++
++    @Override
++    protected ImplementationProvider getImplementationProvider() {
++        return null; //todo (used for choosing implementation baseclass)
++    }
+ }
+diff --git a/src/main/java/org/oilmod/bukkit/ui/SlotState.java b/src/main/java/org/oilmod/bukkit/ui/SlotState.java
+index cc926592..3df9f0b1 100644
+--- a/src/main/java/org/oilmod/bukkit/ui/SlotState.java
++++ b/src/main/java/org/oilmod/bukkit/ui/SlotState.java
+@@ -20,7 +20,7 @@ public class SlotState implements ISlotState {
+ 
+     @Override
+     public org.bukkit.inventory.ItemStack getItemStack() {
+-        return OilSpigotUtil.toBukkit(itemStackNMS);
++        return OilSpigotUtil.toRep(itemStackNMS);
+     }
+ 
+     public ItemStack getItemStackNMS() {
+diff --git a/src/main/java/org/oilmod/bukkit/util/OilSpigotUtil.java b/src/main/java/org/oilmod/bukkit/util/OilSpigotUtil.java
+index 36a6aa86..aef2a0b5 100644
+--- a/src/main/java/org/oilmod/bukkit/util/OilSpigotUtil.java
++++ b/src/main/java/org/oilmod/bukkit/util/OilSpigotUtil.java
+@@ -8,6 +8,8 @@ import org.bukkit.block.BlockFace;
+ import org.bukkit.craftbukkit.block.CraftBlock;
+ import org.bukkit.craftbukkit.block.CraftBlockState;
+ import org.bukkit.craftbukkit.util.CraftMagicNumbers;
++import org.oilmod.api.rep.block.BlockFaceRep;
++import org.oilmod.api.rep.block.BlockStateRep;
+ import org.oilmod.api.userinterface.ClickType;
+ import org.oilmod.api.userinterface.IInteractableUIElement;
+ import org.oilmod.api.userinterface.IUIElement;
+@@ -29,6 +31,7 @@ import org.bukkit.craftbukkit.entity.CraftHumanEntity;
+ import org.bukkit.craftbukkit.entity.CraftPlayer;
+ import org.bukkit.craftbukkit.inventory.CraftItemStack;
+ import org.bukkit.entity.Player;
++import org.oilmod.rep.block.BlockStateBR;
+ 
+ import java.util.HashMap;
+ import java.util.Map;
+@@ -54,7 +57,7 @@ public final class OilSpigotUtil {
+     }
+ 
+ 
+-    public static Player toBukkit(EntityHuman human) {
++    public static Player toRep(EntityHuman human) {
+         CraftHumanEntity bukkit = human.getBukkitEntity();
+         if (bukkit instanceof Player) {
+             return (Player) bukkit;
+@@ -131,7 +134,7 @@ public final class OilSpigotUtil {
+         }
+     }
+ 
+-    public static org.bukkit.inventory.ItemStack toBukkit(ItemStack itemStack) {
++    public static org.bukkit.inventory.ItemStack toRep(ItemStack itemStack) {
+         return CraftItemStack.asCraftMirror(itemStack);
+     }
+ 
+@@ -156,33 +159,48 @@ public final class OilSpigotUtil {
+         return clickTypeNMSToOilMap.get(type);
+     }
+ 
+-    public static Material toBukkit(Item item) {
++    public static Material toRep(Item item) {
+         return CraftMagicNumbers.getMaterial(item);
+     }
+ 
+-    public static Material toBukkit(Block block) {
++    public static Material toRep(Block block) {
+         return CraftMagicNumbers.getMaterial(block);
+     }
+     public static Block toNMS(Material material) {
+         return CraftMagicNumbers.getBlock(material);
+     }
+-    public static BlockFace toBukkit(EnumDirection dir) {
++    public static BlockFace toRep(EnumDirection dir) {
+         return CraftBlock.notchToBlockFace(dir);
+     }
+-    public static EnumDirection toNMS(BlockFace face) {
+-        return CraftBlock.blockFaceToNotch(face);
++    public static EnumDirection toNMS(BlockFaceRep face) {
++        switch (face) {
++            case DOWN:
++                return EnumDirection.DOWN;
++            case UP:
++                return EnumDirection.UP;
++            case NORTH:
++                return EnumDirection.NORTH;
++            case SOUTH:
++                return EnumDirection.SOUTH;
++            case WEST:
++                return EnumDirection.WEST;
++            case EAST:
++                return EnumDirection.EAST;
++            default:
++                return null;
++        }
+     }
+ 
+     public static BlockPosition toNMS(Location l) {
+         return new BlockPosition(l.getBlockX(), l.getBlockY(), l.getBlockZ());
+     }
+ 
+-    public static Location toBukkit(World w, BlockPosition pos) {
++    public static Location toRep(World w, BlockPosition pos) {
+         return new Location(w.getWorld() , pos.getX(),  pos.getY(), pos.getZ());
+     }
+ 
+-    public static org.bukkit.block.BlockState toBukkit(IBlockData state) {
+-        return new CraftBlockState(CraftMagicNumbers.getMaterial(state.getBlock()));
++    public static BlockStateRep toRep(IBlockData state) {
++        return new BlockStateBR(state);
+     }
+ 
+     public static InteractionResult toOil(net.minecraft.server.EnumInteractionResult nms) {
+diff --git a/src/main/java/org/oilmod/rep/block/BlockBR.java b/src/main/java/org/oilmod/rep/block/BlockBR.java
+new file mode 100644
+index 00000000..bfb32607
+--- /dev/null
++++ b/src/main/java/org/oilmod/rep/block/BlockBR.java
+@@ -0,0 +1,29 @@
++package org.oilmod.rep.block;
++
++import net.minecraft.server.Block;
++import net.minecraft.server.Item;
++import net.minecraft.server.Items;
++import org.oilmod.api.rep.block.BlockRep;
++import org.oilmod.api.rep.item.ItemRep;
++
++public class BlockBR implements BlockRep {
++    private final Block NMS;
++
++    public BlockBR(Block nms) {
++        NMS = nms;
++    }
++
++    public Block getNMS() {
++        return NMS;
++    }
++
++    @Override
++    public boolean hasItem() {
++        return getItem() == Items.a;
++    }
++
++    @Override
++    public ItemRep getItem() {
++        return Item.getItemOf(getNMS()).getItemRep();
++    }
++}
+diff --git a/src/main/java/org/oilmod/rep/block/BlockStateBR.java b/src/main/java/org/oilmod/rep/block/BlockStateBR.java
+new file mode 100644
+index 00000000..2997da08
+--- /dev/null
++++ b/src/main/java/org/oilmod/rep/block/BlockStateBR.java
+@@ -0,0 +1,36 @@
++package org.oilmod.rep.block;
++
++import net.minecraft.server.BlockPosition;
++import net.minecraft.server.IBlockData;
++import org.oilmod.api.rep.block.BlockRep;
++import org.oilmod.api.rep.block.BlockStateRep;
++import org.oilmod.api.rep.world.LocationBlockRep;
++import org.oilmod.rep.world.WorldBR;
++
++public class BlockStateBR implements BlockStateRep {
++    private final IBlockData NMS;
++
++    public BlockStateBR(IBlockData nms) {
++        NMS = nms;
++    }
++
++    public IBlockData getNMS() {
++        return NMS;
++    }
++
++    @Override
++    public BlockRep getBlock() {
++        return getNMS().getBlock().getBlockRep();
++    }
++
++
++    @Override
++    public float getBlockHardness(LocationBlockRep loc) {
++        return NMS.b(((WorldBR)loc.getWorld()).getNMS(), new BlockPosition(loc.getBlockX(), loc.getBlockY(), loc.getBlockZ()));
++    }
++
++    /*@Override
++    public BlockType getBlockType() {
++        return NMS.getMaterial().getOilBlockType();
++    }*/
++}
+diff --git a/src/main/java/org/oilmod/rep/inventory/InventoryBR.java b/src/main/java/org/oilmod/rep/inventory/InventoryBR.java
+new file mode 100644
+index 00000000..844ae33a
+--- /dev/null
++++ b/src/main/java/org/oilmod/rep/inventory/InventoryBR.java
+@@ -0,0 +1,39 @@
++package org.oilmod.rep.inventory;
++
++import net.minecraft.server.Block;
++import net.minecraft.server.IInventory;
++import org.apache.commons.lang3.NotImplementedException;
++import org.oilmod.api.rep.inventory.InventoryRep;
++import org.oilmod.api.rep.itemstack.ItemStackRep;
++
++public class InventoryBR implements InventoryRep {
++    private final IInventory NMS;
++
++    public InventoryBR(IInventory nms) {
++        NMS = nms;
++    }
++
++    public IInventory getNMS() {
++        return NMS;
++    }
++
++    @Override
++    public int getStorageSize() {
++        return getNMS().getSize();
++    }
++
++    @Override
++    public int getTotalSize() {
++        return getNMS().getSize();
++    }
++
++    @Override
++    public ItemStackRep getStored(int slot) {
++        throw new NotImplementedException("todo"); //todo
++    }
++
++    @Override
++    public void setStored(int slot, ItemStackRep stack) {
++        throw new NotImplementedException("todo"); //todo
++    }
++}
+diff --git a/src/main/java/org/oilmod/rep/item/ItemBR.java b/src/main/java/org/oilmod/rep/item/ItemBR.java
+new file mode 100644
+index 00000000..b29d84a0
+--- /dev/null
++++ b/src/main/java/org/oilmod/rep/item/ItemBR.java
+@@ -0,0 +1,21 @@
++package org.oilmod.rep.item;
++
++import net.minecraft.server.Item;
++import org.oilmod.api.rep.item.ItemRep;
++
++public class ItemBR implements ItemRep {
++    private final Item NMS;
++
++    public ItemBR(Item nms) {
++        NMS = nms;
++    }
++
++    public Item getNMS() {
++        return NMS;
++    }
++
++    @Override
++    public int getMaxDurability() {
++        return getNMS().getMaxDurability();
++    }
++}
+diff --git a/src/main/java/org/oilmod/rep/item/ItemStackBR.java b/src/main/java/org/oilmod/rep/item/ItemStackBR.java
+new file mode 100644
+index 00000000..94eeebdf
+--- /dev/null
++++ b/src/main/java/org/oilmod/rep/item/ItemStackBR.java
+@@ -0,0 +1,79 @@
++package org.oilmod.rep.item;
++
++import net.minecraft.server.Item;
++import org.oilmod.api.rep.enchant.EnchantmentRep;
++import org.oilmod.api.rep.item.ItemRep;
++import org.oilmod.api.rep.itemstack.ItemStackRep;
++
++public class ItemStackBR implements ItemStackRep {
++
++    private final Item NMS;
++
++    public ItemBR(Item nms) {
++        NMS = nms;
++    }
++
++    public Item getNMS() {
++        return NMS;
++    }
++
++    @Override
++    public ItemRep getItem() {
++        return null;
++    }
++
++    @Override
++    public int getAmount() {
++        return 0;
++    }
++
++    @Override
++    public void setAmount(int amount) {
++
++    }
++
++    @Override
++    public void setDurability(short durability) {
++
++    }
++
++    @Override
++    public short getDurability() {
++        return 0;
++    }
++
++    @Override
++    public int getMaxStackSize() {
++        return 0;
++    }
++
++    @Override
++    public boolean isSimilar(ItemStackRep stack) {
++        return false;
++    }
++
++    @Override
++    public ItemStackRep clone() {
++        return null;
++    }
++
++    @Override
++    public int getEnchantmentLevel(EnchantmentRep ench) {
++        return 0;
++    }
++
++    @Override
++    public void addEnchantment(EnchantmentRep ench, int level, boolean force) {
++
++    }
++
++    @Override
++    public int removeEnchantment(EnchantmentRep ench) {
++        return 0;
++    }
++
++    @Override
++    public boolean isEmpty() {
++        return false;
++    }
++}
+diff --git a/src/main/java/org/oilmod/rep/providers/minecraft/MC112BlockProvider.java b/src/main/java/org/oilmod/rep/providers/minecraft/MC112BlockProvider.java
+new file mode 100644
+index 00000000..17e7e8b4
+--- /dev/null
++++ b/src/main/java/org/oilmod/rep/providers/minecraft/MC112BlockProvider.java
+@@ -0,0 +1,48 @@
++package org.oilmod.rep.providers.minecraft;
++
++import com.google.common.base.Optional;
++import net.minecraft.server.Block;
++import net.minecraft.server.BlockStateList;
++import net.minecraft.server.IBlockData;
++import net.minecraft.server.IBlockState;
++import net.minecraft.server.MinecraftKey;
++import org.apache.commons.lang3.Validate;
++import org.oilmod.api.rep.block.BlockStateRep;
++import org.oilmod.api.rep.providers.minecraft.MC112BlockReq;
++import org.oilmod.api.rep.providers.minecraft.MinecraftBlock;
++import org.oilmod.api.rep.providers.minecraft.MinecraftBlockProvider;
++import org.oilmod.api.rep.variant.Availability;
++import org.oilmod.api.rep.variant.Substitute;
++import org.oilmod.rep.block.BlockStateBR;
++
++public class MC112BlockProvider extends MinecraftBlockProvider {
++    @Override
++    protected void apiInit() {
++
++    }
++
++    @Override
++    protected void apiPostInit() {
++
++    }
++
++    @Override
++    protected Substitute<BlockStateRep> getBlock(MinecraftBlock block) {
++        MC112BlockReq req = block.getMc112();
++        if (req.isSubstituted()) {
++            MinecraftBlock sub = req.getSubstitute();
++            return new Substitute<>(Availability.min(sub.getAvailability(), req.getAvailability()), sub.get());
++        }
++
++        Block b = Block.REGISTRY.get(new MinecraftKey(req.getKey()));
++        BlockStateList states = b.s();
++        IBlockData data = states.getBlockData();
++        for (MC112BlockReq.Property p:req.getProperties()) {
++            IBlockState state = states.a(p.name);
++            Optional<Comparable> opt = state.b(p.value);
++            Validate.isTrue(opt.isPresent(), "Missing value {} for property {} for block {}", p.value, p.name, Block.REGISTRY.b(b));
++            data = data.set(state, opt.get());
++        }
++        return new Substitute<>(req.getAvailability(), new BlockStateBR(data));
++    }
++}
+diff --git a/src/main/java/org/oilmod/rep/world/WorldBR.java b/src/main/java/org/oilmod/rep/world/WorldBR.java
+new file mode 100644
+index 00000000..8cfc369f
+--- /dev/null
++++ b/src/main/java/org/oilmod/rep/world/WorldBR.java
+@@ -0,0 +1,17 @@
++package org.oilmod.rep.world;
++
++import net.minecraft.server.Block;
++import net.minecraft.server.World;
++import org.oilmod.api.rep.world.WorldRep;
++
++public class WorldBR implements WorldRep {
++    private final World NMS;
++
++    public WorldBR(World nms) {
++        NMS = nms;
++    }
++
++    public World getNMS() {
++        return NMS;
++    }
++}
+diff --git a/src/test/java/org/oilmod/bukkit/blocks/MaterialToolTest.java b/src/test/java/org/oilmod/bukkit/blocks/MaterialToolTest.java
+index 2e60ca8e..60cdd17f 100644
+--- a/src/test/java/org/oilmod/bukkit/blocks/MaterialToolTest.java
++++ b/src/test/java/org/oilmod/bukkit/blocks/MaterialToolTest.java
+@@ -84,17 +84,17 @@ public class MaterialToolTest extends AbstractTestingBase {
+ 
+     @Test
+     public void breakablePickaxe() {
+-        assertEquals(getMessage(), vanillaPickaxe(), oil().breakablePickaxe(OilSpigotUtil.toBukkit(block)));
++        assertEquals(getMessage(), vanillaPickaxe(), oil().breakablePickaxe(OilSpigotUtil.toRep(block)));
+     }
+ 
+     @Test
+     public void breakableAxe() {
+-        assertEquals(getMessage(), vanillaAxe(), oil().breakableAxe(OilSpigotUtil.toBukkit(block)));
++        assertEquals(getMessage(), vanillaAxe(), oil().breakableAxe(OilSpigotUtil.toRep(block)));
+     }
+ 
+     @Test
+     public void breakableShovel() {
+-        assertEquals(getMessage(), vanillaShovel(), oil().breakableShovel(OilSpigotUtil.toBukkit(block)));
++        assertEquals(getMessage(), vanillaShovel(), oil().breakableShovel(OilSpigotUtil.toRep(block)));
+     }
+ 
+     //TODO test for sword and shears
+-- 
+2.20.1.windows.1
+
