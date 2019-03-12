@@ -1,0 +1,678 @@
+From 4249ed8feda1904c42952820b9b33f3496c66f45 Mon Sep 17 00:00:00 2001
+From: sirati97 <TheSirati97@gmail.com>
+Date: Tue, 12 Mar 2019 15:43:16 +0000
+Subject: [PATCH] improved itemstack api & impl
+
+---
+ src/main/java/net/minecraft/server/Block.java |  7 ++
+ src/main/java/net/minecraft/server/Item.java  | 10 ++-
+ .../java/net/minecraft/server/ItemBlock.java  | 15 ++++
+ src/main/java/org/oilmod/bukkit/OilMain.java  |  5 ++
+ .../bukkit/inventory/ItemStackDataImpl.java   | 16 ++--
+ .../bukkit/items/RealCraftItemStack.java      |  4 +-
+ src/main/java/org/oilmod/rep/RepAPIImpl.java  | 24 ++++++
+ .../java/org/oilmod/rep/block/BlockBR.java    | 12 ++-
+ .../org/oilmod/rep/block/BlockStateBR.java    | 19 +----
+ .../org/oilmod/rep/block/BlockStateBase.java  | 37 +++++++++
+ .../rep/block/StandardBlockStateBR.java       | 26 ++++++
+ .../java/org/oilmod/rep/item/BlockItemBR.java | 29 +++++++
+ src/main/java/org/oilmod/rep/item/ItemBR.java |  7 ++
+ .../java/org/oilmod/rep/item/ItemStackBR.java | 79 -------------------
+ .../org/oilmod/rep/itemstack/ItemStackBR.java | 60 ++++++++++++++
+ .../rep/itemstack/ItemStackStateBR.java       | 60 ++++++++++++++
+ 16 files changed, 303 insertions(+), 107 deletions(-)
+ create mode 100644 src/main/java/org/oilmod/rep/RepAPIImpl.java
+ create mode 100644 src/main/java/org/oilmod/rep/block/BlockStateBase.java
+ create mode 100644 src/main/java/org/oilmod/rep/block/StandardBlockStateBR.java
+ create mode 100644 src/main/java/org/oilmod/rep/item/BlockItemBR.java
+ delete mode 100644 src/main/java/org/oilmod/rep/item/ItemStackBR.java
+ create mode 100644 src/main/java/org/oilmod/rep/itemstack/ItemStackBR.java
+ create mode 100644 src/main/java/org/oilmod/rep/itemstack/ItemStackStateBR.java
+
+diff --git a/src/main/java/net/minecraft/server/Block.java b/src/main/java/net/minecraft/server/Block.java
+index 96140055..7d2b8062 100644
+--- a/src/main/java/net/minecraft/server/Block.java
++++ b/src/main/java/net/minecraft/server/Block.java
+@@ -3,6 +3,8 @@ package net.minecraft.server;
+ import com.google.common.collect.Sets;
+ import com.google.common.collect.UnmodifiableIterator;
+ import org.oilmod.rep.block.BlockBR;
++import org.oilmod.rep.block.BlockStateBR;
++import org.oilmod.rep.block.StandardBlockStateBR;
+ 
+ import java.util.HashSet;
+ import java.util.Iterator;
+@@ -1062,11 +1064,16 @@ public class Block {
+ 
+ 
+     private final BlockBR blockRep = new BlockBR(this);
++    private final StandardBlockStateBR standardStateRep = new StandardBlockStateBR(this);
+ 
+     public BlockBR getBlockRep() {
+         return blockRep;
+     }
+ 
++    public StandardBlockStateBR getStandardStateRep() {
++        return standardStateRep;
++    }
++
+     //OilSpigot end
+ 
+     public static enum EnumRandomOffset {
+diff --git a/src/main/java/net/minecraft/server/Item.java b/src/main/java/net/minecraft/server/Item.java
+index 25c3ce88..24a73443 100644
+--- a/src/main/java/net/minecraft/server/Item.java
++++ b/src/main/java/net/minecraft/server/Item.java
+@@ -779,18 +779,24 @@ public class Item implements NMSItem {
+         registerItem(i, new MinecraftKey(s), item);
+     }
+ 
+-    //OilSpigot pail public registerItem
++    //OilSpigot
++    //pail public registerItem
+     public static void registerItem(int i, MinecraftKey minecraftkey, Item item) {
+         highestId = Math.max(highestId, i);
+         Item.REGISTRY.a(i, minecraftkey, item);
+     }
+ 
+-    private final ItemBR itemRep = new ItemBR(this);
++    //OilRep
++    private final ItemBR itemRep = createItemRep();
+ 
+     public ItemBR getItemRep() {
+         return itemRep;
+     }
+ 
++    protected ItemBR createItemRep() {
++        return new ItemBR(this);
++    }
++
+     //OilSpigot
+     public static int getHighestId() {
+         return highestId;
+diff --git a/src/main/java/net/minecraft/server/ItemBlock.java b/src/main/java/net/minecraft/server/ItemBlock.java
+index a5730d1c..dd0a6573 100644
+--- a/src/main/java/net/minecraft/server/ItemBlock.java
++++ b/src/main/java/net/minecraft/server/ItemBlock.java
+@@ -1,5 +1,8 @@
+ package net.minecraft.server;
+ 
++import org.oilmod.rep.item.BlockItemBR;
++import org.oilmod.rep.item.ItemBR;
++
+ import javax.annotation.Nullable;
+ 
+ public class ItemBlock extends Item {
+@@ -103,4 +106,16 @@ public class ItemBlock extends Item {
+     public Block getBlock() {
+         return this.a;
+     }
++
++    //OilSpigot
++    //OilRep
++    public BlockItemBR getItemRep() {
++        return (BlockItemBR) super.getItemRep();
++    }
++
++    protected BlockItemBR createItemRep() {
++        return new BlockItemBR(this);
++    }
++
++    //OilSpigot
+ }
+diff --git a/src/main/java/org/oilmod/bukkit/OilMain.java b/src/main/java/org/oilmod/bukkit/OilMain.java
+index a895b43e..21b7b75c 100644
+--- a/src/main/java/org/oilmod/bukkit/OilMain.java
++++ b/src/main/java/org/oilmod/bukkit/OilMain.java
+@@ -10,6 +10,7 @@ import org.oilmod.api.items.internal.ItemCraftingFactory;
+ import org.oilmod.api.items.internal.ItemFactory;
+ import org.oilmod.api.items.type.ItemTypeHelper;
+ import org.oilmod.api.items.type.TBBType;
++import org.oilmod.api.rep.RepAPI;
+ import org.oilmod.api.userinterface.internal.UIHelper;
+ import org.oilmod.api.util.OilUtil;
+ import org.oilmod.bukkit.block.RealBlockTypeHelper;
+@@ -29,6 +30,7 @@ import net.minecraft.server.MinecraftServer;
+ import net.minecraft.server.PacketDataSerializer;
+ import net.minecraft.server.PacketPlayOutCustomPayload;
+ import org.bukkit.configuration.serialization.ConfigurationSerialization;
++import org.oilmod.rep.RepAPIImpl;
+ import org.spigotmc.Metrics;
+ 
+ import java.io.IOException;
+@@ -41,6 +43,9 @@ public class OilMain {
+     public static OilMod ModOilMod;
+ 
+     public static void init() {
++        RepAPI.installImplementation(new RepAPIImpl());
++        //todo do same for oilmod
++
+         OilMod.ModHelper.setInstance(new OilMod.ModHelper()); //no modification needed for now
+         ModMinecraft  =  new OilMod("minecraft", "Minecraft");
+         ModOilMod  =  new OilMod("oilmod", "OilMod");
+diff --git a/src/main/java/org/oilmod/bukkit/inventory/ItemStackDataImpl.java b/src/main/java/org/oilmod/bukkit/inventory/ItemStackDataImpl.java
+index 5a406ec7..991cb486 100644
+--- a/src/main/java/org/oilmod/bukkit/inventory/ItemStackDataImpl.java
++++ b/src/main/java/org/oilmod/bukkit/inventory/ItemStackDataImpl.java
+@@ -5,14 +5,16 @@ import org.oilmod.api.config.DataType;
+ import org.oilmod.api.data.DataParent;
+ import org.oilmod.api.data.IData;
+ import org.oilmod.api.data.ItemStackData;
++import org.oilmod.api.rep.itemstack.ItemStackRep;
+ import org.oilmod.bukkit.util.OilSpigotUtil;
+ import org.bukkit.inventory.ItemStack;
++import org.oilmod.rep.itemstack.ItemStackBR;
+ 
+ /**
+  * Created by sirati97 on 26.06.2016 for spigot.
+  */
+ public class ItemStackDataImpl extends ItemStackData {
+-    private ItemStack itemStack;
++    private ItemStackRep itemStack;
+ 
+     public ItemStackDataImpl(String name, DataParent dataParent) {
+         super(name, dataParent);
+@@ -20,7 +22,7 @@ public class ItemStackDataImpl extends ItemStackData {
+ 
+     @Override
+     public void saveTo(Compound parent, String name) {
+-        net.minecraft.server.ItemStack nmsItemStack = OilSpigotUtil.toNMS(itemStack);
++        net.minecraft.server.ItemStack nmsItemStack = ((ItemStackBR)itemStack).getNMS();
+         if (!nmsItemStack.isEmpty()) {
+             Compound compoundItemStack = parent.createCompound();
+             nmsItemStack.save(compoundItemStack);
+@@ -38,18 +40,18 @@ public class ItemStackDataImpl extends ItemStackData {
+     }
+ 
+     @Override
+-    public ItemStack getData() {
++    public ItemStackRep getData() {
+         return itemStack;
+     }
+ 
+     @Override
+-    public void setData(ItemStack itemStack) {
++    public void setData(ItemStackRep itemStack) {
+         this.itemStack = itemStack;
+     }
+ 
+     @Override
+-    public void onCloned(IData<ItemStack> iData) {
+-        ItemStack original = iData.getData();
+-        this.setData(original==null?null:original.clone());
++    public void onCloned(IData<ItemStackRep> iData) {
++        ItemStackRep original = iData.getData();
++        this.setData(original==null?null:original.copy());
+     }
+ }
+diff --git a/src/main/java/org/oilmod/bukkit/items/RealCraftItemStack.java b/src/main/java/org/oilmod/bukkit/items/RealCraftItemStack.java
+index 03a947f1..d3d4f940 100644
+--- a/src/main/java/org/oilmod/bukkit/items/RealCraftItemStack.java
++++ b/src/main/java/org/oilmod/bukkit/items/RealCraftItemStack.java
+@@ -20,8 +20,8 @@ public class RealCraftItemStack extends CraftItemStack implements OilBukkitItemS
+     public Map<String, Object> serialize() {
+         Map<String, Object> result = new LinkedHashMap();
+         result.put("type", this.getType().name());
+-        if(this.getDurability() != 0) {
+-            result.put("damage", this.getDurability());
++        if(this.getItemDamage() != 0) {
++            result.put("damage", this.getItemDamage());
+         }
+ 
+         if(this.getAmount() != 1) {
+diff --git a/src/main/java/org/oilmod/rep/RepAPIImpl.java b/src/main/java/org/oilmod/rep/RepAPIImpl.java
+new file mode 100644
+index 00000000..23deeb9e
+--- /dev/null
++++ b/src/main/java/org/oilmod/rep/RepAPIImpl.java
+@@ -0,0 +1,24 @@
++package org.oilmod.rep;
++
++import org.oilmod.api.rep.RepAPI;
++import org.oilmod.api.rep.itemstack.ItemStackFactory;
++import org.oilmod.api.rep.providers.minecraft.MinecraftBlockProvider;
++import org.oilmod.api.rep.providers.minecraft.MinecraftItemProvider;
++import org.oilmod.rep.providers.minecraft.MC112BlockProvider;
++
++public class RepAPIImpl extends RepAPI {
++    @Override
++    protected ItemStackFactory createItemStackFactory() {
++        return null;
++    }
++
++    @Override
++    protected MinecraftBlockProvider createMCBlockProvider() {
++        return new MC112BlockProvider();
++    }
++
++    @Override
++    protected MinecraftItemProvider createMCItemProvider() {
++        return null;
++    }
++}
+diff --git a/src/main/java/org/oilmod/rep/block/BlockBR.java b/src/main/java/org/oilmod/rep/block/BlockBR.java
+index bfb32607..a309a66a 100644
+--- a/src/main/java/org/oilmod/rep/block/BlockBR.java
++++ b/src/main/java/org/oilmod/rep/block/BlockBR.java
+@@ -2,8 +2,11 @@ package org.oilmod.rep.block;
+ 
+ import net.minecraft.server.Block;
+ import net.minecraft.server.Item;
++import net.minecraft.server.ItemBlock;
+ import net.minecraft.server.Items;
+ import org.oilmod.api.rep.block.BlockRep;
++import org.oilmod.api.rep.block.BlockStateRep;
++import org.oilmod.api.rep.item.BlockItemRep;
+ import org.oilmod.api.rep.item.ItemRep;
+ 
+ public class BlockBR implements BlockRep {
+@@ -23,7 +26,12 @@ public class BlockBR implements BlockRep {
+     }
+ 
+     @Override
+-    public ItemRep getItem() {
+-        return Item.getItemOf(getNMS()).getItemRep();
++    public BlockItemRep getItem() {
++        return ((ItemBlock)Item.getItemOf(getNMS())).getItemRep();
++    }
++
++    @Override
++    public StandardBlockStateBR getStandardState() {
++        return getNMS().getStandardStateRep();
+     }
+ }
+diff --git a/src/main/java/org/oilmod/rep/block/BlockStateBR.java b/src/main/java/org/oilmod/rep/block/BlockStateBR.java
+index 2997da08..a7825514 100644
+--- a/src/main/java/org/oilmod/rep/block/BlockStateBR.java
++++ b/src/main/java/org/oilmod/rep/block/BlockStateBR.java
+@@ -7,11 +7,11 @@ import org.oilmod.api.rep.block.BlockStateRep;
+ import org.oilmod.api.rep.world.LocationBlockRep;
+ import org.oilmod.rep.world.WorldBR;
+ 
+-public class BlockStateBR implements BlockStateRep {
++public class BlockStateBR extends BlockStateBase {
+     private final IBlockData NMS;
+ 
+     public BlockStateBR(IBlockData nms) {
+-        NMS = nms;
++        this.NMS = nms;
+     }
+ 
+     public IBlockData getNMS() {
+@@ -19,18 +19,7 @@ public class BlockStateBR implements BlockStateRep {
+     }
+ 
+     @Override
+-    public BlockRep getBlock() {
+-        return getNMS().getBlock().getBlockRep();
++    public boolean isReadOnly() {
++        return false;
+     }
+-
+-
+-    @Override
+-    public float getBlockHardness(LocationBlockRep loc) {
+-        return NMS.b(((WorldBR)loc.getWorld()).getNMS(), new BlockPosition(loc.getBlockX(), loc.getBlockY(), loc.getBlockZ()));
+-    }
+-
+-    /*@Override
+-    public BlockType getBlockType() {
+-        return NMS.getMaterial().getOilBlockType();
+-    }*/
+ }
+diff --git a/src/main/java/org/oilmod/rep/block/BlockStateBase.java b/src/main/java/org/oilmod/rep/block/BlockStateBase.java
+new file mode 100644
+index 00000000..8c9380e3
+--- /dev/null
++++ b/src/main/java/org/oilmod/rep/block/BlockStateBase.java
+@@ -0,0 +1,37 @@
++package org.oilmod.rep.block;
++
++import net.minecraft.server.BlockPosition;
++import net.minecraft.server.IBlockData;
++import org.oilmod.api.rep.block.BlockRep;
++import org.oilmod.api.rep.block.BlockStateRep;
++import org.oilmod.api.rep.world.LocationBlockRep;
++import org.oilmod.rep.world.WorldBR;
++
++public abstract class BlockStateBase implements BlockStateRep {
++    public abstract IBlockData getNMS();
++
++    @Override
++    public abstract boolean isReadOnly();
++
++    @Override
++    public BlockRep getBlock() {
++        return getNMS().getBlock().getBlockRep();
++    }
++
++    @Override
++    public BlockStateRep copy() {
++        //possible as IBlockData is immutable
++        return new BlockStateBR(getNMS());
++    }
++
++
++    @Override
++    public float getBlockHardness(LocationBlockRep loc) {
++        return getNMS().b(((WorldBR)loc.getWorld()).getNMS(), new BlockPosition(loc.getBlockX(), loc.getBlockY(), loc.getBlockZ()));
++    }
++
++    /*@Override
++    public BlockType getBlockType() {
++        return NMS.getMaterial().getOilBlockType();
++    }*/
++}
+diff --git a/src/main/java/org/oilmod/rep/block/StandardBlockStateBR.java b/src/main/java/org/oilmod/rep/block/StandardBlockStateBR.java
+new file mode 100644
+index 00000000..85a1048b
+--- /dev/null
++++ b/src/main/java/org/oilmod/rep/block/StandardBlockStateBR.java
+@@ -0,0 +1,26 @@
++package org.oilmod.rep.block;
++
++import net.minecraft.server.Block;
++import net.minecraft.server.BlockPosition;
++import net.minecraft.server.IBlockData;
++import org.oilmod.api.rep.block.BlockRep;
++import org.oilmod.api.rep.block.BlockStateRep;
++import org.oilmod.api.rep.world.LocationBlockRep;
++import org.oilmod.rep.world.WorldBR;
++
++public class StandardBlockStateBR extends BlockStateBase {
++    private final Block block;
++
++    public StandardBlockStateBR(Block block) {
++        this.block = block;
++    }
++
++    public IBlockData getNMS() {
++        return block.getBlockData();
++    }
++
++    @Override
++    public boolean isReadOnly() {
++        return true;
++    }
++}
+diff --git a/src/main/java/org/oilmod/rep/item/BlockItemBR.java b/src/main/java/org/oilmod/rep/item/BlockItemBR.java
+new file mode 100644
+index 00000000..6b5ee5a1
+--- /dev/null
++++ b/src/main/java/org/oilmod/rep/item/BlockItemBR.java
+@@ -0,0 +1,29 @@
++package org.oilmod.rep.item;
++
++import net.minecraft.server.Item;
++import net.minecraft.server.ItemBlock;
++import org.oilmod.api.rep.block.BlockRep;
++import org.oilmod.api.rep.item.BlockItemRep;
++import org.oilmod.api.rep.item.BlockItemStateRep;
++import org.oilmod.api.rep.item.ItemStateRep;
++
++public class BlockItemBR extends ItemBR implements BlockItemRep {
++    public BlockItemBR(ItemBlock nms) {
++        super(nms);
++    }
++
++    @Override
++    public ItemBlock getNMS() {
++        return (ItemBlock) super.getNMS();
++    }
++
++    @Override
++    public BlockItemStateRep getStandardState() {
++        return (BlockItemStateRep) super.getStandardState();
++    }
++
++    @Override
++    public BlockRep getBlock() {
++        return getNMS().getBlock().getBlockRep();
++    }
++}
+diff --git a/src/main/java/org/oilmod/rep/item/ItemBR.java b/src/main/java/org/oilmod/rep/item/ItemBR.java
+index b29d84a0..f280c530 100644
+--- a/src/main/java/org/oilmod/rep/item/ItemBR.java
++++ b/src/main/java/org/oilmod/rep/item/ItemBR.java
+@@ -1,7 +1,9 @@
+ package org.oilmod.rep.item;
+ 
+ import net.minecraft.server.Item;
++import org.apache.commons.lang3.NotImplementedException;
+ import org.oilmod.api.rep.item.ItemRep;
++import org.oilmod.api.rep.item.ItemStateRep;
+ 
+ public class ItemBR implements ItemRep {
+     private final Item NMS;
+@@ -14,6 +16,11 @@ public class ItemBR implements ItemRep {
+         return NMS;
+     }
+ 
++    @Override
++    public ItemStateRep getStandardState() {
++        throw new NotImplementedException("todo"); //todo
++    }
++
+     @Override
+     public int getMaxDurability() {
+         return getNMS().getMaxDurability();
+diff --git a/src/main/java/org/oilmod/rep/item/ItemStackBR.java b/src/main/java/org/oilmod/rep/item/ItemStackBR.java
+deleted file mode 100644
+index 94eeebdf..00000000
+--- a/src/main/java/org/oilmod/rep/item/ItemStackBR.java
++++ /dev/null
+@@ -1,79 +0,0 @@
+-package org.oilmod.rep.item;
+-
+-import net.minecraft.server.Item;
+-import org.oilmod.api.rep.enchant.EnchantmentRep;
+-import org.oilmod.api.rep.item.ItemRep;
+-import org.oilmod.api.rep.itemstack.ItemStackRep;
+-
+-public class ItemStackBR implements ItemStackRep {
+-
+-    private final Item NMS;
+-
+-    public ItemBR(Item nms) {
+-        NMS = nms;
+-    }
+-
+-    public Item getNMS() {
+-        return NMS;
+-    }
+-
+-    @Override
+-    public ItemRep getItem() {
+-        return null;
+-    }
+-
+-    @Override
+-    public int getAmount() {
+-        return 0;
+-    }
+-
+-    @Override
+-    public void setAmount(int amount) {
+-
+-    }
+-
+-    @Override
+-    public void setDurability(short durability) {
+-
+-    }
+-
+-    @Override
+-    public short getDurability() {
+-        return 0;
+-    }
+-
+-    @Override
+-    public int getMaxStackSize() {
+-        return 0;
+-    }
+-
+-    @Override
+-    public boolean isSimilar(ItemStackRep stack) {
+-        return false;
+-    }
+-
+-    @Override
+-    public ItemStackRep clone() {
+-        return null;
+-    }
+-
+-    @Override
+-    public int getEnchantmentLevel(EnchantmentRep ench) {
+-        return 0;
+-    }
+-
+-    @Override
+-    public void addEnchantment(EnchantmentRep ench, int level, boolean force) {
+-
+-    }
+-
+-    @Override
+-    public int removeEnchantment(EnchantmentRep ench) {
+-        return 0;
+-    }
+-
+-    @Override
+-    public boolean isEmpty() {
+-        return false;
+-    }
+-}
+diff --git a/src/main/java/org/oilmod/rep/itemstack/ItemStackBR.java b/src/main/java/org/oilmod/rep/itemstack/ItemStackBR.java
+new file mode 100644
+index 00000000..1a81fc96
+--- /dev/null
++++ b/src/main/java/org/oilmod/rep/itemstack/ItemStackBR.java
+@@ -0,0 +1,60 @@
++package org.oilmod.rep.itemstack;
++
++import net.minecraft.server.ItemStack;
++import org.oilmod.api.rep.item.ItemRep;
++import org.oilmod.api.rep.itemstack.ItemStackRep;
++import org.oilmod.api.rep.itemstack.ItemStackStateRep;
++
++public class ItemStackBR implements ItemStackRep {
++
++    private final ItemStack NMS;
++
++    public ItemStackBR(ItemStack nms) {
++        NMS = nms;
++    }
++
++    public ItemStack getNMS() {
++        return NMS;
++    }
++
++    @Override
++    public ItemRep getItem() {
++        return getNMS().getItem().getItemRep();
++    }
++
++    @Override
++    public ItemStackStateRep getItemStackState() {
++        return null;
++    }
++
++    @Override
++    public int getAmount() {
++        return getNMS().getCount();
++    }
++
++    @Override
++    public void setAmount(int amount) {
++        getNMS().setCount(amount);
++    }
++
++    @Override
++    public int getMaxStackSize() {
++        return getNMS().getMaxStackSize();
++    }
++
++    @Override
++    public boolean isSimilar(ItemStackRep stack) {
++        return ItemStack.matchesIgnoresCount(getNMS(), ((ItemStackBR)stack).getNMS());
++    }
++
++    @Override
++    public ItemStackBR copy() {
++        return new ItemStackBR(getNMS().cloneItemStack());
++    }
++
++
++    @Override
++    public boolean isEmpty() {
++        return getNMS().isEmpty();
++    }
++}
+diff --git a/src/main/java/org/oilmod/rep/itemstack/ItemStackStateBR.java b/src/main/java/org/oilmod/rep/itemstack/ItemStackStateBR.java
+new file mode 100644
+index 00000000..1ccd0d9e
+--- /dev/null
++++ b/src/main/java/org/oilmod/rep/itemstack/ItemStackStateBR.java
+@@ -0,0 +1,60 @@
++package org.oilmod.rep.itemstack;
++
++import net.minecraft.server.ItemStack;
++import org.apache.commons.lang3.NotImplementedException;
++import org.oilmod.api.rep.enchant.EnchantmentRep;
++import org.oilmod.api.rep.item.ItemStateRep;
++import org.oilmod.api.rep.itemstack.ItemStackRep;
++import org.oilmod.api.rep.itemstack.state.ItemStackStateRep;
++
++public class ItemStackStateBR implements ItemStackStateRep {
++    private final ItemStack stack;
++
++    public ItemStackStateBR(ItemStack stack) {
++        this.stack = stack;
++    }
++
++    @Override
++    public ItemStateRep getItemState() {
++        throw new NotImplementedException("todo"); //todo
++    }
++
++    @Override
++    public void applyItemState(ItemStateRep state) {
++        throw new NotImplementedException("todo"); //todo
++    }
++
++    @Override
++    public void applyTo(ItemStackRep stack) {
++
++    }
++
++    @Override
++    public boolean isAttached() {
++        return true;
++    }
++
++    @Override
++    public void setItemDamage(int itemDamage) {
++        stack.setDamage(itemDamage);
++    }
++
++    public int getItemDamage() {
++        return stack.getDamage();
++    }
++
++    @Override
++    public int getEnchantmentLevel(EnchantmentRep ench) {
++        return stack.;
++    }
++
++    @Override
++    public void addEnchantment(EnchantmentRep ench, int level, boolean force) {
++
++    }
++
++    @Override
++    public int removeEnchantment(EnchantmentRep ench) {
++        return 0;
++    }
++}
+-- 
+2.20.1.windows.1
+
