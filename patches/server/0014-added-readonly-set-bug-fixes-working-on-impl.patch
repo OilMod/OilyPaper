@@ -1,0 +1,982 @@
+From eb2a34c73eb6ce928a50cd8bb32699967accac00 Mon Sep 17 00:00:00 2001
+From: sirati97 <TheSirati97@gmail.com>
+Date: Wed, 13 Mar 2019 09:49:27 +0000
+Subject: [PATCH] added readonly set, bug fixes, working on impl
+
+---
+ src/main/java/net/minecraft/server/Block.java |   9 +-
+ .../net/minecraft/server/Enchantment.java     |  12 ++
+ .../java/net/minecraft/server/ItemStack.java  |  15 ++-
+ .../net/minecraft/server/MinecraftKey.java    |  15 ++-
+ .../server/PlayerInteractManager.java         |   3 +-
+ src/main/java/net/minecraft/server/World.java |   8 ++
+ .../craftbukkit/entity/CraftHumanEntity.java  |  23 ----
+ .../inventory/custom/slot/ViewSlotBase.java   |   8 +-
+ .../org/oilmod/bukkit/items/RealItem.java     |  10 +-
+ .../oilmod/bukkit/items/RealItemStack.java    |  11 +-
+ .../org/oilmod/bukkit/util/OilSpigotUtil.java |  28 ++++-
+ .../org/oilmod/bukkit/util/RealOilUtil.java   |  93 ++++++++--------
+ .../oilmod/rep/enchantment/EnchantmentBR.java |  70 ++++++++++++
+ .../java/org/oilmod/rep/entity/EntityBR.java  | 103 ++++++++++++++++++
+ .../org/oilmod/rep/entity/EntityHumanBR.java  |   6 +
+ .../org/oilmod/rep/entity/EntityLivingBR.java |   6 +
+ .../org/oilmod/rep/itemstack/ItemStackBR.java |   6 +-
+ .../rep/itemstack/ItemStackStateBR.java       |  36 ++++--
+ .../org/oilmod/rep/world/LocationBlockBR.java |  44 ++++++++
+ 19 files changed, 395 insertions(+), 111 deletions(-)
+ create mode 100644 src/main/java/org/oilmod/rep/enchantment/EnchantmentBR.java
+ create mode 100644 src/main/java/org/oilmod/rep/entity/EntityBR.java
+ create mode 100644 src/main/java/org/oilmod/rep/entity/EntityHumanBR.java
+ create mode 100644 src/main/java/org/oilmod/rep/entity/EntityLivingBR.java
+ create mode 100644 src/main/java/org/oilmod/rep/world/LocationBlockBR.java
+
+diff --git a/src/main/java/net/minecraft/server/Block.java b/src/main/java/net/minecraft/server/Block.java
+index 7d2b8062..b19f1bbe 100644
+--- a/src/main/java/net/minecraft/server/Block.java
++++ b/src/main/java/net/minecraft/server/Block.java
+@@ -363,11 +363,12 @@ public class Block {
+ 
+     //OilSpigot start
+     private static List<ItemStack> dropCatcherList;
+-    private static  BlockPosition dropCatcherListBlockposition;
+-    public ItemStack[] getDrops(World world, BlockPosition blockposition, IBlockData iblockdata, int fortuneLvl) {
++    private static BlockPosition dropCatcherListBlockposition;
++    private static final BlockPosition fakePos = new BlockPosition(0,0,0);
++    public ItemStack[] getDrops(World world, IBlockData iblockdata, int fortuneLvl) {
+         dropCatcherList = new ArrayList<>();
+-        dropCatcherListBlockposition = blockposition;
+-        b(world, blockposition, iblockdata, fortuneLvl);
++        dropCatcherListBlockposition = fakePos;
++        b(world, fakePos, iblockdata, fortuneLvl);
+         ItemStack[] result = dropCatcherList.toArray(new ItemStack[dropCatcherList.size()]);
+         dropCatcherList = null;
+         return result;
+diff --git a/src/main/java/net/minecraft/server/Enchantment.java b/src/main/java/net/minecraft/server/Enchantment.java
+index 0a51c1a8..692f63c7 100644
+--- a/src/main/java/net/minecraft/server/Enchantment.java
++++ b/src/main/java/net/minecraft/server/Enchantment.java
+@@ -1,6 +1,9 @@
+ package net.minecraft.server;
+ 
+ import com.google.common.collect.Lists;
++import org.oilmod.api.rep.enchant.EnchantmentRep;
++import org.oilmod.rep.enchantment.EnchantmentBR;
++
+ import java.util.ArrayList;
+ import java.util.List;
+ import javax.annotation.Nullable;
+@@ -162,6 +165,15 @@ public abstract class Enchantment {
+         // CraftBukkit end
+     }
+ 
++    //OilyPaper start
++    //oilrep
++    private final EnchantmentBR enchantmentRep = new EnchantmentBR(this);
++
++    public EnchantmentBR getEnchantmentRep() {
++        return enchantmentRep;
++    }
++    //OilyPaper end
++
+     public static enum Rarity {
+ 
+         COMMON(10), UNCOMMON(5), RARE(2), VERY_RARE(1);
+diff --git a/src/main/java/net/minecraft/server/ItemStack.java b/src/main/java/net/minecraft/server/ItemStack.java
+index 241bf890..1464d8e5 100644
+--- a/src/main/java/net/minecraft/server/ItemStack.java
++++ b/src/main/java/net/minecraft/server/ItemStack.java
+@@ -835,6 +835,7 @@ public class ItemStack { //OilSpigot - removed final
+             nbttagcompound.setShort("lvl", (short) ((byte) i));
+             nbttaglist.add(nbttagcompound);
+         } else {
++            //OilSpigot keepsync
+             if (!this.tag.hasKeyOfType("ench", 9)) {
+                 this.tag.set("ench", new NBTTagList());
+             }
+@@ -842,13 +843,11 @@ public class ItemStack { //OilSpigot - removed final
+             NBTTagList nbttaglist = this.tag.getList("ench", 10);
+             NBTTagCompound nbttagcompound = new NBTTagCompound();
+ 
+-        nbttagcompound.setShort("id", (short) Enchantment.getId(enchantment));
+-        nbttagcompound.setShort("lvl", (short) ((byte) i));
+-        nbttaglist.add(nbttagcompound);
+-        processEnchantOrder(nbttagcompound); // Paper
+-    }
+-
+-
++            nbttagcompound.setShort("id", (short) Enchantment.getId(enchantment));
++            nbttagcompound.setShort("lvl", (short) ((byte) i));
++            nbttaglist.add(nbttagcompound);
++            processEnchantOrder(nbttagcompound); // Paper
++        }
+     }
+ 
+     public boolean hasEnchantments() {
+@@ -861,7 +860,7 @@ public class ItemStack { //OilSpigot - removed final
+     public NBTTagList getCustomEnchantments() {
+         return this.tag == null ? null : this.tag.getList("cuEnch", 10);
+     }
+-    //OilSpigot end - add support for custom enchantments
++    //OilSpigot end - add support for custom enchantments //todo unify custom enchants with normal ones
+ 
+     //OilSpigot start
+     public List<String> getLore() {
+diff --git a/src/main/java/net/minecraft/server/MinecraftKey.java b/src/main/java/net/minecraft/server/MinecraftKey.java
+index df9eee6d..8372ee7a 100644
+--- a/src/main/java/net/minecraft/server/MinecraftKey.java
++++ b/src/main/java/net/minecraft/server/MinecraftKey.java
+@@ -11,10 +11,11 @@ import java.lang.reflect.Type;
+ import java.util.Locale;
+ import org.apache.commons.lang3.StringUtils;
+ import org.apache.commons.lang3.Validate;
++import org.oilmod.api.rep.IKey;
+ import org.oilmod.api.util.NMSKey;
+ 
+ //OilSpigot implement NMSKey - only change KEEPSYNC
+-public class MinecraftKey implements Comparable<MinecraftKey>, NMSKey {
++public class MinecraftKey implements Comparable<MinecraftKey>, NMSKey, IKey {
+ 
+     protected final String a;
+     protected final String b;
+@@ -71,6 +72,18 @@ public class MinecraftKey implements Comparable<MinecraftKey>, NMSKey {
+         }
+     }
+ 
++    //OilyPaper start
++    @Override
++    public String getNamespace() {
++        return b();
++    }
++
++    @Override
++    public String getKeyString() {
++        return getKey();
++    }
++    //OilyPaper end
++
+     public int hashCode() {
+         return 31 * this.a.hashCode() + this.b.hashCode();
+     }
+diff --git a/src/main/java/net/minecraft/server/PlayerInteractManager.java b/src/main/java/net/minecraft/server/PlayerInteractManager.java
+index b462b1d3..1b4e9420 100644
+--- a/src/main/java/net/minecraft/server/PlayerInteractManager.java
++++ b/src/main/java/net/minecraft/server/PlayerInteractManager.java
+@@ -9,9 +9,8 @@ import org.bukkit.event.block.Action;
+ import org.bukkit.event.player.PlayerInteractEvent;
+ import org.oilmod.bukkit.items.RealItem;
+ import org.oilmod.bukkit.items.RealItemStack;
+-import org.oilmod.bukkit.util.OilSpigotUtil;
+ 
+-import static org.oilmod.bukkit.util.OilSpigotUtil.toBukkit;
++import static org.oilmod.bukkit.util.OilSpigotUtil.toRep;
+ // CraftBukkit end
+ 
+ public class PlayerInteractManager {
+diff --git a/src/main/java/net/minecraft/server/World.java b/src/main/java/net/minecraft/server/World.java
+index f834c767..48471efb 100644
+--- a/src/main/java/net/minecraft/server/World.java
++++ b/src/main/java/net/minecraft/server/World.java
+@@ -36,6 +36,7 @@ import java.util.Set;
+ import com.destroystokyo.paper.antixray.ChunkPacketBlockController; // Anti-Xray
+ import com.destroystokyo.paper.antixray.ChunkPacketBlockControllerAntiXray; // Anti-Xray
+ import com.google.common.collect.Sets;
++import org.oilmod.rep.world.WorldBR;
+ // Paper end
+ 
+ public abstract class World implements IBlockAccess {
+@@ -3306,4 +3307,11 @@ public abstract class World implements IBlockAccess {
+     public BlockPosition a(String s, BlockPosition blockposition, boolean flag) {
+         return null;
+     }
++    //OilyPaper start
++    private final WorldBR worldRep = new WorldBR(this);
++
++    public WorldBR getWorldRep() {
++        return worldRep;
++    }
++    //OilyPaper end
+ }
+diff --git a/src/main/java/org/bukkit/craftbukkit/entity/CraftHumanEntity.java b/src/main/java/org/bukkit/craftbukkit/entity/CraftHumanEntity.java
+index 16c3a1c9..8cf375ed 100644
+--- a/src/main/java/org/bukkit/craftbukkit/entity/CraftHumanEntity.java
++++ b/src/main/java/org/bukkit/craftbukkit/entity/CraftHumanEntity.java
+@@ -543,27 +543,4 @@ public class CraftHumanEntity extends CraftLivingEntity implements HumanEntity {
+         getHandle().openSign(teSign);
+     }
+     // Paper end
+-
+-    //OilyPaper - start
+-    /* moved here from craftplayer */
+-    @Override
+-    public void setSneaking(boolean sneak) {
+-        getHandle().setSneaking(sneak);
+-    }
+-
+-    @Override
+-    public boolean isSneaking() {
+-        return getHandle().isSneaking();
+-    }
+-
+-    @Override
+-    public boolean isSprinting() {
+-        return getHandle().isSprinting();
+-    }
+-
+-    @Override
+-    public void setSprinting(boolean sprinting) {
+-        getHandle().setSprinting(sprinting);
+-    }
+-    //OilyPaper - end
+ }
+diff --git a/src/main/java/org/oilmod/bukkit/inventory/custom/slot/ViewSlotBase.java b/src/main/java/org/oilmod/bukkit/inventory/custom/slot/ViewSlotBase.java
+index 648daefa..15ca308a 100644
+--- a/src/main/java/org/oilmod/bukkit/inventory/custom/slot/ViewSlotBase.java
++++ b/src/main/java/org/oilmod/bukkit/inventory/custom/slot/ViewSlotBase.java
+@@ -1,5 +1,7 @@
+ package org.oilmod.bukkit.inventory.custom.slot;
+ 
++import org.oilmod.api.rep.entity.EntityHumanRep;
++import org.oilmod.api.rep.itemstack.ItemStackRep;
+ import org.oilmod.api.userinterface.Click;
+ import org.oilmod.api.userinterface.internal.NMSClickData;
+ import org.oilmod.api.userinterface.internal.NMSUIElement;
+@@ -24,12 +26,12 @@ public abstract class ViewSlotBase implements IViewSlot{
+     }
+ 
+     @Override
+-    public final org.bukkit.inventory.ItemStack getDisplayed(int index) {
++    public final ItemStackRep getDisplayed(int index) {
+         return OilSpigotUtil.toRep(getItem(index));
+     }
+ 
+     @Override
+-    public final void setDisplayed(int index, org.bukkit.inventory.ItemStack itemStack) {
++    public final void setDisplayed(int index, ItemStackRep itemStack) {
+         if (this instanceof SettableViewSlot) {
+             ((SettableViewSlot)this).setItem(index, OilSpigotUtil.toNMS(itemStack));
+         } else {
+@@ -48,7 +50,7 @@ public abstract class ViewSlotBase implements IViewSlot{
+     }
+ 
+     @Override
+-    public final void onClick(Player player, int index, Click click, NMSClickData nmsClickData) {
++    public final void onClick(EntityHumanRep player, int index, Click click, NMSClickData nmsClickData) {
+         clickItem(index, click.getSubType(), OilSpigotUtil.toNMS(click.getType()), OilSpigotUtil.toNMS(player), OilSpigotUtil.toNMS(nmsClickData));
+     }
+ }
+diff --git a/src/main/java/org/oilmod/bukkit/items/RealItem.java b/src/main/java/org/oilmod/bukkit/items/RealItem.java
+index 9760f23f..5f1a720a 100644
+--- a/src/main/java/org/oilmod/bukkit/items/RealItem.java
++++ b/src/main/java/org/oilmod/bukkit/items/RealItem.java
+@@ -10,8 +10,10 @@ import org.oilmod.api.items.type.IDurable;
+ import org.oilmod.api.items.type.IToolBlockBreaking;
+ import org.oilmod.api.items.type.IVDAdapter;
+ import org.oilmod.bukkit.util.OilSpigotUtil;
++import org.oilmod.rep.block.BlockStateBR;
++import org.oilmod.rep.item.ItemBR;
+ 
+-import static org.oilmod.bukkit.util.OilSpigotUtil.toBukkit;
++import static org.oilmod.bukkit.util.OilSpigotUtil.toRep;
+ import static org.oilmod.bukkit.util.OilSpigotUtil.toNMS;
+ 
+ public class RealItem extends Item {
+@@ -58,14 +60,14 @@ public class RealItem extends Item {
+ 
+ 
+     public boolean canEnchantSpecial(Enchantment enchantment, boolean anvil) {
+-        return getApiItem().canEnchantSpecial(OilSpigotUtil. toBukkit(enchantment), anvil);
++        return getApiItem().canEnchantSpecial(enchantment.getEnchantmentRep(), anvil);
+     }
+ 
+     public EnumInteractionResult onItemLeftClickOnBlock(EntityHuman human, World w, BlockPosition pos, EnumHand hand, EnumDirection facing, float hitX, float hitY, float hitZ) {
+         RealItemStack itemstack = (RealItemStack) human.b(hand);
+         EnumInteractionResult result = onItemLeftClick(w, human, hand);
+         if (result != EnumInteractionResult.PASS) return result;
+-        return toNMS(apiItem.onItemLeftClickOnBlock(itemstack.getOilItemStack(), human.getBukkitEntity(), toBukkit(w, pos), hand==EnumHand.OFF_HAND, toBukkit(facing), hitX, hitY, hitZ));
++        return toNMS(apiItem.onItemLeftClickOnBlock(itemstack.getOilItemStack(), human.getBukkitEntity(), toRep(w, pos), hand==EnumHand.OFF_HAND, toRep(facing), hitX, hitY, hitZ));
+     }
+ 
+ 
+@@ -140,7 +142,7 @@ public class RealItem extends Item {
+     }
+ 
+     public boolean onBlockDestroyed(ItemStack stack, World w, IBlockData data, BlockPosition pos, EntityLiving entity) {
+-        return apiItem.onBlockDestroyed(((RealItemStack)stack).getOilItemStack(), new RealOilBlockState(data), OilSpigotUtil.toRep(w, pos), (LivingEntity)entity.getBukkitEntity());
++        return apiItem.onBlockDestroyed(((RealItemStack)stack).getOilItemStack(), new BlockStateBR(data), OilSpigotUtil.toRep(w, pos), (LivingEntity)entity.getBukkitEntity());
+     }
+ 
+     //OilSpigot Pail a -> onItemRightClick
+diff --git a/src/main/java/org/oilmod/bukkit/items/RealItemStack.java b/src/main/java/org/oilmod/bukkit/items/RealItemStack.java
+index e3d2e812..5267e71c 100644
+--- a/src/main/java/org/oilmod/bukkit/items/RealItemStack.java
++++ b/src/main/java/org/oilmod/bukkit/items/RealItemStack.java
+@@ -11,12 +11,11 @@ import org.oilmod.api.items.OilItem;
+ import org.oilmod.api.items.OilItemStack;
+ import org.oilmod.api.items.type.IDurable;
+ import org.oilmod.bukkit.config.nbttag.NBTCompound;
++import org.oilmod.bukkit.util.OilSpigotUtil;
+ 
+ import java.lang.ref.WeakReference;
+ import java.util.Map;
+ 
+-import static org.oilmod.bukkit.util.OilSpigotUtil.*;
+-
+ public class RealItemStack extends ItemStack implements NMSItemStack {
+     private WeakReference<RealCraftItemStack> craftItemStack = null;
+     private OilItemStack oilItemStack;
+@@ -164,20 +163,20 @@ public class RealItemStack extends ItemStack implements NMSItemStack {
+ 
+     //Anvils
+     public int prepareRepairAnvil(ItemStack itemStack, EntityHuman human, int usedItems, int oldDurability) {
+-        return getApiItem().prepareRepairAnvil(oilItemStack, toBukkit(itemStack), human.getBukkitEntity(), usedItems, oldDurability);
++        return getApiItem().prepareRepairAnvil(oilItemStack, OilSpigotUtil.toRep(itemStack), human.getBukkitEntity(), usedItems, oldDurability);
+     }
+ 
+     public void repairAnvil(ItemStack itemStack, EntityHuman human) {
+-        getApiItem().repairAnvil(oilItemStack, toBukkit(itemStack), human.getBukkitEntity());
++        getApiItem().repairAnvil(oilItemStack, OilSpigotUtil.toRep(itemStack), human.getBukkitEntity());
+     }
+ 
+     //TODO: actually implement
+     public int prepareCombineAnvil(ItemStack itemStack, EntityHuman human, int cost) {
+-        return getApiItem().prepareCombineAnvil(oilItemStack, toBukkit(itemStack), human.getBukkitEntity(), cost);
++        return getApiItem().prepareCombineAnvil(oilItemStack, OilSpigotUtil.toRep(itemStack), human.getBukkitEntity(), cost);
+     }
+ 
+     public void combineAnvil(ItemStack itemStack, EntityHuman human) {
+-        getApiItem().combineAnvil(oilItemStack, toBukkit(itemStack), human.getBukkitEntity());
++        getApiItem().combineAnvil(oilItemStack, OilSpigotUtil.toRep(itemStack), human.getBukkitEntity());
+     }
+ 
+     //OilAPI end
+diff --git a/src/main/java/org/oilmod/bukkit/util/OilSpigotUtil.java b/src/main/java/org/oilmod/bukkit/util/OilSpigotUtil.java
+index 5662afb9..763bf0f4 100644
+--- a/src/main/java/org/oilmod/bukkit/util/OilSpigotUtil.java
++++ b/src/main/java/org/oilmod/bukkit/util/OilSpigotUtil.java
+@@ -11,6 +11,11 @@ import org.bukkit.craftbukkit.util.CraftMagicNumbers;
+ import org.oilmod.api.rep.block.BlockFaceRep;
+ import org.oilmod.api.rep.block.BlockStateRep;
+ import org.bukkit.enchantments.Enchantment;
++import org.oilmod.api.rep.enchant.EnchantmentRep;
++import org.oilmod.api.rep.entity.EntityHumanRep;
++import org.oilmod.api.rep.itemstack.ItemStackRep;
++import org.oilmod.api.rep.stdimpl.world.LocFactoryImpl;
++import org.oilmod.api.rep.world.LocationBlockRep;
+ import org.oilmod.api.userinterface.ClickType;
+ import org.oilmod.api.userinterface.IInteractableUIElement;
+ import org.oilmod.api.userinterface.IUIElement;
+@@ -33,6 +38,8 @@ import org.bukkit.craftbukkit.entity.CraftPlayer;
+ import org.bukkit.craftbukkit.inventory.CraftItemStack;
+ import org.bukkit.entity.Player;
+ import org.oilmod.rep.block.BlockStateBR;
++import org.oilmod.rep.itemstack.ItemStackBR;
++import org.oilmod.rep.world.LocationBlockBR;
+ 
+ import java.util.HashMap;
+ import java.util.Map;
+@@ -75,6 +82,16 @@ public final class OilSpigotUtil {
+         }
+     }
+ 
++    public static EntityPlayer toNMS(EntityHumanRep player) {
++        ((EntityHuman))
++
++        if (player instanceof CraftPlayer) {
++            return ((CraftPlayer) player).getHandle();
++        } else {
++            throw new IllegalStateException("Do not know how to convert " + player.getClass().getCanonicalName() + " to EntityPlayer (NMS)");
++        }
++    }
++
+     public static ISlotView toNMS(UIPanel panel) {
+         if (panel == null) {
+             return null;
+@@ -143,6 +160,10 @@ public final class OilSpigotUtil {
+         return CraftItemStack.asNMSCopy(itemStack);
+     }
+ 
++    public static ItemStack toNMS(ItemStackRep stack) {
++        return ((ItemStackBR)stack).getNMS();
++    }
++
+ 
+     public static World toNMS(org.bukkit.World world) {
+         if (world instanceof CraftWorld) {
+@@ -196,8 +217,8 @@ public final class OilSpigotUtil {
+         return new BlockPosition(l.getBlockX(), l.getBlockY(), l.getBlockZ());
+     }
+ 
+-    public static Location toRep(World w, BlockPosition pos) {
+-        return new Location(w.getWorld() , pos.getX(),  pos.getY(), pos.getZ());
++    public static LocationBlockRep toRep(World w, BlockPosition pos) {
++        return new LocationBlockBR(w, pos);
+     }
+ 
+     public static BlockStateRep toRep(IBlockData state) {
+@@ -236,7 +257,4 @@ public final class OilSpigotUtil {
+         return new NotImplementedException("If you see that message sirati97 with an error log");
+     }
+ 
+-    public static Enchantment toBukkit(net.minecraft.server.Enchantment enchantment) {
+-        return org.bukkit.enchantments.Enchantment.getById(net.minecraft.server.Enchantment.getId(enchantment)); //TODO: replace with own reference when custom enchantment api was added
+-    }
+ }
+diff --git a/src/main/java/org/oilmod/bukkit/util/RealOilUtil.java b/src/main/java/org/oilmod/bukkit/util/RealOilUtil.java
+index d5553f80..a0a51b0b 100644
+--- a/src/main/java/org/oilmod/bukkit/util/RealOilUtil.java
++++ b/src/main/java/org/oilmod/bukkit/util/RealOilUtil.java
+@@ -1,22 +1,28 @@
+ package org.oilmod.bukkit.util;
+ 
+ import com.google.common.base.Predicate;
+-import org.oilmod.api.util.NMSKey;
+-import org.oilmod.api.util.OilKey;
+-import org.oilmod.api.util.OilUtil;
+-import gnu.trove.map.hash.THashMap;
+-import net.minecraft.server.*;
+-import net.minecraft.server.Item;
+ import org.bukkit.Bukkit;
+-import org.bukkit.Location;
+-import org.bukkit.Material;
+-import org.bukkit.World;
+-import org.bukkit.block.BlockState;
+ import org.bukkit.craftbukkit.CraftChunk;
+ import org.bukkit.craftbukkit.block.CraftBlock;
+ import org.bukkit.craftbukkit.entity.CraftHumanEntity;
+ import org.bukkit.craftbukkit.entity.CraftLivingEntity;
+ import org.bukkit.craftbukkit.inventory.CraftItemStack;
++import org.oilmod.api.rep.block.BlockRep;
++import org.oilmod.api.rep.block.BlockStateRep;
++import org.oilmod.api.rep.entity.EntityHumanRep;
++import org.oilmod.api.rep.entity.EntityLivingRep;
++import org.oilmod.api.rep.item.BlockItemRep;
++import org.oilmod.api.rep.item.ItemRep;
++import org.oilmod.api.rep.itemstack.ItemStackRep;
++import org.oilmod.api.rep.world.LocationBlockRep;
++import org.oilmod.api.rep.world.LocationRep;
++import org.oilmod.api.rep.world.WorldRep;
++import org.oilmod.api.util.NMSKey;
++import org.oilmod.api.util.OilKey;
++import org.oilmod.api.util.OilUtil;
++import gnu.trove.map.hash.THashMap;
++import net.minecraft.server.*;
++import net.minecraft.server.Item;
+ import org.bukkit.entity.*;
+ import org.bukkit.entity.Entity;
+ import org.bukkit.entity.minecart.CommandMinecart;
+@@ -29,6 +35,11 @@ import org.bukkit.entity.minecart.StorageMinecart;
+ import org.bukkit.event.block.BlockBreakEvent;
+ import org.bukkit.event.block.BlockMultiPlaceEvent;
+ import org.bukkit.event.block.BlockPlaceEvent;
++import org.oilmod.rep.block.BlockBR;
++import org.oilmod.rep.block.BlockStateBR;
++import org.oilmod.rep.item.BlockItemBR;
++import org.oilmod.rep.itemstack.ItemStackBR;
++import org.oilmod.rep.world.WorldBR;
+ 
+ import javax.annotation.Nullable;
+ import java.util.List;
+@@ -47,67 +58,61 @@ public class RealOilUtil extends OilUtil.UtilImpl {
+     };
+ 
+     @Override
+-    protected org.bukkit.inventory.ItemStack[] getDrops(org.bukkit.block.Block block) {
+-        return getDropsFortune(block, 0);
++    protected ItemStackRep[] getDrops(WorldRep w, BlockRep block, BlockStateRep state) {
++        return getDropsFortune(w, block, state, 0);
+     }
+ 
+     @Override
+-    protected org.bukkit.inventory.ItemStack[] getDropsSilktouch(org.bukkit.block.Block block) {
++    protected ItemStackRep[] getDropsSilktouch(WorldRep w, BlockRep block, BlockStateRep state) {
+         Block nmsBlock = ((CraftBlock) block).getNMSBlock();
+-        return new org.bukkit.inventory.ItemStack[]{CraftItemStack.asCraftMirror(nmsBlock.getDropSilktouch(nmsBlock.fromLegacyData(block.getData())))};
++        return new ItemStackRep[]{new ItemStackBR(nmsBlock.getDropSilktouch(((BlockStateBR)state).getNMS()))};
+     }
+ 
+     @Override
+-    protected org.bukkit.inventory.ItemStack[] getDropsFortune(org.bukkit.block.Block block, int lv) {
+-        CraftBlock craftBlock = (CraftBlock) block;
+-        CraftChunk craftChunk = (CraftChunk) craftBlock.getChunk();
+-        Block nmsBlock = craftBlock.getNMSBlock();
+-        ItemStack[] resultNms = nmsBlock.getDrops(craftChunk.getHandle().getWorld(), toBlockPosition(block), nmsBlock.fromLegacyData(block.getData()), lv);
+-        org.bukkit.inventory.ItemStack[] result = new org.bukkit.inventory.ItemStack[resultNms.length];
++    protected ItemStackRep[] getDropsFortune(WorldRep w, BlockRep block, BlockStateRep state, int lv) {
++        Block nmsBlock = ((BlockBR)block).getNMS();
++
++        ItemStack[] resultNms = nmsBlock.getDrops(((WorldBR)w).getNMS(), ((BlockStateBR)state).getNMS(), lv);
++        ItemStackRep[] result = new ItemStackRep[resultNms.length];
+         for (int i = 0; i < resultNms.length; i++) {
+-            result[i] = CraftItemStack.asCraftMirror(resultNms[i]);
++            result[i] = new ItemStackBR(resultNms[i]);
+         }
+         return result;
+     }
+ 
+     @Override
+-    protected org.bukkit.inventory.ItemStack getRandomValidVariation(Material material, Random random) {
+-        ItemStack itemStack = CraftItemStack.asNMSCopy(new org.bukkit.inventory.ItemStack(material));
+-        Item item = itemStack.getItem();
+-        int newData = 0;
+-        if (item instanceof ItemBlock) {
+-            Block block = ((ItemBlock) item).getBlock();
+-            BlockStateList stateList = block.s();
+-            newData = block.getDropData(stateList.a().get(random.nextInt(stateList.a().size())));
+-        }
+-        itemStack.setData(newData);
+-        return CraftItemStack.asCraftMirror(itemStack);
++    protected ItemStackRep getRandomValidVariation(BlockItemRep itemRep, Random random) {
++        ItemBlock item = ((BlockItemBR)itemRep).getNMS();
++        Block block = item.getBlock();
++        BlockStateList stateList = block.s();
++        int newData = block.getDropData(stateList.a().get(random.nextInt(stateList.a().size())));
++        return new ItemStackBR(ItemStack.createStackVanilla(item, 1, newData, null)); //todo use new system of states, move to rep api
+     }
+ 
+     @Override
+-    protected boolean canBreak(Player player, org.bukkit.block.Block block) {
++    protected boolean canBreak(EntityHumanRep player, BlockRep block, BlockStateRep state) {
+         BlockBreakEvent event = new BlockBreakEvent(block, player);
+         Bukkit.getPluginManager().callEvent(event);
+         return !event.isCancelled();
+     }
+ 
+     @Override
+-    protected boolean canPlace(Player player, org.bukkit.block.Block block, BlockState blockState, org.bukkit.block.Block block1, org.bukkit.inventory.ItemStack itemStack) {
+-        BlockPlaceEvent event = new BlockPlaceEvent(block, blockState, block1, itemStack, player, true); //TODO: find hand
++    protected boolean canPlace(EntityHumanRep player, BlockRep block, BlockStateRep state, LocationBlockRep placedAgainst, ItemStackRep itemStack) {
++        BlockPlaceEvent event = new BlockPlaceEvent(block, blockState, placedAgainst, itemStack, player, true); //TODO: find hand
+         Bukkit.getPluginManager().callEvent(event);
+         return !event.isCancelled() && event.canBuild();
+     }
+ 
+ 
+     @Override
+-    protected boolean canMultiPlace(Player player, List<BlockState> states, org.bukkit.block.Block clicked, org.bukkit.inventory.ItemStack itemInHand) {
++    protected boolean canMultiPlace(EntityHumanRep player, List<BlockStateRep> states, LocationBlockRep clicked, ItemStackRep itemInHand) {
+         BlockPlaceEvent event = new BlockMultiPlaceEvent(states, clicked, itemInHand, player, true);
+         Bukkit.getPluginManager().callEvent(event);
+         return !event.isCancelled() && event.canBuild();
+     }
+ 
+     @Override
+-    protected <T extends Entity> List<T> getNearbyEntities(Location loc1, Location loc2, Class<T> entityClass) {
++    protected <T extends Entity> List<T> getNearbyEntities(LocationRep loc1, LocationRep loc2, Class<T> entityClass) {
+         AxisAlignedBB box = new AxisAlignedBB(loc1.getX(), loc1.getY(), loc1.getZ(), loc2.getX(), loc2.getY(), loc2.getZ());
+         List<net.minecraft.server.Entity> notchEntityList = OilSpigotUtil.toNMS(loc1.getWorld()).a(getMappedNMSClass(entityClass), box, entityPredicate);
+         List<T> bukkitEntityList = new java.util.ArrayList<>(notchEntityList.size());
+@@ -123,16 +128,16 @@ public class RealOilUtil extends OilUtil.UtilImpl {
+     }
+ 
+     @Override
+-    protected void setLastDamager(LivingEntity entity, LivingEntity source) {
++    protected void setLastDamager(EntityLivingRep entity, EntityLivingRep source) {
+         damageEntity(entity, 0, source);
+     }
+ 
+     @Override
+-    protected boolean damageEntity(LivingEntity entity, double amount, LivingEntity source) {
++    protected boolean damageEntity(EntityLivingRep entity, double amount, EntityLivingRep source) {
+         DamageSource reason = DamageSource.GENERIC;
+ 
+         if (source instanceof HumanEntity) {
+-            reason = DamageSource.playerAttack(((CraftHumanEntity) source).getHandle());
++            reason = DamageSource.playerAttack(((CraftHumanEntity) source).getHandle());//todo this is not correct
+         } else if (source != null) {
+             reason = DamageSource.mobAttack(((CraftLivingEntity) source).getHandle());
+         }
+@@ -140,7 +145,7 @@ public class RealOilUtil extends OilUtil.UtilImpl {
+     }
+ 
+     @Override
+-    protected long getWorldTicksPlayed(World world) {
++    protected long getWorldTicksPlayed(WorldRep world) {
+         net.minecraft.server.World nmsWorld = OilSpigotUtil.toNMS(world);
+         return nmsWorld.worldData.getTime();
+     }
+@@ -161,17 +166,13 @@ public class RealOilUtil extends OilUtil.UtilImpl {
+         return new MinecraftKey(key.getMod().getInternalName(), key.getKeyString());
+     }
+ 
+-    private BlockPosition toBlockPosition(org.bukkit.block.Block block) {
+-        return new BlockPosition(block.getX(), block.getY(), block.getZ());
+-    }
+-
+     //OilSpigot KEEPSYNC public static CraftEntity.getEntity(CraftServer server, Entity entity);
+     public Class<? extends net.minecraft.server.Entity> mapToNMS(Class<? extends Entity> bukkitClass) {
+         /**
+          * Order is *EXTREMELY* important -- keep it right! =D
+          */ //todo updated to 1.12?
+         if (LivingEntity.class.isAssignableFrom(bukkitClass)) {
+-            //Players
++            //EntityHumanReps
+             if (HumanEntity.class.isAssignableFrom(bukkitClass)) {
+                 if (Player.class.isAssignableFrom(bukkitClass)) {
+                     return EntityPlayer.class;
+diff --git a/src/main/java/org/oilmod/rep/enchantment/EnchantmentBR.java b/src/main/java/org/oilmod/rep/enchantment/EnchantmentBR.java
+new file mode 100644
+index 00000000..1d57f063
+--- /dev/null
++++ b/src/main/java/org/oilmod/rep/enchantment/EnchantmentBR.java
+@@ -0,0 +1,70 @@
++package org.oilmod.rep.enchantment;
++
++import net.minecraft.server.Enchantment;
++import net.minecraft.server.Item;
++import org.oilmod.api.rep.IKey;
++import org.oilmod.api.rep.enchant.EnchantmentRep;
++import org.oilmod.api.rep.item.ItemRep;
++import org.oilmod.api.rep.item.ItemStateRep;
++import org.oilmod.api.rep.itemstack.ItemStackFactory;
++import org.oilmod.api.rep.itemstack.ItemStackRep;
++import org.oilmod.api.rep.itemstack.state.ItemStackStateRep;
++import org.oilmod.rep.itemstack.ItemStackBR;
++
++public class EnchantmentBR implements EnchantmentRep {
++    private final Enchantment NMS;
++
++    public EnchantmentBR(Enchantment nms) {
++        NMS = nms;
++    }
++
++    public Enchantment getNMS() {
++        return NMS;
++    }
++
++
++    @Override
++    public IKey getKey() {
++        return Enchantment.enchantments.b(getNMS());
++    }
++
++    @Override
++    public int getMaxLevel() {
++        return getNMS().getMaxLevel();
++    }
++
++    @Override
++    public int getStartLevel() {
++        return getNMS().getStartLevel();
++    }
++
++    @Override
++    public boolean isTreasure() {
++        return getNMS().isTreasure();
++    }
++
++    @Override
++    public boolean isCurse() {
++        return getNMS().isCursed();
++    }
++
++    @Override
++    public boolean conflictsWith(EnchantmentRep other) {
++        return false;
++    }
++
++    @Override
++    public boolean canEnchantItem(ItemRep item, ItemStateRep state) {
++        return canEnchantItem(ItemStackFactory.INSTANCE.create(item, state));
++    }
++
++    @Override
++    public boolean canEnchantItem(ItemRep item, ItemStackStateRep stackState) {
++        return canEnchantItem(ItemStackFactory.INSTANCE.create(item, stackState));
++    }
++
++
++    private boolean canEnchantItem(ItemStackRep stack) {
++        return getNMS().canEnchant(((ItemStackBR)stack).getNMS());
++    }
++}
+diff --git a/src/main/java/org/oilmod/rep/entity/EntityBR.java b/src/main/java/org/oilmod/rep/entity/EntityBR.java
+new file mode 100644
+index 00000000..1cadf083
+--- /dev/null
++++ b/src/main/java/org/oilmod/rep/entity/EntityBR.java
+@@ -0,0 +1,103 @@
++package org.oilmod.rep.entity;
++
++import net.minecraft.server.Entity;
++import org.bukkit.Location;
++import org.oilmod.api.rep.entity.EntityRep;
++import org.oilmod.api.rep.stdimpl.world.LocFactoryImpl;
++import org.oilmod.api.rep.world.LocationEntityRep;
++import org.oilmod.api.rep.world.LocationRep;
++import org.oilmod.api.rep.world.VectorRep;
++import org.oilmod.api.rep.world.WorldRep;
++import org.oilmod.rep.world.WorldBR;
++
++import java.util.UUID;
++
++public class EntityBR implements EntityRep {
++    private final Entity nms;
++
++    public EntityBR(Entity entity) {
++        this.nms = entity;
++    }
++
++    public Entity getNms() {
++        return nms;
++    }
++
++    @Override
++    public LocationEntityRep getLocationRep() {
++        return LocFactoryImpl.INSTANCE.createEntityLocation(nms.locX, nms.locY, nms.locZ, nms.yaw, nms.pitch, getWorld());
++    }
++
++    @Override
++    public void setVelocity(VectorRep velocity) {
++        nms.motX = velocity.getX();
++        nms.motY = velocity.getY();
++        nms.motZ = velocity.getZ();
++    }
++
++    @Override
++    public VectorRep getVelocityRep() {
++        return LocFactoryImpl.INSTANCE.createVector(nms.motX, nms.motY, nms.motZ);
++    }
++
++    @Override
++    public boolean isOnGround() {
++        return nms.onGround;
++    }
++
++    @Override
++    public WorldRep getWorld() {
++        return nms.world.getWorldRep();
++    }
++
++    @Override
++    public boolean teleport(LocationRep location) {
++        nms.teleportTo(new Location(((WorldBR)location.getWorld()).getNMS().getWorld(),location), false);
++        return true; //?
++    }
++
++    @Override
++    public int getFireTicks() {
++        return 0;
++    }
++
++    @Override
++    public int getMaxFireTicks() {
++        return 0;
++    }
++
++    @Override
++    public void setFireTicks(int ticks) {
++
++    }
++
++    @Override
++    public void remove() {
++
++    }
++
++    @Override
++    public boolean isDead() {
++        return false;
++    }
++
++    @Override
++    public boolean isValid() {
++        return false;
++    }
++
++    @Override
++    public float getFallDistance() {
++        return 0;
++    }
++
++    @Override
++    public void setFallDistance(float distance) {
++
++    }
++
++    @Override
++    public UUID getUniqueId() {
++        return null;
++    }
++}
+diff --git a/src/main/java/org/oilmod/rep/entity/EntityHumanBR.java b/src/main/java/org/oilmod/rep/entity/EntityHumanBR.java
+new file mode 100644
+index 00000000..33d739a2
+--- /dev/null
++++ b/src/main/java/org/oilmod/rep/entity/EntityHumanBR.java
+@@ -0,0 +1,6 @@
++package org.oilmod.rep.entity;
++
++import org.oilmod.api.rep.entity.EntityHumanRep;
++
++public class EntityHumanBR extends EntityHumanRep {
++}
+diff --git a/src/main/java/org/oilmod/rep/entity/EntityLivingBR.java b/src/main/java/org/oilmod/rep/entity/EntityLivingBR.java
+new file mode 100644
+index 00000000..cd3f6c21
+--- /dev/null
++++ b/src/main/java/org/oilmod/rep/entity/EntityLivingBR.java
+@@ -0,0 +1,6 @@
++package org.oilmod.rep.entity;
++
++import org.oilmod.api.rep.entity.EntityLivingRep;
++
++public class EntityLivingBR implements EntityLivingRep {
++}
+diff --git a/src/main/java/org/oilmod/rep/itemstack/ItemStackBR.java b/src/main/java/org/oilmod/rep/itemstack/ItemStackBR.java
+index 1a81fc96..886cb997 100644
+--- a/src/main/java/org/oilmod/rep/itemstack/ItemStackBR.java
++++ b/src/main/java/org/oilmod/rep/itemstack/ItemStackBR.java
+@@ -3,14 +3,16 @@ package org.oilmod.rep.itemstack;
+ import net.minecraft.server.ItemStack;
+ import org.oilmod.api.rep.item.ItemRep;
+ import org.oilmod.api.rep.itemstack.ItemStackRep;
+-import org.oilmod.api.rep.itemstack.ItemStackStateRep;
++import org.oilmod.api.rep.itemstack.state.ItemStackStateRep;
+ 
+ public class ItemStackBR implements ItemStackRep {
+ 
+     private final ItemStack NMS;
++    private final ItemStackStateBR state;
+ 
+     public ItemStackBR(ItemStack nms) {
+         NMS = nms;
++        state = new ItemStackStateBR(nms);
+     }
+ 
+     public ItemStack getNMS() {
+@@ -24,7 +26,7 @@ public class ItemStackBR implements ItemStackRep {
+ 
+     @Override
+     public ItemStackStateRep getItemStackState() {
+-        return null;
++        return state;
+     }
+ 
+     @Override
+diff --git a/src/main/java/org/oilmod/rep/itemstack/ItemStackStateBR.java b/src/main/java/org/oilmod/rep/itemstack/ItemStackStateBR.java
+index 1ccd0d9e..e764f9ef 100644
+--- a/src/main/java/org/oilmod/rep/itemstack/ItemStackStateBR.java
++++ b/src/main/java/org/oilmod/rep/itemstack/ItemStackStateBR.java
+@@ -1,11 +1,20 @@
+ package org.oilmod.rep.itemstack;
+ 
++import net.minecraft.server.Enchantment;
++import net.minecraft.server.EnchantmentManager;
+ import net.minecraft.server.ItemStack;
++import net.minecraft.server.NBTTagCompound;
++import net.minecraft.server.NBTTagList;
+ import org.apache.commons.lang3.NotImplementedException;
+ import org.oilmod.api.rep.enchant.EnchantmentRep;
+ import org.oilmod.api.rep.item.ItemStateRep;
+ import org.oilmod.api.rep.itemstack.ItemStackRep;
+ import org.oilmod.api.rep.itemstack.state.ItemStackStateRep;
++import org.oilmod.api.util.ConvertedReadSet;
++import org.oilmod.api.util.ReadSet;
++import org.oilmod.rep.enchantment.EnchantmentBR;
++
++import java.util.Set;
+ 
+ public class ItemStackStateBR implements ItemStackStateRep {
+     private final ItemStack stack;
+@@ -24,11 +33,6 @@ public class ItemStackStateBR implements ItemStackStateRep {
+         throw new NotImplementedException("todo"); //todo
+     }
+ 
+-    @Override
+-    public void applyTo(ItemStackRep stack) {
+-
+-    }
+-
+     @Override
+     public boolean isAttached() {
+         return true;
+@@ -45,16 +49,34 @@ public class ItemStackStateBR implements ItemStackStateRep {
+ 
+     @Override
+     public int getEnchantmentLevel(EnchantmentRep ench) {
+-        return stack.;
++        return EnchantmentManager.getEnchantmentLevel(((EnchantmentBR)ench).getNMS(), stack);
+     }
+ 
+     @Override
+     public void addEnchantment(EnchantmentRep ench, int level, boolean force) {
+-
++        stack.addEnchantment(((EnchantmentBR)ench).getNMS(), level); //todo consider checking validity or remobing force altogether, seems like a weird choice anyway
+     }
+ 
+     @Override
+     public int removeEnchantment(EnchantmentRep ench) {
++        if (!stack.hasEnchantments())return 0;//consider replacing with two method, one void one int
++        Enchantment nms = ((EnchantmentBR)ench).getNMS();
++        int id = Enchantment.getId(nms);
++
++        NBTTagList nbttaglist = stack.getEnchantments();
++        for (int i = 0; i < nbttaglist.size(); ++i) {
++            NBTTagCompound nbttagcompound = nbttaglist.get(i);
++            if (nbttagcompound.getShort("id") == id) {
++                short short0 = nbttagcompound.getShort("lvl");
++                nbttaglist.remove(i);
++                return short0;
++            }
++        }
+         return 0;
+     }
++
++    @Override
++    public ReadSet<EnchantmentBR> getEnchantments() {
++        return new ConvertedReadSet<>(EnchantmentManager.a(stack).keySet(), Enchantment::getEnchantmentRep, EnchantmentBR::getNMS);
++    }
+ }
+diff --git a/src/main/java/org/oilmod/rep/world/LocationBlockBR.java b/src/main/java/org/oilmod/rep/world/LocationBlockBR.java
+new file mode 100644
+index 00000000..1dd0ad40
+--- /dev/null
++++ b/src/main/java/org/oilmod/rep/world/LocationBlockBR.java
+@@ -0,0 +1,44 @@
++package org.oilmod.rep.world;
++
++import net.minecraft.server.BlockPosition;
++import net.minecraft.server.World;
++import org.oilmod.api.rep.world.LocationBlockRep;
++import org.oilmod.api.rep.world.WorldRep;
++
++public class LocationBlockBR implements LocationBlockRep {
++    private final World w;
++    private final BlockPosition pos;
++
++    public LocationBlockBR(World w, BlockPosition pos) {
++        this.w = w;
++        this.pos = pos;
++    }
++
++    public BlockPosition getPos() {
++        return pos;
++    }
++
++    public World getWorldNMS() {
++        return w;
++    }
++
++    @Override
++    public int getBlockX() {
++        return pos.getX();
++    }
++
++    @Override
++    public int getBlockY() {
++        return pos.getY();
++    }
++
++    @Override
++    public int getBlockZ() {
++        return pos.getZ();
++    }
++
++    @Override
++    public WorldRep getWorld() {
++        return getWorldNMS().getWorldRep();
++    }
++}
+-- 
+2.20.1.windows.1
+

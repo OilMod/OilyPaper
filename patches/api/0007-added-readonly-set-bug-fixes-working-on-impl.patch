@@ -1,0 +1,220 @@
+From 7ef30d47b5e649945bd7818c45d4e9625b329693 Mon Sep 17 00:00:00 2001
+From: sirati97 <TheSirati97@gmail.com>
+Date: Wed, 13 Mar 2019 09:49:30 +0000
+Subject: [PATCH] added readonly set, bug fixes, working on impl
+
+---
+ src/main/java/org/bukkit/Location.java        | 14 +++++++
+ .../org/bukkit/enchantments/Enchantment.java  |  2 +-
+ .../enchantments/EnchantmentWrapper.java      | 17 --------
+ .../java/org/bukkit/entity/HumanEntity.java   | 19 +--------
+ .../java/org/bukkit/inventory/ItemStack.java  | 42 +------------------
+ .../oilmod/api/rep/bukkit/util/LocUtil.java   |  8 ++--
+ 6 files changed, 21 insertions(+), 81 deletions(-)
+
+diff --git a/src/main/java/org/bukkit/Location.java b/src/main/java/org/bukkit/Location.java
+index 9457832b..07fa67f9 100644
+--- a/src/main/java/org/bukkit/Location.java
++++ b/src/main/java/org/bukkit/Location.java
+@@ -15,6 +15,8 @@ import java.util.function.Predicate;
+ import org.bukkit.entity.Entity;
+ import org.bukkit.entity.LivingEntity;
+ import org.bukkit.entity.Player;
++import org.oilmod.api.rep.world.LocationEntityRep;
++import org.oilmod.api.rep.world.VectorRep;
+ // Paper end
+ 
+ /**
+@@ -64,6 +66,18 @@ public class Location implements Cloneable, ConfigurationSerializable {
+         this.yaw = yaw;
+     }
+ 
++    //OilyPaper
++    public Location(World world, VectorRep loc) {
++        this.world = world;
++        this.x = loc.getX();
++        this.y = loc.getY();
++        this.z = loc.getZ();
++        if (loc instanceof LocationEntityRep) {
++            this.pitch = (float) ((LocationEntityRep) loc).getPitch();
++            this.yaw = (float) ((LocationEntityRep) loc).getYaw();
++        }
++    }
++
+     /**
+      * Sets the world that this location resides in
+      *
+diff --git a/src/main/java/org/bukkit/enchantments/Enchantment.java b/src/main/java/org/bukkit/enchantments/Enchantment.java
+index 93b6d48c..5422cb04 100644
+--- a/src/main/java/org/bukkit/enchantments/Enchantment.java
++++ b/src/main/java/org/bukkit/enchantments/Enchantment.java
+@@ -9,7 +9,7 @@ import org.oilmod.api.rep.enchant.EnchantmentRep;
+ /**
+  * The various type of enchantments that may be added to armour or weapons
+  */
+-public abstract class Enchantment implements EnchantmentRep {
++public abstract class Enchantment {
+     /**
+      * Provides protection against environmental damage
+      */
+diff --git a/src/main/java/org/bukkit/enchantments/EnchantmentWrapper.java b/src/main/java/org/bukkit/enchantments/EnchantmentWrapper.java
+index f3f24d5e..7cbcdf77 100644
+--- a/src/main/java/org/bukkit/enchantments/EnchantmentWrapper.java
++++ b/src/main/java/org/bukkit/enchantments/EnchantmentWrapper.java
+@@ -60,21 +60,4 @@ public class EnchantmentWrapper extends Enchantment {
+     public boolean conflictsWith(Enchantment other) {
+         return getEnchantment().conflictsWith(other);
+     }
+-
+-    //OilyPaper - start
+-    @Override
+-    public boolean isCurse() {
+-        return isCursed();
+-    }
+-
+-    @Override
+-    public boolean conflictsWith(EnchantmentRep other) {
+-        return getEnchantment().conflictsWith(other);
+-    }
+-
+-    @Override
+-    public boolean canEnchantItem(ItemRep item) {
+-        return getEnchantment().canEnchantItem(item);
+-    }
+-    //OilyPaper - end
+ }
+diff --git a/src/main/java/org/bukkit/entity/HumanEntity.java b/src/main/java/org/bukkit/entity/HumanEntity.java
+index 82a21c95..5c45140a 100644
+--- a/src/main/java/org/bukkit/entity/HumanEntity.java
++++ b/src/main/java/org/bukkit/entity/HumanEntity.java
+@@ -11,15 +11,11 @@ import org.bukkit.inventory.InventoryView;
+ import org.bukkit.inventory.ItemStack;
+ import org.bukkit.inventory.PlayerInventory;
+ import org.bukkit.permissions.Permissible;
+-import org.oilmod.api.rep.entity.EntityHumanRep;
+-import org.oilmod.api.rep.inventory.InventoryRep;
+-import org.oilmod.api.rep.inventory.InventoryUIRep;
+-import org.oilmod.api.rep.itemstack.ItemStackRep;
+ 
+ /**
+  * Represents a human entity, such as an NPC or a player
+  */
+-public interface HumanEntity extends LivingEntity, AnimalTamer, Permissible, InventoryHolder, EntityHumanRep {
++public interface HumanEntity extends LivingEntity, AnimalTamer, Permissible, InventoryHolder {
+ 
+     /**
+      * Returns the name of this player
+@@ -358,17 +354,4 @@ public interface HumanEntity extends LivingEntity, AnimalTamer, Permissible, Inv
+     void openSign(org.bukkit.block.Sign sign);
+     // Paper end
+ 
+-    //OilyPaper - start
+-
+-    @Override
+-    default InventoryUIRep openInventory(InventoryRep inventory) {
+-        return openInventory((Inventory)inventory);
+-    }
+-
+-    @Override
+-    default void setItemOnCursor(ItemStackRep item) {
+-        setItemOnCursor((ItemStack)item);
+-    }
+-
+-    //OilyPaper - end
+ }
+diff --git a/src/main/java/org/bukkit/inventory/ItemStack.java b/src/main/java/org/bukkit/inventory/ItemStack.java
+index 43343b63..060914c7 100644
+--- a/src/main/java/org/bukkit/inventory/ItemStack.java
++++ b/src/main/java/org/bukkit/inventory/ItemStack.java
+@@ -23,7 +23,7 @@ import javax.annotation.Nullable;
+ /**
+  * Represents a stack of items
+  */
+-public class ItemStack implements Cloneable, ConfigurationSerializable, ItemStackRep {
++public class ItemStack implements Cloneable, ConfigurationSerializable {
+     private int type = 0;
+     private int amount = 0;
+     private MaterialData data = null;
+@@ -777,44 +777,4 @@ public class ItemStack implements Cloneable, ConfigurationSerializable, ItemStac
+         return itemMeta.hasItemFlag(flag);
+     }
+     // Paper end
+-
+-    //OilyPaper - start
+-
+-    @Override
+-    public ItemRep getItem() {
+-        return null;
+-    }
+-
+-    @Override
+-    public void addEnchantment(EnchantmentRep ench, int level, boolean force) {
+-        if (force) {
+-            addUnsafeEnchantment((Enchantment)ench, level);
+-        } else {
+-            addEnchantment((Enchantment)ench, level);
+-        }
+-    }
+-
+-    @Override
+-    public int removeEnchantment(EnchantmentRep ench) {
+-        return removeEnchantment((Enchantment)ench);
+-    }
+-
+-    @Override
+-    public boolean isSimilar(ItemStackRep stack) {
+-        return false;
+-    }
+-
+-    @Override
+-    public int getEnchantmentLevel(EnchantmentRep ench) {
+-        return getEnchantmentLevel((Enchantment)ench);
+-    }
+-
+-
+-
+-    @Override
+-    public boolean isEmpty() {
+-        return getType()==Material.AIR;
+-    }
+-
+-    //OilyPaper - end
+ }
+diff --git a/src/main/java/org/oilmod/api/rep/bukkit/util/LocUtil.java b/src/main/java/org/oilmod/api/rep/bukkit/util/LocUtil.java
+index 5d6fd698..7e5a8bee 100644
+--- a/src/main/java/org/oilmod/api/rep/bukkit/util/LocUtil.java
++++ b/src/main/java/org/oilmod/api/rep/bukkit/util/LocUtil.java
+@@ -18,7 +18,7 @@ public final class LocUtil {
+     }
+ 
+     public static World toBukkit(WorldRep rep) {
+-        return ((World.OilRep)rep).bukkit();
++        return ((World)rep);
+     }
+ 
+     public static Location toBukkit(LocationRep v) {
+@@ -30,11 +30,11 @@ public final class LocUtil {
+     }
+ 
+     public static LocationEntityRep toOilEntity(Location loc) {
+-        return LocFactoryImpl.INSTANCE.createEntityLocation(loc.getX(), loc.getY(), loc.getZ(), loc.getYaw(), loc.getPitch(), loc.getWorld().OilRep());
++        return LocFactoryImpl.INSTANCE.createEntityLocation(loc.getX(), loc.getY(), loc.getZ(), loc.getYaw(), loc.getPitch(), loc.getWorld());
+     }
+ 
+     public static LocationRep toOil(Location loc) {
+-        return LocFactoryImpl.INSTANCE.createLocation(loc.getX(), loc.getY(), loc.getZ(), loc.getWorld().OilRep());
++        return LocFactoryImpl.INSTANCE.createLocation(loc.getX(), loc.getY(), loc.getZ(), loc.getWorld());
+     }
+ 
+     public static VectorRep toOil(Vector loc) {
+@@ -42,6 +42,6 @@ public final class LocUtil {
+     }
+ 
+     public static LocationBlockRep toOilBlock(Location loc) {
+-        return LocFactoryImpl.INSTANCE.createBlockLocation(loc.getBlockX(), loc.getBlockY(), loc.getBlockZ(), loc.getWorld().OilRep());
++        return LocFactoryImpl.INSTANCE.createBlockLocation(loc.getBlockX(), loc.getBlockY(), loc.getBlockZ(), loc.getWorld());
+     }
+ }
+-- 
+2.20.1.windows.1
+
