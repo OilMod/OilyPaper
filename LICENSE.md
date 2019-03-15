@@ -9,4 +9,4 @@ Any code directly produced for PaperMC is subject to their licensing. Some parts
 [See here](./licences/OilModLicence.md)
 
 ## Contributing ##
-When contribution the contributing party has to agree to this projects license .
+To contribute the contributing party has to agree to this projects license.
