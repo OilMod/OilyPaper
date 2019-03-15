@@ -1,0 +1,92 @@
+From a12e4eee393661990a323512c1242926048451ab Mon Sep 17 00:00:00 2001
+From: sirati97 <TheSirati97@gmail.com>
+Date: Fri, 15 Mar 2019 07:54:47 +0000
+Subject: [PATCH] mainly bugfixes
+
+---
+ src/main/java/org/bukkit/entity/Entity.java   | 36 +------------------
+ .../java/org/bukkit/entity/LivingEntity.java  |  2 +-
+ src/main/java/org/bukkit/entity/Player.java   |  2 +-
+ 3 files changed, 3 insertions(+), 37 deletions(-)
+
+diff --git a/src/main/java/org/bukkit/entity/Entity.java b/src/main/java/org/bukkit/entity/Entity.java
+index 905d8236..306353d5 100644
+--- a/src/main/java/org/bukkit/entity/Entity.java
++++ b/src/main/java/org/bukkit/entity/Entity.java
+@@ -31,7 +31,7 @@ import static org.oilmod.api.rep.bukkit.util.LocUtil.toOilEntity;
+ /**
+  * Represents a base entity in the world
+  */
+-public interface Entity extends Metadatable, CommandSender, Nameable, EntityRep, VehicleRep, PassengerRep {
++public interface Entity extends Metadatable, CommandSender, Nameable {
+ 
+     /**
+      * Gets the entity's current position
+@@ -534,38 +534,4 @@ public interface Entity extends Metadatable, CommandSender, Nameable, EntityRep,
+      */
+     Chunk getChunk();
+     // Paper end
+-
+-    //OilyPaper - start
+-
+-    @Override
+-    default LocationEntityRep getLocationRep() {
+-        return toOilEntity(getLocation());
+-    }
+-
+-    @Override
+-    default void setVelocity(VectorRep velocity) {
+-        setVelocity(toBukkit(velocity));
+-    }
+-
+-    @Override
+-    default VectorRep getVelocityRep() {
+-        return toOil(getVelocity());
+-    }
+-
+-    @Override
+-    default boolean teleport(LocationRep location) {
+-        return teleport(toBukkit(location));
+-    }
+-
+-    @Override
+-    default boolean addPassenger(PassengerRep passenger) {
+-        return addPassenger((Entity)passenger);
+-    }
+-
+-    @Override
+-    default boolean removePassenger(PassengerRep passenger) {
+-        return removePassenger((Entity)passenger);
+-    }
+-
+-    //OilyPaper - end
+ }
+diff --git a/src/main/java/org/bukkit/entity/LivingEntity.java b/src/main/java/org/bukkit/entity/LivingEntity.java
+index 90d8ad84..2b54e178 100644
+--- a/src/main/java/org/bukkit/entity/LivingEntity.java
++++ b/src/main/java/org/bukkit/entity/LivingEntity.java
+@@ -21,7 +21,7 @@ import javax.annotation.Nullable;
+ /**
+  * Represents a living entity, such as a monster or player
+  */
+-public interface LivingEntity extends Attributable, Entity, Damageable, ProjectileSource, EntityLivingRep {
++public interface LivingEntity extends Attributable, Entity, Damageable, ProjectileSource {
+ 
+     /**
+      * Gets the height of the living entity's eyes above its Location.
+diff --git a/src/main/java/org/bukkit/entity/Player.java b/src/main/java/org/bukkit/entity/Player.java
+index 5b4e4834..99f66ad5 100644
+--- a/src/main/java/org/bukkit/entity/Player.java
++++ b/src/main/java/org/bukkit/entity/Player.java
+@@ -37,7 +37,7 @@ import org.oilmod.api.rep.entity.EntityPlayerRep;
+ /**
+  * Represents a player, connected or not
+  */
+-public interface Player extends HumanEntity, Conversable, CommandSender, OfflinePlayer, PluginMessageRecipient, com.destroystokyo.paper.network.NetworkClient, EntityPlayerRep { // Paper - Extend NetworkClient
++public interface Player extends HumanEntity, Conversable, CommandSender, OfflinePlayer, PluginMessageRecipient, com.destroystokyo.paper.network.NetworkClient { // Paper - Extend NetworkClient
+ 
+     /**
+      * Gets the "friendly" name to display of this player. This may include
+-- 
+2.20.1.windows.1
+
