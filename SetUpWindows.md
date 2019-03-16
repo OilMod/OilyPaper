@@ -11,6 +11,7 @@ If you already have those installed, make sure the path is setup correctly. To d
 - `jar`
 - `java`
 - `mvn`
+
 Do not add anything, just write them like this. If one of them is not working please see below
 
 ## Path settings ##
