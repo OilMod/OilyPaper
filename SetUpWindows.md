@@ -27,11 +27,11 @@ Now go to your maven installation. If you placed it in the folder as described a
  Also add this to you path. In my case it is `C:\maven\apache-maven-3.6.0\bin\ `.
  
  Make sure that there are no trailing spaces or anything like that. 
- Click okay to close both of the settings windows and then close all instances of git-bash. 
+ Click okay twice to close both of the settings windows and then close all instances of git-bash. 
  Please now check your installation again, if it still does not work either your installation of 
  maven, git for windows, or jdk8 is corrupted or you made a small mistake.
  
- ##Setting up Git to work with github
+## Setting up Git to work with github
  Follow the help pages of github: 
 - [How to generate an SSH key](https://help.github.com/articles/generating-a-new-ssh-key-and-adding-it-to-the-ssh-agent/)
 - [How to add a key to github](https://help.github.com/articles/adding-a-new-ssh-key-to-your-github-account/)
