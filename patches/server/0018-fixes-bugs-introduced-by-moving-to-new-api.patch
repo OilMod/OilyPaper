@@ -1,0 +1,2672 @@
+From 1fe3c95727f14ad6dccfe4250e58890c01895549 Mon Sep 17 00:00:00 2001
+From: sirati97 <TheSirati97@gmail.com>
+Date: Thu, 21 Mar 2019 17:41:59 +0100
+Subject: [PATCH] fixes bugs introduced by moving to new api
+
+---
+ .../spigot/optimisation/ItemStackFreeze.java  |   2 +-
+ .../minecraft/server/EnchantmentSlotType.java |   2 +-
+ .../java/net/minecraft/server/ItemStack.java  |   9 +-
+ .../server/PacketDataSerializer.java          |   2 +-
+ .../server/PacketPlayOutBlockChange.java      |  36 ++++++
+ .../minecraft/server/PlayerConnection.java    |   4 +-
+ .../server/PlayerInteractManager.java         | 122 ++++++++++--------
+ src/main/java/org/oilmod/bukkit/OilMain.java  |  24 ++--
+ .../oilmod/bukkit/block/RealBlockType.java    |   3 +-
+ .../bukkit/bukkit/stubs/OilBlockStub.java     |   7 +-
+ .../bukkit/config/nbttag/NBTCompound.java     |   8 +-
+ .../bukkit/config/nbttag/NBTDataList.java     |   6 +-
+ .../bukkit/config/yaml/YamlCompound.java      |  14 +-
+ .../bukkit/config/yaml/YamlDataList.java      |   4 +-
+ .../crafting/BukkitCraftingIngredient.java    |   3 +-
+ .../crafting/BukkitCraftingResultFactory.java |   3 +-
+ .../ItemStackCraftingInventoryReference.java  |   2 +-
+ .../crafting/NMSCraftingIngredient.java       |   2 +-
+ .../org/oilmod/bukkit/crafting/OilRecipe.java |   8 +-
+ .../bukkit/crafting/OilShapedRecipe.java      |  10 +-
+ .../bukkit/crafting/OilShapelessRecipe.java   |  10 +-
+ .../crafting/RealItemCraftingFactory.java     |   4 +-
+ .../bukkit/crafting/help/CHCommand.java       |   2 +-
+ .../bukkit/crafting/help/CHContainer.java     |   4 +-
+ .../crafting/help/CHDisplaySlotView.java      |   8 +-
+ .../crafting/help/CHSelectorSlotView.java     |   6 +-
+ .../crafting/help/VanillaBannerAddCHView.java |   7 +-
+ .../bukkit/crafting/help/VanillaCHView.java   |  10 +-
+ .../crafting/help/VanillaFireworksCHView.java |   2 -
+ .../help/VanillaShieldBannerCHView.java       |   9 +-
+ .../help/VanillaTippedArrowCHView.java        |   1 -
+ .../bukkit/crafting/nms/NMS_OilRecipe.java    |   2 +-
+ .../crafting/nms/NMS_OilShapedRecipe.java     |   4 +-
+ .../crafting/nms/NMS_OilShapelessRecipe.java  |   4 +-
+ .../enchantments/CustomEnchantment.java       |   2 +-
+ .../RealEnchantmentTypeHelper.java            |   6 +-
+ .../org/oilmod/bukkit/inv2/RealContainer.java |  18 ---
+ .../oilmod/bukkit/inv2/VanillaSlotView.java   |   1 -
+ .../bukkit/inventory/ApiItemFilter.java       |   3 +-
+ .../bukkit/inventory/ItemStackDataImpl.java   |   1 -
+ .../OilContainerPortableCrafting.java         |   2 +-
+ .../inventory/OilCraftResultInventory.java    |   2 +-
+ .../bukkit/inventory/OilIInventory.java       |   6 +-
+ .../bukkit/inventory/OilInventoryBase.java    |  23 ++--
+ .../bukkit/inventory/OilInventoryChest.java   |   2 +-
+ .../bukkit/inventory/OilInventoryFurnace.java |  34 +++--
+ .../OilInventoryPortableCrafting.java         |   8 +-
+ .../inventory/OilSlotFurnaceResult.java       |   3 +-
+ .../inventory/RealInventoryFactory.java       |   1 -
+ .../creative/OilCreativeInventory.java        |  13 +-
+ .../inventory/custom/ClickExtraData.java      |   2 +-
+ .../custom/api/NMSFixedSizePanelImpl.java     |   2 +-
+ .../custom/api/OilElementWrapper.java         |   9 +-
+ .../api/OilInteractableElementWrapper.java    |   6 +-
+ .../inventory/custom/api/OilPanelWrapper.java |   4 +-
+ .../inventory/custom/api/RealUIHelper.java    |   2 -
+ .../custom/api/UIChestContainer.java          |   5 +-
+ .../inventory/custom/nms/MultiSlot.java       |   8 +-
+ .../nms/SettableSlotInventorySnapshot.java    |   6 +-
+ .../inventory/custom/nms/ViewContainer.java   |  10 +-
+ .../inventory/custom/nms/ViewInventory.java   |   7 +-
+ .../inventory/custom/slot/IViewSlot.java      |   4 +-
+ .../custom/slot/OilInventoryViewSlot.java     |   4 +-
+ .../custom/slot/SettableViewSlot.java         |   2 +-
+ .../custom/slot/SettableViewSlotBase.java     |   5 +-
+ .../inventory/custom/slot/ViewSlotBase.java   |   5 +-
+ .../inventory/custom/slot/ViewSlotResult.java |   4 +-
+ .../custom/view/HumanInventorySlotView.java   |   6 +-
+ .../custom/view/ScrollableSlotView.java       |   6 +-
+ .../oilmod/bukkit/items/ItemStackCreator.java |   4 +-
+ .../org/oilmod/bukkit/items/RealItem.java     |  22 +++-
+ .../oilmod/bukkit/items/RealItemFactory.java  |   3 -
+ .../oilmod/bukkit/items/RealItemStack.java    |  11 +-
+ .../bukkit/items/RealItemTypeHelper.java      |   7 +-
+ .../items/RealSpecificItemStackFactory.java   |   4 +-
+ .../internal/ItemStackDescription.java        |   4 +-
+ .../internal/ModCraftItemStack.java           |  12 --
+ .../oilmod/bukkit/items/itemtype/RealAxe.java |   2 -
+ .../bukkit/items/itemtype/RealPickaxe.java    |   2 -
+ .../bukkit/items/itemtype/RealShears.java     |   4 -
+ .../bukkit/items/itemtype/RealShovel.java     |  23 ++--
+ .../bukkit/items/itemtype/RealSword.java      |   3 -
+ .../bukkit/items/itemtype/RealTBBHelper.java  |   2 +-
+ .../bukkit/items/itemtype/RealTBBTool.java    |   9 +-
+ .../java/org/oilmod/bukkit/ui/UIManager.java  |   1 -
+ .../org/oilmod/bukkit/util/OilSpigotUtil.java |  18 ++-
+ .../org/oilmod/bukkit/util/RealOilUtil.java   |  51 +++-----
+ .../bukkit/util/enummagic/EnumBuster.java     |  16 ++-
+ .../util/enummagic/ReflectionHelper.java      |   8 +-
+ .../java/org/oilmod/rep/block/BlockBR.java    |   2 -
+ .../org/oilmod/rep/block/BlockStateBR.java    |   5 -
+ .../rep/block/StandardBlockStateBR.java       |   5 -
+ .../oilmod/rep/enchantment/EnchantmentBR.java |   1 -
+ .../org/oilmod/rep/entity/EntityHumanBR.java  |   2 -
+ .../org/oilmod/rep/entity/EntityLivingBR.java |   1 -
+ .../org/oilmod/rep/inventory/InventoryBR.java |   1 -
+ .../java/org/oilmod/rep/item/BlockItemBR.java |   2 -
+ src/main/java/org/oilmod/rep/item/ItemBR.java |   1 -
+ .../org/oilmod/rep/itemstack/ItemStackBR.java |   6 +
+ .../rep/itemstack/ItemStackStateBR.java       |   3 -
+ .../rep/itemstack/OilModItemStackBR.java      |   1 -
+ .../rep/itemstack/RealItemStackFactory.java   |   8 +-
+ .../minecraft/MC112BlockProvider.java         |   9 +-
+ .../minecraft/MC112ItemProvider.java          |  31 +++--
+ .../java/org/oilmod/rep/world/WorldBR.java    |   1 -
+ 105 files changed, 440 insertions(+), 411 deletions(-)
+ create mode 100644 src/main/java/net/minecraft/server/PacketPlayOutBlockChange.java
+
+diff --git a/src/main/java/de/sirati97/spigot/optimisation/ItemStackFreeze.java b/src/main/java/de/sirati97/spigot/optimisation/ItemStackFreeze.java
+index 980657f6..ed8075ca 100644
+--- a/src/main/java/de/sirati97/spigot/optimisation/ItemStackFreeze.java
++++ b/src/main/java/de/sirati97/spigot/optimisation/ItemStackFreeze.java
+@@ -62,6 +62,6 @@ public class ItemStackFreeze { //TODO get this into oilmod
+     }
+ 
+     public ItemStack createItemStack() {
+-        return ItemStack.createStackVanilla(item, count, damage, (NBTTagCompound) tag.clone());
++        return ItemStack.createStack(item, count, damage, (NBTTagCompound) tag.clone());
+     }
+ }
+diff --git a/src/main/java/net/minecraft/server/EnchantmentSlotType.java b/src/main/java/net/minecraft/server/EnchantmentSlotType.java
+index 565641d7..07876f98 100644
+--- a/src/main/java/net/minecraft/server/EnchantmentSlotType.java
++++ b/src/main/java/net/minecraft/server/EnchantmentSlotType.java
+@@ -100,7 +100,7 @@ public abstract class EnchantmentSlotType implements NMSEnchantmentType {
+ 
+     @Override
+     public boolean canEnchantNMS(NMSItem item) {
+-        System.out.println(item.toString() + " " + (item instanceof RealItem? ((RealItem)item).getApiItem().getEnchantmentType().getOilKey().toString():"vanilla") + " " + oil.getOilKey().toString());
++        //System.out.println(item.toString() + " " + (item instanceof RealItem? ((RealItem)item).getApiItem().getEnchantmentType().getOilKey().toString():"vanilla") + " " + oil.getOilKey().toString());
+         return item instanceof RealItem && ((RealItem)item).getApiItem().getEnchantmentType() == oil;
+     }
+ 
+diff --git a/src/main/java/net/minecraft/server/ItemStack.java b/src/main/java/net/minecraft/server/ItemStack.java
+index 797fba61..4b44e1ed 100644
+--- a/src/main/java/net/minecraft/server/ItemStack.java
++++ b/src/main/java/net/minecraft/server/ItemStack.java
+@@ -29,6 +29,8 @@ import de.sirati97.spigot.optimisation.ItemStackFreeze;
+ 
+ import java.util.ArrayList;
+ import org.apache.commons.lang3.Validate;
++import org.oilmod.rep.itemstack.ItemStackBR;
++
+ import static org.spigotmc.ValidateUtils.limit;
+ //OilSpigot end
+ 
+@@ -157,9 +159,12 @@ public class ItemStack { //OilSpigot - removed final
+         }
+     }
+ 
++    public static ItemStack createStack(Item item, int count) {
++        return createStack(item, count, 0, null);
++    }
+ 
+-    public static ItemStack createStackVanilla(Item item, int count, int data, NBTTagCompound tag) {
+-        ItemStack itemStack = new ItemStack(item, count, data);
++    public static ItemStack createStack(Item item, int count, int data, NBTTagCompound tag) {
++        ItemStack itemStack = item instanceof RealItem?((ItemStackBR)((RealItem) item).getApiItem().createItemStack(count, data)).getNMS():new ItemStack(item, count, data);
+         if (tag != null) {
+             itemStack.setTag(tag);
+         }
+diff --git a/src/main/java/net/minecraft/server/PacketDataSerializer.java b/src/main/java/net/minecraft/server/PacketDataSerializer.java
+index c4b795ac..9ac3d3ef 100644
+--- a/src/main/java/net/minecraft/server/PacketDataSerializer.java
++++ b/src/main/java/net/minecraft/server/PacketDataSerializer.java
+@@ -329,7 +329,7 @@ public class PacketDataSerializer extends ByteBuf {
+             if (oilTag != null) {
+                 itemstack = RealItemStack.createModdedStack((RealItem) item, count, data, tag, oilTag); //todo: find way to reduce overhead (it reads in all of mTag)
+             } else {
+-                itemstack = ItemStack.createStackVanilla(item, count, data, tag);
++                itemstack = ItemStack.createStack(item, count, data, tag);
+             }
+ 
+ 
+diff --git a/src/main/java/net/minecraft/server/PacketPlayOutBlockChange.java b/src/main/java/net/minecraft/server/PacketPlayOutBlockChange.java
+new file mode 100644
+index 00000000..9c3b851a
+--- /dev/null
++++ b/src/main/java/net/minecraft/server/PacketPlayOutBlockChange.java
+@@ -0,0 +1,36 @@
++package net.minecraft.server;
++
++import java.io.IOException;
++
++public class PacketPlayOutBlockChange implements Packet<PacketListenerPlayOut> {
++
++    private BlockPosition a;
++    public IBlockData block;
++
++    public PacketPlayOutBlockChange() {}
++
++    public PacketPlayOutBlockChange(World world, BlockPosition blockposition) {
++        this.a = blockposition;
++        this.block = world.getType(blockposition);
++    }
++
++    //OilSpipot
++    public PacketPlayOutBlockChange(BlockPosition blockposition, IBlockData data) {
++        this.a = blockposition;
++        this.block = data;
++    }
++
++    public void a(PacketDataSerializer packetdataserializer) throws IOException {
++        this.a = packetdataserializer.e();
++        this.block = (IBlockData) Block.REGISTRY_ID.fromId(packetdataserializer.g());
++    }
++
++    public void b(PacketDataSerializer packetdataserializer) throws IOException {
++        packetdataserializer.a(this.a);
++        packetdataserializer.d(Block.REGISTRY_ID.getId(this.block));
++    }
++
++    public void a(PacketListenerPlayOut packetlistenerplayout) {
++        packetlistenerplayout.a(this);
++    }
++}
+diff --git a/src/main/java/net/minecraft/server/PlayerConnection.java b/src/main/java/net/minecraft/server/PlayerConnection.java
+index f69f2b43..451c1a22 100644
+--- a/src/main/java/net/minecraft/server/PlayerConnection.java
++++ b/src/main/java/net/minecraft/server/PlayerConnection.java
+@@ -1521,11 +1521,11 @@ public class PlayerConnection implements PacketListenerPlayIn, ITickable {
+             //OilSpigot - start
+             /* make items know that they where used */
+             boolean cancel = CraftEventFactory.callPlayerInteractEvent(this.player, Action.LEFT_CLICK_AIR, this.player.inventory.getItemInHand(), EnumHand.MAIN_HAND).isCancelled();
+-            if (!cancel && this.player.getItemInMainHand() instanceof RealItemStack) {
++            if (!cancel && this.player.getItemInMainHand().getItem() instanceof RealItem) {
+                 EnumInteractionResult result = ((RealItem) this.player.getItemInMainHand().getItem()).onItemLeftClick(this.player.world, this.player,  EnumHand.MAIN_HAND);
+                 if (result == EnumInteractionResult.PASS)cancel = true;
+             }
+-            if (!cancel && this.player.getItemInOffHand() instanceof RealItemStack) {
++            if (!cancel && this.player.getItemInOffHand().getItem() instanceof RealItem) {
+                 EnumInteractionResult result = ((RealItem) this.player.getItemInOffHand().getItem()).onItemLeftClick(this.player.world, this.player, EnumHand.OFF_HAND);
+             }
+             //OilSpigot - end
+diff --git a/src/main/java/net/minecraft/server/PlayerInteractManager.java b/src/main/java/net/minecraft/server/PlayerInteractManager.java
+index 1b4e9420..7c2f99b3 100644
+--- a/src/main/java/net/minecraft/server/PlayerInteractManager.java
++++ b/src/main/java/net/minecraft/server/PlayerInteractManager.java
+@@ -18,22 +18,22 @@ public class PlayerInteractManager {
+     public World world;
+     public EntityPlayer player;
+     private EnumGamemode gamemode;
+-    private boolean d;
+-    private int lastDigTick;
+-    private BlockPosition f;
++    private boolean isDestroyingBlock; //d
++    private int lastDigTick; //lastDigTick is actually the tick at which the digging started
++    private BlockPosition destroyPos; //f
+     private int currentTick;
+-    private boolean h;
+-    private BlockPosition i;
+-    private int j;
+-    private int k;
++    private boolean receivedFinishDiggingPacket; //h
++    private BlockPosition delayedDestroyPos; //i
++    private int initialBlockDamage; //j
++    private int durabilityRemainingOnBlock;//k
+     //OilSpigot
+     private boolean awaitNextTry;
+ 
+     public PlayerInteractManager(World world) {
+         this.gamemode = EnumGamemode.NOT_SET;
+-        this.f = BlockPosition.ZERO;
+-        this.i = BlockPosition.ZERO;
+-        this.k = -1;
++        this.destroyPos = BlockPosition.ZERO;
++        this.delayedDestroyPos = BlockPosition.ZERO;
++        this.durabilityRemainingOnBlock = -1;
+         this.world = world;
+     }
+ 
+@@ -66,66 +66,73 @@ public class PlayerInteractManager {
+     }
+ 
+     public void a() {
++        //oilSpigot
++        int ticksSkipped = MinecraftServer.currentTick - this.currentTick;
+         this.currentTick = MinecraftServer.currentTick; // CraftBukkit;
+         float f;
+         int i;
+ 
+         //OilSpigot start - players need to swing their arm to break blocks (fixes slower tool than vanilla bug, no swing hack)
+-        if ((h || d) && MinecraftServer.currentTick-this.player.lastSwing > 2) { //allow for 3stop ticks lag
+-            System.out.println("Cancelled item breaking because of no swing for " + (MinecraftServer.currentTick-this.player.lastSwing) + " ticks");
++
++        boolean isModItem = this.player.getItemInMainHand().getItem() instanceof RealItem;
++        if ((receivedFinishDiggingPacket || isDestroyingBlock) && MinecraftServer.currentTick-this.player.lastSwing >= ticksSkipped+2) { //allow for 3stop ticks lag
++            System.out.println("Cancelled item breaking because of no swing for " + (MinecraftServer.currentTick-this.player.lastSwing) + " ticks (might as well be custom item, or lag)");
+             e();
+             return;
++        } else if (isModItem && isDestroyingBlock) {//update player that uses custom tool every tick
++            //what we tried but didnt work: using different player id, sending blockupdate air, then back to normal
++            player.playerConnection.sendPacket(new PacketPlayOutBlockBreakAnimation(this.player.getId(), this.delayedDestroyPos, this.durabilityRemainingOnBlock));
++            //todo consider further spamming the client might remove the flickering
+         }
+ 
+-        boolean isModItem = this.player.getItemInMainHand().getItem() instanceof RealItem;
+         //OilSpigot end
+ 
+-        if (this.h) {
++        if (this.receivedFinishDiggingPacket) {
+ 
+-            int j = this.currentTick - this.j;
+-            IBlockData iblockdata = this.world.getType(this.i);
++            int j = this.currentTick - this.initialBlockDamage;
++            IBlockData iblockdata = this.world.getType(this.delayedDestroyPos);
+ 
+ 
+ 
+             if (iblockdata.getMaterial() == Material.AIR) {
+-                this.h = false;
++                this.receivedFinishDiggingPacket = false;
+             } else {
+-                f = iblockdata.a((EntityHuman) this.player, this.player.world, this.i) * (float) (j + 1);
++                f = iblockdata.a((EntityHuman) this.player, this.player.world, this.delayedDestroyPos) * (float) (j + 1);
+                 i = (int) (f * 10.0F);
+-                if (i != this.k) {
+-                    this.world.c(this.player.getId(), this.i, i);
+-                    this.k = i;
++                if (i != this.durabilityRemainingOnBlock) {
++                    this.world.c(this.player.getId(), this.delayedDestroyPos, i);
++                    this.durabilityRemainingOnBlock = i;
+                 }
+ 
+                 if (f >= 1.0F) {
+-                    this.h = false;
+-                    this.breakBlock(this.i);
++                    this.receivedFinishDiggingPacket = false;
++                    this.breakBlock(this.delayedDestroyPos);
+                 }
+             }
+-        } else if (this.d) {
++        } else if (this.isDestroyingBlock) {
+ 
+-            IBlockData iblockdata1 = this.world.getType(this.f);
++            IBlockData iblockdata1 = this.world.getType(this.destroyPos);
+ 
+             if (iblockdata1.getMaterial() == Material.AIR) {
+-                this.world.c(this.player.getId(), this.f, -1);
+-                this.k = -1;
+-                this.d = false;
++                this.world.c(this.player.getId(), this.destroyPos, -1);
++                this.durabilityRemainingOnBlock = -1;
++                this.isDestroyingBlock = false;
+             } else {
+-                int k = this.currentTick - this.lastDigTick;
++                int k = this.currentTick - this.lastDigTick; //lastDigTick is actually the tick at which the digging started
+ 
+-                f = iblockdata1.a((EntityHuman) this.player, this.player.world, this.i) * (float) (k + 1);
++                f = iblockdata1.a((EntityHuman) this.player, this.player.world, this.delayedDestroyPos) * (float) (k + 1);
+                 i = (int) (f * 10.0F);
+-                if (i != this.k) {
+-                    this.world.c(this.player.getId(), this.f, i);
+-                    this.k = i;
++                if (i != this.durabilityRemainingOnBlock) {
++                    this.world.c(this.player.getId(), this.destroyPos, i);
++                    this.durabilityRemainingOnBlock = i;
+                 }
+             }
+ 
+             //OilSpigot start - break block even if client didn't say so in case mod item is faster than client expects
+-            IBlockData iblockdata = this.world.getType(this.f);
+-            float progress = iblockdata.a((EntityHuman) this.player, this.player.world, this.f) * (float) (this.currentTick - this.lastDigTick + 1);
++            IBlockData iblockdata = this.world.getType(this.destroyPos);
++            float progress = iblockdata.a((EntityHuman) this.player, this.player.world, this.destroyPos) * (float) (this.currentTick - this.lastDigTick + 1);
+             if (isModItem &&  progress >= 1.0F) {
+-                breakBlock(this.f);
++                breakBlock(this.destroyPos);
+             }
+             //OilSpigot end
+         }
+@@ -139,8 +146,9 @@ public class PlayerInteractManager {
+         if (awaitNextTry) {
+             awaitNextTry = false;
+             //isModItem here is not really needed and will actually behave unexpectedly for a oilmod considerate client. For vanilla it looks smoother this way tho. (also simplifies all custom race conditions here as we don't need the worry about a block partially broken by a modded item and partially by a vanilla item.)
+-            if (isModItem && blockposition.equals(this.f) && MinecraftServer.currentTick-this.player.lastSwing <= 2) {
+-                a(); //call normal progress function
++            if (isModItem && blockposition.equals(this.destroyPos) && MinecraftServer.currentTick-this.player.lastSwing <= 2) {
++                a(); //call normal progress
++                return; //return so that we do not start block breaking process all over
+             } else {
+                 e(); //reset client
+             }
+@@ -153,14 +161,14 @@ public class PlayerInteractManager {
+ 
+         //OilSpigot start - allow item to react to LEFT_CLICK_BLOCK
+         //TODO
+-        if (!event.isCancelled() && this.player.getItemInMainHand() instanceof RealItemStack) {
++        if (!event.isCancelled() && this.player.getItemInMainHand().getItem() instanceof RealItem) {
+             //TODO calculate actual hitting position
+             EnumInteractionResult result = ((RealItem) this.player.getItemInMainHand().getItem()).onItemLeftClickOnBlock(this.player, world, blockposition, EnumHand.MAIN_HAND, enumdirection, 0.5f, 0.5f, 0.5f);
+-            if (result == EnumInteractionResult.PASS)event.setCancelled(true);
++            if (result != EnumInteractionResult.PASS)event.setCancelled(true);
+         }
+-        if (!event.isCancelled() && this.player.getItemInOffHand() instanceof RealItemStack) {
++        if (!event.isCancelled() && this.player.getItemInOffHand().getItem() instanceof RealItem) {
+             EnumInteractionResult result = ((RealItem) this.player.getItemInOffHand().getItem()).onItemLeftClickOnBlock(this.player, world, blockposition, EnumHand.OFF_HAND, enumdirection, 0.5f, 0.5f, 0.5f);
+-            if (result == EnumInteractionResult.PASS)event.setCancelled(true);
++            if (result != EnumInteractionResult.PASS)event.setCancelled(true);
+         }
+         //OilSpigot end
+ 
+@@ -249,13 +257,13 @@ public class PlayerInteractManager {
+             if (iblockdata.getMaterial() != Material.AIR && f >= 1.0F) {
+                 this.breakBlock(blockposition);
+             } else {
+-                this.d = true;
+-                this.f = blockposition;
++                this.isDestroyingBlock = true;
++                this.destroyPos = blockposition;
+                 int i = (int) (f * 10.0F);
+ 
+                 this.world.c(this.player.getId(), blockposition, i);
+                 this.player.playerConnection.sendPacket(new PacketPlayOutBlockChange(world, blockposition)); // Paper - MC-54026 - backport from 1.13
+-                this.k = i;
++                this.durabilityRemainingOnBlock = i;
+             }
+ 
+         }
+@@ -264,7 +272,7 @@ public class PlayerInteractManager {
+     }
+ 
+     public void a(BlockPosition blockposition) {
+-        if (blockposition.equals(this.f)) {
++        if (blockposition.equals(this.destroyPos)) {
+             this.currentTick = MinecraftServer.currentTick; // CraftBukkit
+             int i = this.currentTick - this.lastDigTick;
+             IBlockData iblockdata = this.world.getType(blockposition);
+@@ -278,19 +286,19 @@ public class PlayerInteractManager {
+ 
+                 //OilSpigot: That's where the 30% speed hack comes from. We are stricter with modItems as they probably have a speed the client does not expect
+                 if (f >= (isModItem?0.95F:0.7F)) {
+-                    this.d = false;
++                    this.isDestroyingBlock = false;
+                     this.world.c(this.player.getId(), blockposition, -1);
+                     this.breakBlock(blockposition);
+                     //OilSpigot moditems can take longer so just ignore that the client thinks is done and await its next try
+                 } else if (isModItem) {
+-                    this.h = false;
+-                    this.d = true; //just making sure
++                    this.receivedFinishDiggingPacket = false;
++                    this.isDestroyingBlock = true; //just making sure
+                     this.awaitNextTry = true;
+-                } else if (!isModItem && !this.h) {
+-                    this.d = false;
+-                    this.h = true;
+-                    this.i = blockposition;
+-                    this.j = this.lastDigTick;
++                } else if (!isModItem && !this.receivedFinishDiggingPacket) {
++                    this.isDestroyingBlock = false;
++                    this.receivedFinishDiggingPacket = true;
++                    this.delayedDestroyPos = blockposition;
++                    this.initialBlockDamage = this.lastDigTick;
+                 }
+             }
+         // CraftBukkit start - Force block reset to client
+@@ -302,12 +310,12 @@ public class PlayerInteractManager {
+     }
+ 
+     public void e() {
+-        this.d = false;
++        this.isDestroyingBlock = false;
+         //OilSpigot start
+-        this.h = false;
++        this.receivedFinishDiggingPacket = false;
+         this.awaitNextTry = false;
+         //OilSpigot end
+-        this.world.c(this.player.getId(), this.f, -1);
++        this.world.c(this.player.getId(), this.destroyPos, -1);
+     }
+ 
+     private boolean c(BlockPosition blockposition) {
+diff --git a/src/main/java/org/oilmod/bukkit/OilMain.java b/src/main/java/org/oilmod/bukkit/OilMain.java
+index 21b7b75c..eb0a32f5 100644
+--- a/src/main/java/org/oilmod/bukkit/OilMain.java
++++ b/src/main/java/org/oilmod/bukkit/OilMain.java
+@@ -1,5 +1,12 @@
+ package org.oilmod.bukkit;
+ 
++import io.netty.buffer.Unpooled;
++import nbt.YBase;
++import net.minecraft.server.EntityPlayer;
++import net.minecraft.server.MinecraftServer;
++import net.minecraft.server.PacketDataSerializer;
++import net.minecraft.server.PacketPlayOutCustomPayload;
++import org.bukkit.configuration.serialization.ConfigurationSerialization;
+ import org.oilmod.api.OilMod;
+ import org.oilmod.api.blocks.BlockType;
+ import org.oilmod.api.inventory.InventoryFactory;
+@@ -14,22 +21,19 @@ import org.oilmod.api.rep.RepAPI;
+ import org.oilmod.api.userinterface.internal.UIHelper;
+ import org.oilmod.api.util.OilUtil;
+ import org.oilmod.bukkit.block.RealBlockTypeHelper;
++import org.oilmod.bukkit.crafting.RealItemCraftingFactory;
++import org.oilmod.bukkit.crafting.help.CHCommand;
+ import org.oilmod.bukkit.enchantments.RealEnchantmentTypeHelper;
+ import org.oilmod.bukkit.inventory.RealInventoryFactory;
+ import org.oilmod.bukkit.inventory.creative.OilCreativeModInventoryCommand;
+ import org.oilmod.bukkit.inventory.custom.api.RealUIHelper;
+-import org.oilmod.bukkit.items.*;
+-import org.oilmod.bukkit.crafting.RealItemCraftingFactory;
+-import org.oilmod.bukkit.crafting.help.CHCommand;
++import org.oilmod.bukkit.items.RealCraftItemStack;
++import org.oilmod.bukkit.items.RealItemClassMap;
++import org.oilmod.bukkit.items.RealItemFactory;
++import org.oilmod.bukkit.items.RealItemRegistryHelper;
++import org.oilmod.bukkit.items.RealItemTypeHelper;
+ import org.oilmod.bukkit.items.itemtype.RealTBBHelper;
+ import org.oilmod.bukkit.util.RealOilUtil;
+-import io.netty.buffer.Unpooled;
+-import nbt.YBase;
+-import net.minecraft.server.EntityPlayer;
+-import net.minecraft.server.MinecraftServer;
+-import net.minecraft.server.PacketDataSerializer;
+-import net.minecraft.server.PacketPlayOutCustomPayload;
+-import org.bukkit.configuration.serialization.ConfigurationSerialization;
+ import org.oilmod.rep.RepAPIImpl;
+ import org.spigotmc.Metrics;
+ 
+diff --git a/src/main/java/org/oilmod/bukkit/block/RealBlockType.java b/src/main/java/org/oilmod/bukkit/block/RealBlockType.java
+index ce76a9ca..8ce8051d 100644
+--- a/src/main/java/org/oilmod/bukkit/block/RealBlockType.java
++++ b/src/main/java/org/oilmod/bukkit/block/RealBlockType.java
+@@ -2,13 +2,12 @@ package org.oilmod.bukkit.block;
+ 
+ import net.minecraft.server.Block;
+ import net.minecraft.server.Blocks;
++import net.minecraft.server.Material;
+ import org.oilmod.api.blocks.BlockType;
+ import org.oilmod.api.blocks.MapColor;
+ import org.oilmod.api.blocks.PistonReaction;
+-import net.minecraft.server.Material;
+ import org.oilmod.api.rep.block.BlockStateRep;
+ import org.oilmod.bukkit.OilMain;
+-import org.oilmod.bukkit.util.OilSpigotUtil;
+ import org.oilmod.rep.block.BlockBR;
+ 
+ public class RealBlockType extends BlockType {
+diff --git a/src/main/java/org/oilmod/bukkit/bukkit/stubs/OilBlockStub.java b/src/main/java/org/oilmod/bukkit/bukkit/stubs/OilBlockStub.java
+index fd038b08..6d38a900 100644
+--- a/src/main/java/org/oilmod/bukkit/bukkit/stubs/OilBlockStub.java
++++ b/src/main/java/org/oilmod/bukkit/bukkit/stubs/OilBlockStub.java
+@@ -6,11 +6,14 @@ import org.bukkit.Chunk;
+ import org.bukkit.Location;
+ import org.bukkit.Material;
+ import org.bukkit.World;
+-import org.bukkit.block.*;
++import org.bukkit.block.Biome;
++import org.bukkit.block.Block;
++import org.bukkit.block.BlockFace;
++import org.bukkit.block.BlockState;
++import org.bukkit.block.PistonMoveReaction;
+ import org.bukkit.craftbukkit.util.CraftMagicNumbers;
+ import org.bukkit.inventory.ItemStack;
+ import org.oilmod.api.rep.world.LocationBlockRep;
+-import org.oilmod.api.rep.world.VectorRep;
+ 
+ import java.util.Collection;
+ import java.util.Collections;
+diff --git a/src/main/java/org/oilmod/bukkit/config/nbttag/NBTCompound.java b/src/main/java/org/oilmod/bukkit/config/nbttag/NBTCompound.java
+index 84ffba70..b299a616 100644
+--- a/src/main/java/org/oilmod/bukkit/config/nbttag/NBTCompound.java
++++ b/src/main/java/org/oilmod/bukkit/config/nbttag/NBTCompound.java
+@@ -1,9 +1,5 @@
+ package org.oilmod.bukkit.config.nbttag;
+ 
+-import org.oilmod.api.config.Compound;
+-import org.oilmod.api.config.DataKeyedEntry;
+-import org.oilmod.api.config.DataList;
+-import org.oilmod.api.config.DataType;
+ import net.minecraft.server.NBTBase;
+ import net.minecraft.server.NBTTagByte;
+ import net.minecraft.server.NBTTagByteArray;
+@@ -16,6 +12,10 @@ import net.minecraft.server.NBTTagList;
+ import net.minecraft.server.NBTTagLong;
+ import net.minecraft.server.NBTTagShort;
+ import net.minecraft.server.NBTTagString;
++import org.oilmod.api.config.Compound;
++import org.oilmod.api.config.DataKeyedEntry;
++import org.oilmod.api.config.DataList;
++import org.oilmod.api.config.DataType;
+ 
+ import java.util.Iterator;
+ 
+diff --git a/src/main/java/org/oilmod/bukkit/config/nbttag/NBTDataList.java b/src/main/java/org/oilmod/bukkit/config/nbttag/NBTDataList.java
+index 2ee4cd1d..6e44f88f 100644
+--- a/src/main/java/org/oilmod/bukkit/config/nbttag/NBTDataList.java
++++ b/src/main/java/org/oilmod/bukkit/config/nbttag/NBTDataList.java
+@@ -1,8 +1,5 @@
+ package org.oilmod.bukkit.config.nbttag;
+ 
+-import org.oilmod.api.config.DataIndexedEntry;
+-import org.oilmod.api.config.DataList;
+-import org.oilmod.api.config.DataType;
+ import net.minecraft.server.NBTBase;
+ import net.minecraft.server.NBTTagByte;
+ import net.minecraft.server.NBTTagByteArray;
+@@ -15,6 +12,9 @@ import net.minecraft.server.NBTTagList;
+ import net.minecraft.server.NBTTagLong;
+ import net.minecraft.server.NBTTagShort;
+ import net.minecraft.server.NBTTagString;
++import org.oilmod.api.config.DataIndexedEntry;
++import org.oilmod.api.config.DataList;
++import org.oilmod.api.config.DataType;
+ 
+ import java.util.Iterator;
+ 
+diff --git a/src/main/java/org/oilmod/bukkit/config/yaml/YamlCompound.java b/src/main/java/org/oilmod/bukkit/config/yaml/YamlCompound.java
+index c85ed3d2..d6b13b62 100644
+--- a/src/main/java/org/oilmod/bukkit/config/yaml/YamlCompound.java
++++ b/src/main/java/org/oilmod/bukkit/config/yaml/YamlCompound.java
+@@ -1,12 +1,5 @@
+ package org.oilmod.bukkit.config.yaml;
+ 
+-import org.oilmod.api.config.Compound;
+-import org.oilmod.api.config.DataKeyedEntry;
+-import org.oilmod.api.config.DataList;
+-import org.oilmod.api.config.DataType;
+-import org.oilmod.bukkit.config.ConfigUtil;
+-import org.oilmod.bukkit.config.MappedMemoryConfiguration;
+-import org.oilmod.bukkit.config.nbttag.NBTCompound;
+ import nbt.YBase;
+ import nbt.YByte;
+ import nbt.YByteArray;
+@@ -21,6 +14,13 @@ import net.minecraft.server.NBTTagCompound;
+ import org.bukkit.configuration.ConfigurationSection;
+ import org.bukkit.configuration.MemorySection;
+ import org.bukkit.configuration.file.YamlConfiguration;
++import org.oilmod.api.config.Compound;
++import org.oilmod.api.config.DataKeyedEntry;
++import org.oilmod.api.config.DataList;
++import org.oilmod.api.config.DataType;
++import org.oilmod.bukkit.config.ConfigUtil;
++import org.oilmod.bukkit.config.MappedMemoryConfiguration;
++import org.oilmod.bukkit.config.nbttag.NBTCompound;
+ 
+ import java.lang.reflect.Field;
+ import java.util.HashMap;
+diff --git a/src/main/java/org/oilmod/bukkit/config/yaml/YamlDataList.java b/src/main/java/org/oilmod/bukkit/config/yaml/YamlDataList.java
+index f19830a7..2a1edcef 100644
+--- a/src/main/java/org/oilmod/bukkit/config/yaml/YamlDataList.java
++++ b/src/main/java/org/oilmod/bukkit/config/yaml/YamlDataList.java
+@@ -1,10 +1,10 @@
+ package org.oilmod.bukkit.config.yaml;
+ 
++import nbt.YList;
++import nbt.YUtil;
+ import org.oilmod.api.config.DataIndexedEntry;
+ import org.oilmod.api.config.DataList;
+ import org.oilmod.api.config.DataType;
+-import nbt.YList;
+-import nbt.YUtil;
+ 
+ import java.util.ArrayList;
+ import java.util.Iterator;
+diff --git a/src/main/java/org/oilmod/bukkit/crafting/BukkitCraftingIngredient.java b/src/main/java/org/oilmod/bukkit/crafting/BukkitCraftingIngredient.java
+index 6d1cd5e7..1006e332 100644
+--- a/src/main/java/org/oilmod/bukkit/crafting/BukkitCraftingIngredient.java
++++ b/src/main/java/org/oilmod/bukkit/crafting/BukkitCraftingIngredient.java
+@@ -1,10 +1,9 @@
+ package org.oilmod.bukkit.crafting;
+ 
++import net.minecraft.server.ItemStack;
+ import org.oilmod.api.items.crafting.DataHolder;
+ import org.oilmod.api.items.crafting.OilCraftingIngredient;
+ import org.oilmod.bukkit.util.OilSpigotUtil;
+-import net.minecraft.server.ItemStack;
+-import org.bukkit.craftbukkit.inventory.CraftItemStack;
+ import org.oilmod.rep.itemstack.ItemStackBR;
+ 
+ import java.util.Random;
+diff --git a/src/main/java/org/oilmod/bukkit/crafting/BukkitCraftingResultFactory.java b/src/main/java/org/oilmod/bukkit/crafting/BukkitCraftingResultFactory.java
+index 19931e39..eea6638a 100644
+--- a/src/main/java/org/oilmod/bukkit/crafting/BukkitCraftingResultFactory.java
++++ b/src/main/java/org/oilmod/bukkit/crafting/BukkitCraftingResultFactory.java
+@@ -1,9 +1,8 @@
+ package org.oilmod.bukkit.crafting;
+ 
++import net.minecraft.server.ItemStack;
+ import net.minecraft.server.NonNullList;
+ import org.oilmod.api.items.crafting.OilCraftingResult;
+-import net.minecraft.server.ItemStack;
+-import org.bukkit.craftbukkit.inventory.CraftItemStack;
+ 
+ import static org.oilmod.bukkit.util.OilSpigotUtil.toNMS;
+ import static org.oilmod.bukkit.util.OilSpigotUtil.toRep;
+diff --git a/src/main/java/org/oilmod/bukkit/crafting/ItemStackCraftingInventoryReference.java b/src/main/java/org/oilmod/bukkit/crafting/ItemStackCraftingInventoryReference.java
+index be6aeded..88d7d3ab 100644
+--- a/src/main/java/org/oilmod/bukkit/crafting/ItemStackCraftingInventoryReference.java
++++ b/src/main/java/org/oilmod/bukkit/crafting/ItemStackCraftingInventoryReference.java
+@@ -1,7 +1,7 @@
+ package org.oilmod.bukkit.crafting;
+ 
+-import net.minecraft.server.oilmod.IInventoryCrafting;
+ import net.minecraft.server.ItemStack;
++import net.minecraft.server.oilmod.IInventoryCrafting;
+ 
+ /**
+  * Created by sirati97 on 03.04.2016.
+diff --git a/src/main/java/org/oilmod/bukkit/crafting/NMSCraftingIngredient.java b/src/main/java/org/oilmod/bukkit/crafting/NMSCraftingIngredient.java
+index f40d6c95..00feb03a 100644
+--- a/src/main/java/org/oilmod/bukkit/crafting/NMSCraftingIngredient.java
++++ b/src/main/java/org/oilmod/bukkit/crafting/NMSCraftingIngredient.java
+@@ -1,7 +1,7 @@
+ package org.oilmod.bukkit.crafting;
+ 
+-import org.oilmod.api.items.crafting.DataHolder;
+ import net.minecraft.server.ItemStack;
++import org.oilmod.api.items.crafting.DataHolder;
+ 
+ import java.util.Random;
+ 
+diff --git a/src/main/java/org/oilmod/bukkit/crafting/OilRecipe.java b/src/main/java/org/oilmod/bukkit/crafting/OilRecipe.java
+index 36c4641f..c33dd205 100644
+--- a/src/main/java/org/oilmod/bukkit/crafting/OilRecipe.java
++++ b/src/main/java/org/oilmod/bukkit/crafting/OilRecipe.java
+@@ -1,17 +1,17 @@
+ package org.oilmod.bukkit.crafting;
+ 
+-import org.apache.commons.lang3.Validate;
+-import org.oilmod.api.items.crafting.DataHolder;
+-import org.oilmod.bukkit.crafting.help.CHView;
+ import net.minecraft.server.EntityHuman;
+-import net.minecraft.server.oilmod.IInventoryCrafting;
+ import net.minecraft.server.IRecipe;
+ import net.minecraft.server.ItemStack;
+ import net.minecraft.server.MinecraftKey;
+ import net.minecraft.server.NonNullList;
+ import net.minecraft.server.RecipeItemStack;
++import net.minecraft.server.oilmod.IInventoryCrafting;
+ import org.apache.commons.lang3.NotImplementedException;
++import org.apache.commons.lang3.Validate;
+ import org.bukkit.inventory.Recipe;
++import org.oilmod.api.items.crafting.DataHolder;
++import org.oilmod.bukkit.crafting.help.CHView;
+ 
+ /**
+  * Created by sirati97 on 24.03.2016.
+diff --git a/src/main/java/org/oilmod/bukkit/crafting/OilShapedRecipe.java b/src/main/java/org/oilmod/bukkit/crafting/OilShapedRecipe.java
+index 8e93f15b..183f297f 100644
+--- a/src/main/java/org/oilmod/bukkit/crafting/OilShapedRecipe.java
++++ b/src/main/java/org/oilmod/bukkit/crafting/OilShapedRecipe.java
+@@ -1,14 +1,14 @@
+ package org.oilmod.bukkit.crafting;
+ 
+-import org.oilmod.api.items.crafting.DataHolder;
+-import org.oilmod.bukkit.crafting.help.CHView;
+-import org.oilmod.bukkit.crafting.help.OilCHView;
+-import org.oilmod.bukkit.crafting.nms.NMS_OilShapedRecipe;
+ import net.minecraft.server.EntityHuman;
+-import net.minecraft.server.oilmod.IInventoryCrafting;
+ import net.minecraft.server.ItemStack;
+ import net.minecraft.server.NonNullList;
+ import net.minecraft.server.World;
++import net.minecraft.server.oilmod.IInventoryCrafting;
++import org.oilmod.api.items.crafting.DataHolder;
++import org.oilmod.bukkit.crafting.help.CHView;
++import org.oilmod.bukkit.crafting.help.OilCHView;
++import org.oilmod.bukkit.crafting.nms.NMS_OilShapedRecipe;
+ import org.oilmod.bukkit.util.BetterNonNullList;
+ 
+ import java.util.List;
+diff --git a/src/main/java/org/oilmod/bukkit/crafting/OilShapelessRecipe.java b/src/main/java/org/oilmod/bukkit/crafting/OilShapelessRecipe.java
+index 262a33db..41131ef8 100644
+--- a/src/main/java/org/oilmod/bukkit/crafting/OilShapelessRecipe.java
++++ b/src/main/java/org/oilmod/bukkit/crafting/OilShapelessRecipe.java
+@@ -1,15 +1,15 @@
+ package org.oilmod.bukkit.crafting;
+ 
+ import com.google.common.collect.Lists;
+-import org.oilmod.api.items.crafting.DataHolder;
+-import org.oilmod.bukkit.crafting.help.CHView;
+-import org.oilmod.bukkit.crafting.help.OilCHView;
+-import org.oilmod.bukkit.crafting.nms.NMS_OilShapelessRecipe;
+ import net.minecraft.server.EntityHuman;
+-import net.minecraft.server.oilmod.IInventoryCrafting;
+ import net.minecraft.server.ItemStack;
+ import net.minecraft.server.NonNullList;
+ import net.minecraft.server.World;
++import net.minecraft.server.oilmod.IInventoryCrafting;
++import org.oilmod.api.items.crafting.DataHolder;
++import org.oilmod.bukkit.crafting.help.CHView;
++import org.oilmod.bukkit.crafting.help.OilCHView;
++import org.oilmod.bukkit.crafting.nms.NMS_OilShapelessRecipe;
+ import org.oilmod.bukkit.util.BetterNonNullList;
+ 
+ import java.util.ArrayList;
+diff --git a/src/main/java/org/oilmod/bukkit/crafting/RealItemCraftingFactory.java b/src/main/java/org/oilmod/bukkit/crafting/RealItemCraftingFactory.java
+index 0186374e..037dd467 100644
+--- a/src/main/java/org/oilmod/bukkit/crafting/RealItemCraftingFactory.java
++++ b/src/main/java/org/oilmod/bukkit/crafting/RealItemCraftingFactory.java
+@@ -1,13 +1,13 @@
+ package org.oilmod.bukkit.crafting;
+ 
++import net.minecraft.server.CraftingManager;
++import net.minecraft.server.IRecipe;
+ import net.minecraft.server.MinecraftKey;
+ import org.oilmod.api.items.crafting.OilCraftingIngredient;
+ import org.oilmod.api.items.crafting.OilCraftingRecipe;
+ import org.oilmod.api.items.crafting.OilCraftingResult;
+ import org.oilmod.api.items.internal.ItemCraftingFactory;
+ import org.oilmod.api.util.OilKey;
+-import net.minecraft.server.CraftingManager;
+-import net.minecraft.server.IRecipe;
+ 
+ /**
+  * Created by sirati97 on 24.03.2016.
+diff --git a/src/main/java/org/oilmod/bukkit/crafting/help/CHCommand.java b/src/main/java/org/oilmod/bukkit/crafting/help/CHCommand.java
+index 5ae6364b..5f7d1aad 100644
+--- a/src/main/java/org/oilmod/bukkit/crafting/help/CHCommand.java
++++ b/src/main/java/org/oilmod/bukkit/crafting/help/CHCommand.java
+@@ -1,6 +1,5 @@
+ package org.oilmod.bukkit.crafting.help;
+ 
+-import org.oilmod.bukkit.inventory.custom.nms.ViewContainer;
+ import net.minecraft.server.CraftingManager;
+ import net.minecraft.server.EntityPlayer;
+ import net.minecraft.server.IInventory;
+@@ -8,6 +7,7 @@ import net.minecraft.server.ItemStack;
+ import org.bukkit.command.Command;
+ import org.bukkit.command.CommandSender;
+ import org.bukkit.craftbukkit.entity.CraftPlayer;
++import org.oilmod.bukkit.inventory.custom.nms.ViewContainer;
+ 
+ import java.util.ArrayList;
+ import java.util.Arrays;
+diff --git a/src/main/java/org/oilmod/bukkit/crafting/help/CHContainer.java b/src/main/java/org/oilmod/bukkit/crafting/help/CHContainer.java
+index 24848c20..d4957ecf 100644
+--- a/src/main/java/org/oilmod/bukkit/crafting/help/CHContainer.java
++++ b/src/main/java/org/oilmod/bukkit/crafting/help/CHContainer.java
+@@ -1,9 +1,9 @@
+ package org.oilmod.bukkit.crafting.help;
+ 
++import net.minecraft.server.EntityHuman;
++import org.oilmod.bukkit.inventory.custom.nms.ViewContainer;
+ import org.oilmod.bukkit.inventory.custom.view.ISlotView;
+ import org.oilmod.bukkit.inventory.custom.view.ScrollableSlotView;
+-import org.oilmod.bukkit.inventory.custom.nms.ViewContainer;
+-import net.minecraft.server.EntityHuman;
+ 
+ import java.util.List;
+ 
+diff --git a/src/main/java/org/oilmod/bukkit/crafting/help/CHDisplaySlotView.java b/src/main/java/org/oilmod/bukkit/crafting/help/CHDisplaySlotView.java
+index 661adb74..dfb89914 100644
+--- a/src/main/java/org/oilmod/bukkit/crafting/help/CHDisplaySlotView.java
++++ b/src/main/java/org/oilmod/bukkit/crafting/help/CHDisplaySlotView.java
+@@ -1,9 +1,5 @@
+ package org.oilmod.bukkit.crafting.help;
+ 
+-import org.oilmod.bukkit.inventory.custom.ClickExtraData;
+-import org.oilmod.bukkit.inventory.custom.view.ISlotView;
+-import org.oilmod.bukkit.inventory.custom.view.SlotView;
+-import org.oilmod.bukkit.inventory.custom.slot.ViewSlotBase;
+ import net.minecraft.server.Blocks;
+ import net.minecraft.server.EntityHuman;
+ import net.minecraft.server.InventoryClickType;
+@@ -12,6 +8,10 @@ import net.minecraft.server.Items;
+ import org.bukkit.Material;
+ import org.bukkit.craftbukkit.inventory.CraftItemStack;
+ import org.bukkit.inventory.meta.SkullMeta;
++import org.oilmod.bukkit.inventory.custom.ClickExtraData;
++import org.oilmod.bukkit.inventory.custom.slot.ViewSlotBase;
++import org.oilmod.bukkit.inventory.custom.view.ISlotView;
++import org.oilmod.bukkit.inventory.custom.view.SlotView;
+ 
+ import java.util.Arrays;
+ 
+diff --git a/src/main/java/org/oilmod/bukkit/crafting/help/CHSelectorSlotView.java b/src/main/java/org/oilmod/bukkit/crafting/help/CHSelectorSlotView.java
+index c63db0cb..6f2c92b8 100644
+--- a/src/main/java/org/oilmod/bukkit/crafting/help/CHSelectorSlotView.java
++++ b/src/main/java/org/oilmod/bukkit/crafting/help/CHSelectorSlotView.java
+@@ -1,11 +1,11 @@
+ package org.oilmod.bukkit.crafting.help;
+ 
+-import org.oilmod.bukkit.inventory.custom.ClickExtraData;
+-import org.oilmod.bukkit.inventory.custom.view.ScalableSlotView;
+-import org.oilmod.bukkit.inventory.custom.slot.ViewSlotBase;
+ import net.minecraft.server.EntityHuman;
+ import net.minecraft.server.InventoryClickType;
+ import net.minecraft.server.ItemStack;
++import org.oilmod.bukkit.inventory.custom.ClickExtraData;
++import org.oilmod.bukkit.inventory.custom.slot.ViewSlotBase;
++import org.oilmod.bukkit.inventory.custom.view.ScalableSlotView;
+ 
+ /**
+  * Created by sirati97 on 03.04.2016.
+diff --git a/src/main/java/org/oilmod/bukkit/crafting/help/VanillaBannerAddCHView.java b/src/main/java/org/oilmod/bukkit/crafting/help/VanillaBannerAddCHView.java
+index 97f1e37e..bc41b27a 100644
+--- a/src/main/java/org/oilmod/bukkit/crafting/help/VanillaBannerAddCHView.java
++++ b/src/main/java/org/oilmod/bukkit/crafting/help/VanillaBannerAddCHView.java
+@@ -1,6 +1,11 @@
+ package org.oilmod.bukkit.crafting.help;
+ 
+-import net.minecraft.server.*;
++import net.minecraft.server.EnumBannerPatternType;
++import net.minecraft.server.EnumColor;
++import net.minecraft.server.ItemStack;
++import net.minecraft.server.Items;
++import net.minecraft.server.NBTTagCompound;
++import net.minecraft.server.NBTTagList;
+ import org.oilmod.bukkit.util.BetterNonNullList;
+ 
+ import java.util.ArrayList;
+diff --git a/src/main/java/org/oilmod/bukkit/crafting/help/VanillaCHView.java b/src/main/java/org/oilmod/bukkit/crafting/help/VanillaCHView.java
+index c4e04fb8..2cf90aa3 100644
+--- a/src/main/java/org/oilmod/bukkit/crafting/help/VanillaCHView.java
++++ b/src/main/java/org/oilmod/bukkit/crafting/help/VanillaCHView.java
+@@ -1,11 +1,15 @@
+ package org.oilmod.bukkit.crafting.help;
+ 
+ 
+-import net.minecraft.server.*;
++import net.minecraft.server.Block;
++import net.minecraft.server.BlockStateList;
++import net.minecraft.server.IRecipe;
++import net.minecraft.server.Item;
++import net.minecraft.server.ItemBlock;
++import net.minecraft.server.ItemStack;
++import net.minecraft.server.RecipeItemStack;
+ import org.oilmod.bukkit.util.BetterNonNullList;
+ 
+-import java.util.List;
+-
+ /**
+  * Created by sirati97 on 02.04.2016.
+  */
+diff --git a/src/main/java/org/oilmod/bukkit/crafting/help/VanillaFireworksCHView.java b/src/main/java/org/oilmod/bukkit/crafting/help/VanillaFireworksCHView.java
+index c39424cc..aa0146cf 100644
+--- a/src/main/java/org/oilmod/bukkit/crafting/help/VanillaFireworksCHView.java
++++ b/src/main/java/org/oilmod/bukkit/crafting/help/VanillaFireworksCHView.java
+@@ -3,8 +3,6 @@ package org.oilmod.bukkit.crafting.help;
+ import net.minecraft.server.ItemStack;
+ import org.oilmod.bukkit.util.BetterNonNullList;
+ 
+-import java.util.List;
+-
+ /**
+  * Created by sirati97 on 13.06.2016 for spigot.
+  */
+diff --git a/src/main/java/org/oilmod/bukkit/crafting/help/VanillaShieldBannerCHView.java b/src/main/java/org/oilmod/bukkit/crafting/help/VanillaShieldBannerCHView.java
+index 16b25a58..8bccb1db 100644
+--- a/src/main/java/org/oilmod/bukkit/crafting/help/VanillaShieldBannerCHView.java
++++ b/src/main/java/org/oilmod/bukkit/crafting/help/VanillaShieldBannerCHView.java
+@@ -1,10 +1,13 @@
+ package org.oilmod.bukkit.crafting.help;
+ 
+-import net.minecraft.server.*;
++import net.minecraft.server.EnumBannerPatternType;
++import net.minecraft.server.EnumColor;
++import net.minecraft.server.ItemStack;
++import net.minecraft.server.Items;
++import net.minecraft.server.NBTTagCompound;
++import net.minecraft.server.TileEntityBanner;
+ import org.oilmod.bukkit.util.BetterNonNullList;
+ 
+-import java.util.List;
+-
+ import static org.oilmod.bukkit.crafting.help.VanillaBannerAddCHView.addPatternToBannerWithClone;
+ 
+ /**
+diff --git a/src/main/java/org/oilmod/bukkit/crafting/help/VanillaTippedArrowCHView.java b/src/main/java/org/oilmod/bukkit/crafting/help/VanillaTippedArrowCHView.java
+index ab0ab62f..0d18aa55 100644
+--- a/src/main/java/org/oilmod/bukkit/crafting/help/VanillaTippedArrowCHView.java
++++ b/src/main/java/org/oilmod/bukkit/crafting/help/VanillaTippedArrowCHView.java
+@@ -9,7 +9,6 @@ import org.oilmod.bukkit.util.BetterNonNullList;
+ 
+ import java.util.HashSet;
+ import java.util.Iterator;
+-import java.util.List;
+ import java.util.Set;
+ 
+ /**
+diff --git a/src/main/java/org/oilmod/bukkit/crafting/nms/NMS_OilRecipe.java b/src/main/java/org/oilmod/bukkit/crafting/nms/NMS_OilRecipe.java
+index 5e4ecd04..eab35f5f 100644
+--- a/src/main/java/org/oilmod/bukkit/crafting/nms/NMS_OilRecipe.java
++++ b/src/main/java/org/oilmod/bukkit/crafting/nms/NMS_OilRecipe.java
+@@ -1,7 +1,7 @@
+ package org.oilmod.bukkit.crafting.nms;
+ 
+-import org.oilmod.bukkit.crafting.OilRecipe;
+ import net.minecraft.server.IRecipe;
++import org.oilmod.bukkit.crafting.OilRecipe;
+ 
+ /**
+  * Created by sirati97 on 28.03.2016.
+diff --git a/src/main/java/org/oilmod/bukkit/crafting/nms/NMS_OilShapedRecipe.java b/src/main/java/org/oilmod/bukkit/crafting/nms/NMS_OilShapedRecipe.java
+index 426d863a..7323a5d5 100644
+--- a/src/main/java/org/oilmod/bukkit/crafting/nms/NMS_OilShapedRecipe.java
++++ b/src/main/java/org/oilmod/bukkit/crafting/nms/NMS_OilShapedRecipe.java
+@@ -1,10 +1,10 @@
+ package org.oilmod.bukkit.crafting.nms;
+ 
+-import org.oilmod.bukkit.crafting.OilRecipe;
+-import org.oilmod.bukkit.crafting.OilShapedRecipe;
+ import net.minecraft.server.ItemStack;
+ import net.minecraft.server.NonNullList;
+ import net.minecraft.server.ShapedRecipes;
++import org.oilmod.bukkit.crafting.OilRecipe;
++import org.oilmod.bukkit.crafting.OilShapedRecipe;
+ 
+ /**
+  * Created by sirati97 on 28.03.2016.
+diff --git a/src/main/java/org/oilmod/bukkit/crafting/nms/NMS_OilShapelessRecipe.java b/src/main/java/org/oilmod/bukkit/crafting/nms/NMS_OilShapelessRecipe.java
+index 82c7d0fa..59bb1c84 100644
+--- a/src/main/java/org/oilmod/bukkit/crafting/nms/NMS_OilShapelessRecipe.java
++++ b/src/main/java/org/oilmod/bukkit/crafting/nms/NMS_OilShapelessRecipe.java
+@@ -1,11 +1,11 @@
+ package org.oilmod.bukkit.crafting.nms;
+ 
+-import org.oilmod.bukkit.crafting.OilRecipe;
+-import org.oilmod.bukkit.crafting.OilShapelessRecipe;
+ import net.minecraft.server.ItemStack;
+ import net.minecraft.server.NonNullList;
+ import net.minecraft.server.RecipeItemStack;
+ import net.minecraft.server.ShapelessRecipes;
++import org.oilmod.bukkit.crafting.OilRecipe;
++import org.oilmod.bukkit.crafting.OilShapelessRecipe;
+ 
+ /**
+  * Created by sirati97 on 28.03.2016.
+diff --git a/src/main/java/org/oilmod/bukkit/enchantments/CustomEnchantment.java b/src/main/java/org/oilmod/bukkit/enchantments/CustomEnchantment.java
+index 1864fe67..e090d00c 100644
+--- a/src/main/java/org/oilmod/bukkit/enchantments/CustomEnchantment.java
++++ b/src/main/java/org/oilmod/bukkit/enchantments/CustomEnchantment.java
+@@ -1,11 +1,11 @@
+ package org.oilmod.bukkit.enchantments;
+ 
+-import org.oilmod.ApiOilMod;
+ import net.minecraft.server.Enchantment;
+ import net.minecraft.server.EnchantmentSlotType;
+ import net.minecraft.server.EnumItemSlot;
+ import net.minecraft.server.LocaleI18n;
+ import net.minecraft.server.MinecraftKey;
++import org.oilmod.ApiOilMod;
+ 
+ /**
+  * Created by sirati97 on 22.03.2016.
+diff --git a/src/main/java/org/oilmod/bukkit/enchantments/RealEnchantmentTypeHelper.java b/src/main/java/org/oilmod/bukkit/enchantments/RealEnchantmentTypeHelper.java
+index 6c1929b3..69ecac19 100644
+--- a/src/main/java/org/oilmod/bukkit/enchantments/RealEnchantmentTypeHelper.java
++++ b/src/main/java/org/oilmod/bukkit/enchantments/RealEnchantmentTypeHelper.java
+@@ -4,18 +4,14 @@ import net.minecraft.server.EnchantmentSlotType;
+ import net.minecraft.server.EnchantmentSlotType.OilSpecialEnchantmentSlotType;
+ import net.minecraft.server.EnchantmentSlotType.VanillaEnchantmentSlotType;
+ import net.minecraft.server.Item;
+-import org.apache.commons.lang3.NotImplementedException;
+ import org.apache.commons.lang3.Validate;
+ import org.oilmod.api.OilMod;
+ import org.oilmod.api.items.EnchantmentType;
++import org.oilmod.api.items.EnchantmentType.EnchantmentTypeEnum;
+ import org.oilmod.api.items.NMSItem;
+ import org.oilmod.api.items.nms.NMSEnchantmentType;
+ import org.oilmod.bukkit.OilMain;
+-import org.oilmod.bukkit.block.RealNMSMaterial;
+-
+-import org.oilmod.api.items.EnchantmentType.EnchantmentTypeEnum;
+ 
+-import java.security.AllPermission;
+ import java.util.Set;
+ 
+ public class RealEnchantmentTypeHelper extends EnchantmentType.EnchantmentTypeHelper {
+diff --git a/src/main/java/org/oilmod/bukkit/inv2/RealContainer.java b/src/main/java/org/oilmod/bukkit/inv2/RealContainer.java
+index e106ba00..f24deea6 100644
+--- a/src/main/java/org/oilmod/bukkit/inv2/RealContainer.java
++++ b/src/main/java/org/oilmod/bukkit/inv2/RealContainer.java
+@@ -1,23 +1,5 @@
+ package org.oilmod.bukkit.inv2;
+ 
+-import net.minecraft.server.Container;
+-import net.minecraft.server.EntityHuman;
+-import net.minecraft.server.EntityPlayer;
+-import net.minecraft.server.InventoryClickType;
+-import net.minecraft.server.ItemStack;
+-import net.minecraft.server.PacketPlayOutSetSlot;
+-import net.minecraft.server.PlayerInventory;
+-import net.minecraft.server.Slot;
+-import org.bukkit.craftbukkit.inventory.CraftItemStack;
+-import org.bukkit.event.Event;
+-import org.bukkit.event.inventory.InventoryDragEvent;
+-import org.bukkit.event.inventory.InventoryType;
+-import org.bukkit.inventory.InventoryView;
+-
+-import java.util.HashMap;
+-import java.util.Iterator;
+-import java.util.Map;
+-
+ /*
+ @SuppressWarnings("Duplicates")
+ public class RealContainer extends Container {
+diff --git a/src/main/java/org/oilmod/bukkit/inv2/VanillaSlotView.java b/src/main/java/org/oilmod/bukkit/inv2/VanillaSlotView.java
+index 74d7a271..2d4e4a96 100644
+--- a/src/main/java/org/oilmod/bukkit/inv2/VanillaSlotView.java
++++ b/src/main/java/org/oilmod/bukkit/inv2/VanillaSlotView.java
+@@ -3,7 +3,6 @@ package org.oilmod.bukkit.inv2;
+ import net.minecraft.server.EntityHuman;
+ import net.minecraft.server.ItemStack;
+ import net.minecraft.server.Slot;
+-import org.bukkit.entity.HumanEntity;
+ 
+ import java.util.List;
+ 
+diff --git a/src/main/java/org/oilmod/bukkit/inventory/ApiItemFilter.java b/src/main/java/org/oilmod/bukkit/inventory/ApiItemFilter.java
+index fdfa20c8..0a39146f 100644
+--- a/src/main/java/org/oilmod/bukkit/inventory/ApiItemFilter.java
++++ b/src/main/java/org/oilmod/bukkit/inventory/ApiItemFilter.java
+@@ -1,8 +1,7 @@
+ package org.oilmod.bukkit.inventory;
+ 
+-import org.oilmod.api.inventory.ItemFilter;
+ import net.minecraft.server.ItemStack;
+-import org.bukkit.craftbukkit.inventory.CraftItemStack;
++import org.oilmod.api.inventory.ItemFilter;
+ 
+ import static org.oilmod.bukkit.util.OilSpigotUtil.toRep;
+ 
+diff --git a/src/main/java/org/oilmod/bukkit/inventory/ItemStackDataImpl.java b/src/main/java/org/oilmod/bukkit/inventory/ItemStackDataImpl.java
+index 991cb486..0d789996 100644
+--- a/src/main/java/org/oilmod/bukkit/inventory/ItemStackDataImpl.java
++++ b/src/main/java/org/oilmod/bukkit/inventory/ItemStackDataImpl.java
+@@ -7,7 +7,6 @@ import org.oilmod.api.data.IData;
+ import org.oilmod.api.data.ItemStackData;
+ import org.oilmod.api.rep.itemstack.ItemStackRep;
+ import org.oilmod.bukkit.util.OilSpigotUtil;
+-import org.bukkit.inventory.ItemStack;
+ import org.oilmod.rep.itemstack.ItemStackBR;
+ 
+ /**
+diff --git a/src/main/java/org/oilmod/bukkit/inventory/OilContainerPortableCrafting.java b/src/main/java/org/oilmod/bukkit/inventory/OilContainerPortableCrafting.java
+index 6ab33a30..382e12e3 100644
+--- a/src/main/java/org/oilmod/bukkit/inventory/OilContainerPortableCrafting.java
++++ b/src/main/java/org/oilmod/bukkit/inventory/OilContainerPortableCrafting.java
+@@ -3,10 +3,10 @@ package org.oilmod.bukkit.inventory;
+ import net.minecraft.server.ContainerWorkbench;
+ import net.minecraft.server.EntityHuman;
+ import net.minecraft.server.IInventory;
+-import net.minecraft.server.oilmod.IInventoryCrafting;
+ import net.minecraft.server.ItemStack;
+ import net.minecraft.server.PlayerInventory;
+ import net.minecraft.server.Slot;
++import net.minecraft.server.oilmod.IInventoryCrafting;
+ import org.bukkit.craftbukkit.inventory.CraftInventoryView;
+ 
+ /**
+diff --git a/src/main/java/org/oilmod/bukkit/inventory/OilCraftResultInventory.java b/src/main/java/org/oilmod/bukkit/inventory/OilCraftResultInventory.java
+index 2b105321..f6fe1b3d 100644
+--- a/src/main/java/org/oilmod/bukkit/inventory/OilCraftResultInventory.java
++++ b/src/main/java/org/oilmod/bukkit/inventory/OilCraftResultInventory.java
+@@ -4,9 +4,9 @@ import net.minecraft.server.ChatComponentText;
+ import net.minecraft.server.ChatMessage;
+ import net.minecraft.server.EntityHuman;
+ import net.minecraft.server.IChatBaseComponent;
+-import net.minecraft.server.oilmod.IInventoryCraftResult;
+ import net.minecraft.server.IRecipe;
+ import net.minecraft.server.ItemStack;
++import net.minecraft.server.oilmod.IInventoryCraftResult;
+ import org.apache.commons.lang3.NotImplementedException;
+ import org.bukkit.Location;
+ import org.bukkit.craftbukkit.entity.CraftHumanEntity;
+diff --git a/src/main/java/org/oilmod/bukkit/inventory/OilIInventory.java b/src/main/java/org/oilmod/bukkit/inventory/OilIInventory.java
+index 9888bd23..05635423 100644
+--- a/src/main/java/org/oilmod/bukkit/inventory/OilIInventory.java
++++ b/src/main/java/org/oilmod/bukkit/inventory/OilIInventory.java
+@@ -1,11 +1,11 @@
+ package org.oilmod.bukkit.inventory;
+ 
+-import org.oilmod.api.config.CompoundSerializable;
+-import org.oilmod.api.inventory.ModInventoryObjectBase;
+-import org.oilmod.api.inventory.ModNMSIInventory;
+ import net.minecraft.server.BukkitIInventory;
+ import net.minecraft.server.IInventory;
+ import net.minecraft.server.ITileEntityContainer;
++import org.oilmod.api.config.CompoundSerializable;
++import org.oilmod.api.inventory.ModInventoryObjectBase;
++import org.oilmod.api.inventory.ModNMSIInventory;
+ 
+ /**
+  * Created by sirati97 on 13.02.2016.
+diff --git a/src/main/java/org/oilmod/bukkit/inventory/OilInventoryBase.java b/src/main/java/org/oilmod/bukkit/inventory/OilInventoryBase.java
+index c3972f19..e9e4877a 100644
+--- a/src/main/java/org/oilmod/bukkit/inventory/OilInventoryBase.java
++++ b/src/main/java/org/oilmod/bukkit/inventory/OilInventoryBase.java
+@@ -1,23 +1,28 @@
+ package org.oilmod.bukkit.inventory;
+ 
++import net.minecraft.server.ChatComponentText;
++import net.minecraft.server.Container;
++import net.minecraft.server.ContainerUtil;
++import net.minecraft.server.EntityHuman;
++import net.minecraft.server.IChatBaseComponent;
++import net.minecraft.server.ItemStack;
++import net.minecraft.server.NonNullList;
++import net.minecraft.server.PlayerInventory;
++import org.apache.commons.lang.Validate;
+ import org.apache.commons.lang3.NotImplementedException;
++import org.bukkit.Location;
++import org.bukkit.craftbukkit.entity.CraftHumanEntity;
++import org.bukkit.craftbukkit.inventory.CraftInventory;
++import org.bukkit.entity.HumanEntity;
++import org.bukkit.inventory.InventoryHolder;
+ import org.oilmod.api.config.Compound;
+ import org.oilmod.api.config.CompoundSerializable;
+ import org.oilmod.api.config.DataList;
+ import org.oilmod.api.config.DataType;
+ import org.oilmod.api.inventory.ModInventoryObjectBase;
+-import org.oilmod.api.rep.inventory.InventoryRep;
+ import org.oilmod.api.userinterface.IInteractableUIElement;
+ import org.oilmod.api.util.ITicker;
+-import org.oilmod.api.util.WeakReferenceTicker;
+ import org.oilmod.bukkit.inventory.custom.slot.OilInventoryViewSlot;
+-import net.minecraft.server.*;
+-import org.apache.commons.lang.Validate;
+-import org.bukkit.Location;
+-import org.bukkit.craftbukkit.entity.CraftHumanEntity;
+-import org.bukkit.craftbukkit.inventory.CraftInventory;
+-import org.bukkit.entity.HumanEntity;
+-import org.bukkit.inventory.InventoryHolder;
+ import org.oilmod.rep.inventory.InventoryBR;
+ 
+ import java.lang.ref.WeakReference;
+diff --git a/src/main/java/org/oilmod/bukkit/inventory/OilInventoryChest.java b/src/main/java/org/oilmod/bukkit/inventory/OilInventoryChest.java
+index fe7175f0..8b2ebd03 100644
+--- a/src/main/java/org/oilmod/bukkit/inventory/OilInventoryChest.java
++++ b/src/main/java/org/oilmod/bukkit/inventory/OilInventoryChest.java
+@@ -1,11 +1,11 @@
+ package org.oilmod.bukkit.inventory;
+ 
+-import org.oilmod.api.inventory.ModInventoryObject;
+ import net.minecraft.server.Container;
+ import net.minecraft.server.EntityHuman;
+ import net.minecraft.server.ItemStack;
+ import net.minecraft.server.PlayerInventory;
+ import org.bukkit.inventory.InventoryHolder;
++import org.oilmod.api.inventory.ModInventoryObject;
+ 
+ /**
+  * Created by sirati97 on 17.01.2016.
+diff --git a/src/main/java/org/oilmod/bukkit/inventory/OilInventoryFurnace.java b/src/main/java/org/oilmod/bukkit/inventory/OilInventoryFurnace.java
+index 5ed3eda7..54fb98c2 100644
+--- a/src/main/java/org/oilmod/bukkit/inventory/OilInventoryFurnace.java
++++ b/src/main/java/org/oilmod/bukkit/inventory/OilInventoryFurnace.java
+@@ -4,20 +4,36 @@ package org.oilmod.bukkit.inventory;
+ 
+ // CraftBukkit start
+ 
+-import org.oilmod.api.util.ITicker;
+-import org.oilmod.bukkit.bukkit.stubs.OilBlockStub;
+-import net.minecraft.server.*;
++import net.minecraft.server.Block;
++import net.minecraft.server.Blocks;
++import net.minecraft.server.Container;
++import net.minecraft.server.EntityHuman;
++import net.minecraft.server.Item;
++import net.minecraft.server.ItemBoat;
++import net.minecraft.server.ItemDoor;
++import net.minecraft.server.ItemHoe;
++import net.minecraft.server.ItemStack;
++import net.minecraft.server.ItemSword;
++import net.minecraft.server.ItemTool;
++import net.minecraft.server.Items;
++import net.minecraft.server.Material;
++import net.minecraft.server.MathHelper;
++import net.minecraft.server.PlayerInventory;
++import net.minecraft.server.RecipesFurnace;
++import net.minecraft.server.SlotFurnaceFuel;
++import net.minecraft.server.TileEntityFurnace;
+ import org.bukkit.craftbukkit.event.CraftEventFactory;
+ import org.bukkit.craftbukkit.inventory.CraftItemStack;
+-        import org.bukkit.event.inventory.FurnaceBurnEvent;
++import org.bukkit.event.inventory.FurnaceBurnEvent;
+ import org.bukkit.event.inventory.FurnaceSmeltEvent;
+-// CraftBukkit end
+-
+-//OilSpigot start
++import org.bukkit.inventory.InventoryHolder;
+ import org.oilmod.api.config.Compound;
+ import org.oilmod.api.inventory.ModFurnaceInventoryObject;
+-import org.oilmod.api.util.WeakReferenceTicker;
+-import org.bukkit.inventory.InventoryHolder;
++import org.oilmod.api.util.ITicker;
++import org.oilmod.bukkit.bukkit.stubs.OilBlockStub;
++
++// CraftBukkit end
++//OilSpigot start
+ //OilSpigot end
+ 
+ /**
+diff --git a/src/main/java/org/oilmod/bukkit/inventory/OilInventoryPortableCrafting.java b/src/main/java/org/oilmod/bukkit/inventory/OilInventoryPortableCrafting.java
+index 941804b2..6e17c854 100644
+--- a/src/main/java/org/oilmod/bukkit/inventory/OilInventoryPortableCrafting.java
++++ b/src/main/java/org/oilmod/bukkit/inventory/OilInventoryPortableCrafting.java
+@@ -1,8 +1,6 @@
+ package org.oilmod.bukkit.inventory;
+ 
+ import net.minecraft.server.AutoRecipeStackManager;
+-import org.oilmod.api.config.Compound;
+-import org.oilmod.api.inventory.ModPortableCraftingInventoryObject;
+ import net.minecraft.server.ChatComponentText;
+ import net.minecraft.server.ChatMessage;
+ import net.minecraft.server.Container;
+@@ -12,8 +10,6 @@ import net.minecraft.server.EntityHuman;
+ import net.minecraft.server.EntityPlayer;
+ import net.minecraft.server.IChatBaseComponent;
+ import net.minecraft.server.IInventory;
+-import net.minecraft.server.oilmod.IInventoryCraftResult;
+-import net.minecraft.server.oilmod.IInventoryCrafting;
+ import net.minecraft.server.IRecipe;
+ import net.minecraft.server.ItemStack;
+ import net.minecraft.server.Items;
+@@ -21,10 +17,14 @@ import net.minecraft.server.NonNullList;
+ import net.minecraft.server.PacketPlayOutSetSlot;
+ import net.minecraft.server.PlayerInventory;
+ import net.minecraft.server.World;
++import net.minecraft.server.oilmod.IInventoryCraftResult;
++import net.minecraft.server.oilmod.IInventoryCrafting;
+ import org.bukkit.craftbukkit.entity.CraftHumanEntity;
+ import org.bukkit.entity.HumanEntity;
+ import org.bukkit.event.inventory.InventoryType;
+ import org.bukkit.inventory.InventoryHolder;
++import org.oilmod.api.config.Compound;
++import org.oilmod.api.inventory.ModPortableCraftingInventoryObject;
+ 
+ import java.util.Iterator;
+ import java.util.List;
+diff --git a/src/main/java/org/oilmod/bukkit/inventory/OilSlotFurnaceResult.java b/src/main/java/org/oilmod/bukkit/inventory/OilSlotFurnaceResult.java
+index 75504137..4b345df6 100644
+--- a/src/main/java/org/oilmod/bukkit/inventory/OilSlotFurnaceResult.java
++++ b/src/main/java/org/oilmod/bukkit/inventory/OilSlotFurnaceResult.java
+@@ -1,7 +1,7 @@
+ package org.oilmod.bukkit.inventory;
+ 
+ // CraftBukkit start
+-import org.oilmod.bukkit.bukkit.stubs.OilBlockStub;
++
+ import net.minecraft.server.EntityExperienceOrb;
+ import net.minecraft.server.EntityHuman;
+ import net.minecraft.server.IInventory;
+@@ -12,6 +12,7 @@ import net.minecraft.server.SlotFurnaceResult;
+ import org.bukkit.Material;
+ import org.bukkit.entity.Player;
+ import org.bukkit.event.inventory.FurnaceExtractEvent;
++import org.oilmod.bukkit.bukkit.stubs.OilBlockStub;
+ // CraftBukkit end
+ 
+ public class OilSlotFurnaceResult extends SlotFurnaceResult {
+diff --git a/src/main/java/org/oilmod/bukkit/inventory/RealInventoryFactory.java b/src/main/java/org/oilmod/bukkit/inventory/RealInventoryFactory.java
+index 330a5bcf..e069ff3c 100644
+--- a/src/main/java/org/oilmod/bukkit/inventory/RealInventoryFactory.java
++++ b/src/main/java/org/oilmod/bukkit/inventory/RealInventoryFactory.java
+@@ -11,7 +11,6 @@ import org.oilmod.api.inventory.ModNMSIInventory;
+ import org.oilmod.api.inventory.ModPortableCraftingInventoryObject;
+ import org.oilmod.api.items.OilItemStack;
+ import org.oilmod.api.util.ITicker;
+-import org.oilmod.api.util.WeakReferenceTicker;
+ 
+ /**
+  * Created by sirati97 on 12.02.2016.
+diff --git a/src/main/java/org/oilmod/bukkit/inventory/creative/OilCreativeInventory.java b/src/main/java/org/oilmod/bukkit/inventory/creative/OilCreativeInventory.java
+index ba8a6d9c..bc90a43b 100644
+--- a/src/main/java/org/oilmod/bukkit/inventory/creative/OilCreativeInventory.java
++++ b/src/main/java/org/oilmod/bukkit/inventory/creative/OilCreativeInventory.java
+@@ -1,16 +1,17 @@
+ package org.oilmod.bukkit.inventory.creative;
+ 
++import net.minecraft.server.Container;
++import net.minecraft.server.EntityHuman;
++import net.minecraft.server.ItemStack;
+ import net.minecraft.server.NonNullList;
++import net.minecraft.server.PlayerInventory;
++import org.bukkit.craftbukkit.inventory.CraftItemStack;
+ import org.oilmod.api.inventory.ModInventoryObjectBase;
+ import org.oilmod.api.items.OilItemStackFactory;
++import org.oilmod.bukkit.inventory.NoItemFilter;
+ import org.oilmod.bukkit.inventory.OilInventoryBase;
+ import org.oilmod.bukkit.items.RealSpecificItemStackFactory;
+ import org.oilmod.bukkit.items.SpecificItemStackFactory;
+-import net.minecraft.server.Container;
+-import net.minecraft.server.EntityHuman;
+-import net.minecraft.server.ItemStack;
+-import net.minecraft.server.PlayerInventory;
+-import org.bukkit.craftbukkit.inventory.CraftItemStack;
+ import org.oilmod.bukkit.util.BetterNonNullList;
+ 
+ import java.util.ArrayList;
+@@ -27,7 +28,7 @@ public class OilCreativeInventory extends OilInventoryBase<ModInventoryObjectBas
+     private List<SpecificItemStackFactory> factories = new ArrayList<>();
+ 
+     public OilCreativeInventory() {
+-        super(null, "Creative Menu", 10, null, null, false);
++        super(null, "Creative Menu", 10, null, NoItemFilter.INSTANCE, false);
+     }
+ 
+     @Override
+diff --git a/src/main/java/org/oilmod/bukkit/inventory/custom/ClickExtraData.java b/src/main/java/org/oilmod/bukkit/inventory/custom/ClickExtraData.java
+index 3c11f079..16b93af9 100644
+--- a/src/main/java/org/oilmod/bukkit/inventory/custom/ClickExtraData.java
++++ b/src/main/java/org/oilmod/bukkit/inventory/custom/ClickExtraData.java
+@@ -1,9 +1,9 @@
+ package org.oilmod.bukkit.inventory.custom;
+ 
+ 
++import net.minecraft.server.ItemStack;
+ import org.oilmod.api.userinterface.internal.NMSClickData;
+ import org.oilmod.bukkit.inventory.custom.nms.ViewContainer;
+-import net.minecraft.server.ItemStack;
+ 
+ /**
+  * Created by sirati97 on 14.06.2016 for spigot.
+diff --git a/src/main/java/org/oilmod/bukkit/inventory/custom/api/NMSFixedSizePanelImpl.java b/src/main/java/org/oilmod/bukkit/inventory/custom/api/NMSFixedSizePanelImpl.java
+index 1b10d849..c75d3f22 100644
+--- a/src/main/java/org/oilmod/bukkit/inventory/custom/api/NMSFixedSizePanelImpl.java
++++ b/src/main/java/org/oilmod/bukkit/inventory/custom/api/NMSFixedSizePanelImpl.java
+@@ -4,8 +4,8 @@ import org.oilmod.api.userinterface.UIElement;
+ import org.oilmod.api.userinterface.UIElementResult;
+ import org.oilmod.api.userinterface.UIPanel;
+ import org.oilmod.api.userinterface.internal.NMSFixedSizePanel;
+-import org.oilmod.bukkit.inventory.custom.view.SlotView;
+ import org.oilmod.bukkit.inventory.custom.slot.ViewSlotBase;
++import org.oilmod.bukkit.inventory.custom.view.SlotView;
+ import org.oilmod.bukkit.util.OilSpigotUtil;
+ 
+ /**
+diff --git a/src/main/java/org/oilmod/bukkit/inventory/custom/api/OilElementWrapper.java b/src/main/java/org/oilmod/bukkit/inventory/custom/api/OilElementWrapper.java
+index 35832e14..9873bc83 100644
+--- a/src/main/java/org/oilmod/bukkit/inventory/custom/api/OilElementWrapper.java
++++ b/src/main/java/org/oilmod/bukkit/inventory/custom/api/OilElementWrapper.java
+@@ -1,5 +1,8 @@
+ package org.oilmod.bukkit.inventory.custom.api;
+ 
++import net.minecraft.server.EntityHuman;
++import net.minecraft.server.InventoryClickType;
++import net.minecraft.server.ItemStack;
+ import org.oilmod.api.rep.entity.EntityHumanRep;
+ import org.oilmod.api.rep.itemstack.ItemStackRep;
+ import org.oilmod.api.userinterface.Click;
+@@ -9,12 +12,6 @@ import org.oilmod.api.userinterface.internal.NMSUIElement;
+ import org.oilmod.bukkit.inventory.custom.ClickExtraData;
+ import org.oilmod.bukkit.inventory.custom.slot.IViewSlot;
+ import org.oilmod.bukkit.util.OilSpigotUtil;
+-import net.minecraft.server.EntityHuman;
+-import net.minecraft.server.EntityPlayer;
+-import net.minecraft.server.InventoryClickType;
+-import net.minecraft.server.ItemStack;
+-import org.bukkit.craftbukkit.inventory.CraftItemStack;
+-import org.bukkit.entity.Player;
+ import org.oilmod.rep.itemstack.ItemStackBR;
+ 
+ /**
+diff --git a/src/main/java/org/oilmod/bukkit/inventory/custom/api/OilInteractableElementWrapper.java b/src/main/java/org/oilmod/bukkit/inventory/custom/api/OilInteractableElementWrapper.java
+index 8bf79ad6..62aad191 100644
+--- a/src/main/java/org/oilmod/bukkit/inventory/custom/api/OilInteractableElementWrapper.java
++++ b/src/main/java/org/oilmod/bukkit/inventory/custom/api/OilInteractableElementWrapper.java
+@@ -1,13 +1,11 @@
+ package org.oilmod.bukkit.inventory.custom.api;
+ 
+-import org.bukkit.entity.Player;
++import net.minecraft.server.EntityHuman;
++import net.minecraft.server.ItemStack;
+ import org.oilmod.api.rep.entity.EntityHumanRep;
+ import org.oilmod.api.rep.itemstack.ItemStackRep;
+ import org.oilmod.api.userinterface.IInteractableUIElement;
+ import org.oilmod.bukkit.inventory.custom.slot.SettableViewSlot;
+-import org.oilmod.bukkit.util.OilSpigotUtil;
+-import net.minecraft.server.EntityHuman;
+-import net.minecraft.server.ItemStack;
+ 
+ import static org.oilmod.bukkit.util.OilSpigotUtil.toRep;
+ 
+diff --git a/src/main/java/org/oilmod/bukkit/inventory/custom/api/OilPanelWrapper.java b/src/main/java/org/oilmod/bukkit/inventory/custom/api/OilPanelWrapper.java
+index 9d75f26a..1ba3f606 100644
+--- a/src/main/java/org/oilmod/bukkit/inventory/custom/api/OilPanelWrapper.java
++++ b/src/main/java/org/oilmod/bukkit/inventory/custom/api/OilPanelWrapper.java
+@@ -1,10 +1,10 @@
+ package org.oilmod.bukkit.inventory.custom.api;
+ 
+-import org.oilmod.api.userinterface.UIPanel;
+ import org.oilmod.api.userinterface.UIElementResult;
++import org.oilmod.api.userinterface.UIPanel;
+ import org.oilmod.bukkit.OilMain;
+-import org.oilmod.bukkit.inventory.custom.view.ISlotView;
+ import org.oilmod.bukkit.inventory.custom.slot.ViewSlotResult;
++import org.oilmod.bukkit.inventory.custom.view.ISlotView;
+ 
+ /**
+  * Created by sirati97 on 14.06.2016 for spigot.
+diff --git a/src/main/java/org/oilmod/bukkit/inventory/custom/api/RealUIHelper.java b/src/main/java/org/oilmod/bukkit/inventory/custom/api/RealUIHelper.java
+index 28bdd797..36f80e76 100644
+--- a/src/main/java/org/oilmod/bukkit/inventory/custom/api/RealUIHelper.java
++++ b/src/main/java/org/oilmod/bukkit/inventory/custom/api/RealUIHelper.java
+@@ -18,8 +18,6 @@ import org.oilmod.api.userinterface.internal.UserInterfaceFactory;
+ import org.oilmod.bukkit.inventory.custom.ClickExtraData;
+ import org.oilmod.bukkit.inventory.custom.slot.ViewSlotResult;
+ import org.oilmod.bukkit.util.OilSpigotUtil;
+-import org.bukkit.entity.Player;
+-import org.bukkit.inventory.ItemStack;
+ 
+ /**
+  * Created by sirati97 on 14.06.2016 for spigot.
+diff --git a/src/main/java/org/oilmod/bukkit/inventory/custom/api/UIChestContainer.java b/src/main/java/org/oilmod/bukkit/inventory/custom/api/UIChestContainer.java
+index 51d881c3..2674a557 100644
+--- a/src/main/java/org/oilmod/bukkit/inventory/custom/api/UIChestContainer.java
++++ b/src/main/java/org/oilmod/bukkit/inventory/custom/api/UIChestContainer.java
+@@ -1,14 +1,13 @@
+ package org.oilmod.bukkit.inventory.custom.api;
+ 
++import net.minecraft.server.ItemStack;
+ import org.oilmod.api.rep.entity.EntityHumanRep;
+ import org.oilmod.api.userinterface.UIPanel;
+ import org.oilmod.api.userinterface.UserInterfaceBuilder;
+ import org.oilmod.api.userinterface.internal.UserInterface;
+-import org.oilmod.bukkit.inventory.custom.view.ISlotView;
+ import org.oilmod.bukkit.inventory.custom.nms.ViewContainer;
++import org.oilmod.bukkit.inventory.custom.view.ISlotView;
+ import org.oilmod.bukkit.util.OilSpigotUtil;
+-import net.minecraft.server.ItemStack;
+-import org.bukkit.entity.Player;
+ 
+ /**
+  * Created by sirati97 on 14.06.2016 for spigot.
+diff --git a/src/main/java/org/oilmod/bukkit/inventory/custom/nms/MultiSlot.java b/src/main/java/org/oilmod/bukkit/inventory/custom/nms/MultiSlot.java
+index d9aef0f6..8aa72589 100644
+--- a/src/main/java/org/oilmod/bukkit/inventory/custom/nms/MultiSlot.java
++++ b/src/main/java/org/oilmod/bukkit/inventory/custom/nms/MultiSlot.java
+@@ -1,14 +1,14 @@
+ package org.oilmod.bukkit.inventory.custom.nms;
+ 
+-import org.oilmod.bukkit.inventory.custom.ClickExtraData;
+-import org.oilmod.bukkit.inventory.custom.view.ISlotView;
+-import org.oilmod.bukkit.inventory.custom.slot.SettableViewSlot;
+-import org.oilmod.bukkit.inventory.custom.slot.ViewSlotResult;
+ import net.minecraft.server.EntityHuman;
+ import net.minecraft.server.IInventory;
+ import net.minecraft.server.InventoryClickType;
+ import net.minecraft.server.ItemStack;
+ import net.minecraft.server.Slot;
++import org.oilmod.bukkit.inventory.custom.ClickExtraData;
++import org.oilmod.bukkit.inventory.custom.slot.SettableViewSlot;
++import org.oilmod.bukkit.inventory.custom.slot.ViewSlotResult;
++import org.oilmod.bukkit.inventory.custom.view.ISlotView;
+ 
+ import javax.annotation.Nullable;
+ 
+diff --git a/src/main/java/org/oilmod/bukkit/inventory/custom/nms/SettableSlotInventorySnapshot.java b/src/main/java/org/oilmod/bukkit/inventory/custom/nms/SettableSlotInventorySnapshot.java
+index baa3844c..5cc3fd26 100644
+--- a/src/main/java/org/oilmod/bukkit/inventory/custom/nms/SettableSlotInventorySnapshot.java
++++ b/src/main/java/org/oilmod/bukkit/inventory/custom/nms/SettableSlotInventorySnapshot.java
+@@ -1,17 +1,17 @@
+ package org.oilmod.bukkit.inventory.custom.nms;
+ 
+-import net.minecraft.server.NonNullList;
+-import org.oilmod.bukkit.inventory.custom.ISingleSlot;
+-import org.oilmod.bukkit.util.OilSpigotUtil;
+ import net.minecraft.server.ChatComponentText;
+ import net.minecraft.server.ChatMessage;
+ import net.minecraft.server.EntityHuman;
+ import net.minecraft.server.IChatBaseComponent;
+ import net.minecraft.server.IInventory;
+ import net.minecraft.server.ItemStack;
++import net.minecraft.server.NonNullList;
+ import org.bukkit.Location;
+ import org.bukkit.craftbukkit.entity.CraftHumanEntity;
+ import org.bukkit.entity.HumanEntity;
++import org.oilmod.bukkit.inventory.custom.ISingleSlot;
++import org.oilmod.bukkit.util.OilSpigotUtil;
+ 
+ import java.util.List;
+ import java.util.Map;
+diff --git a/src/main/java/org/oilmod/bukkit/inventory/custom/nms/ViewContainer.java b/src/main/java/org/oilmod/bukkit/inventory/custom/nms/ViewContainer.java
+index f9f099c2..6fd76efa 100644
+--- a/src/main/java/org/oilmod/bukkit/inventory/custom/nms/ViewContainer.java
++++ b/src/main/java/org/oilmod/bukkit/inventory/custom/nms/ViewContainer.java
+@@ -1,11 +1,6 @@
+ package org.oilmod.bukkit.inventory.custom.nms;
+ 
+ import com.google.common.collect.Sets;
+-import org.oilmod.bukkit.inventory.custom.ISingleSlot;
+-import org.oilmod.bukkit.inventory.custom.view.HumanInventorySlotView;
+-import org.oilmod.bukkit.inventory.custom.view.ISlotView;
+-import org.oilmod.bukkit.inventory.custom.view.NullSlotView;
+-import org.oilmod.bukkit.inventory.custom.view.StaticSplittedSlotView;
+ import gnu.trove.map.hash.THashMap;
+ import net.minecraft.server.Blocks;
+ import net.minecraft.server.Container;
+@@ -25,6 +20,11 @@ import org.bukkit.event.Event;
+ import org.bukkit.event.inventory.InventoryDragEvent;
+ import org.bukkit.event.inventory.InventoryType;
+ import org.bukkit.inventory.InventoryView;
++import org.oilmod.bukkit.inventory.custom.ISingleSlot;
++import org.oilmod.bukkit.inventory.custom.view.HumanInventorySlotView;
++import org.oilmod.bukkit.inventory.custom.view.ISlotView;
++import org.oilmod.bukkit.inventory.custom.view.NullSlotView;
++import org.oilmod.bukkit.inventory.custom.view.StaticSplittedSlotView;
+ 
+ import javax.annotation.Nullable;
+ import java.util.ArrayList;
+diff --git a/src/main/java/org/oilmod/bukkit/inventory/custom/nms/ViewInventory.java b/src/main/java/org/oilmod/bukkit/inventory/custom/nms/ViewInventory.java
+index 2bd1a663..72e54b18 100644
+--- a/src/main/java/org/oilmod/bukkit/inventory/custom/nms/ViewInventory.java
++++ b/src/main/java/org/oilmod/bukkit/inventory/custom/nms/ViewInventory.java
+@@ -1,11 +1,12 @@
+ package org.oilmod.bukkit.inventory.custom.nms;
+ 
+-import org.oilmod.api.inventory.ModInventoryObjectBase;
+-import org.oilmod.bukkit.inventory.OilInventoryBase;
+ import net.minecraft.server.EntityHuman;
+ import net.minecraft.server.ItemStack;
+ import net.minecraft.server.PlayerInventory;
+ import org.bukkit.craftbukkit.inventory.CraftItemStack;
++import org.oilmod.api.inventory.ModInventoryObjectBase;
++import org.oilmod.bukkit.inventory.NoItemFilter;
++import org.oilmod.bukkit.inventory.OilInventoryBase;
+ 
+ /**
+  * Created by sirati97 on 02.04.2016.
+@@ -14,7 +15,7 @@ public class ViewInventory extends OilInventoryBase<ModInventoryObjectBase> {
+     private final ViewContainer viewContainer;
+ 
+     public ViewInventory(ViewContainer viewContainer) {
+-        super(null, viewContainer.getTitle(), 0, null, null, false);
++        super(null, viewContainer.getTitle(), 0, null, NoItemFilter.INSTANCE, false);
+         this.viewContainer = viewContainer;
+     }
+ 
+diff --git a/src/main/java/org/oilmod/bukkit/inventory/custom/slot/IViewSlot.java b/src/main/java/org/oilmod/bukkit/inventory/custom/slot/IViewSlot.java
+index 0347033f..1d5f341f 100644
+--- a/src/main/java/org/oilmod/bukkit/inventory/custom/slot/IViewSlot.java
++++ b/src/main/java/org/oilmod/bukkit/inventory/custom/slot/IViewSlot.java
+@@ -1,10 +1,10 @@
+ package org.oilmod.bukkit.inventory.custom.slot;
+ 
+-import org.oilmod.api.userinterface.internal.NMSUIElement;
+-import org.oilmod.bukkit.inventory.custom.ClickExtraData;
+ import net.minecraft.server.EntityHuman;
+ import net.minecraft.server.InventoryClickType;
+ import net.minecraft.server.ItemStack;
++import org.oilmod.api.userinterface.internal.NMSUIElement;
++import org.oilmod.bukkit.inventory.custom.ClickExtraData;
+ 
+ /**
+  * Created by sirati97 on 17.06.2016 for spigot.
+diff --git a/src/main/java/org/oilmod/bukkit/inventory/custom/slot/OilInventoryViewSlot.java b/src/main/java/org/oilmod/bukkit/inventory/custom/slot/OilInventoryViewSlot.java
+index 32397690..a0be08cf 100644
+--- a/src/main/java/org/oilmod/bukkit/inventory/custom/slot/OilInventoryViewSlot.java
++++ b/src/main/java/org/oilmod/bukkit/inventory/custom/slot/OilInventoryViewSlot.java
+@@ -1,10 +1,10 @@
+ package org.oilmod.bukkit.inventory.custom.slot;
+ 
+-import org.oilmod.bukkit.inventory.OilIInventory;
+-import org.oilmod.bukkit.inventory.custom.ClickExtraData;
+ import net.minecraft.server.EntityHuman;
+ import net.minecraft.server.InventoryClickType;
+ import net.minecraft.server.ItemStack;
++import org.oilmod.bukkit.inventory.OilIInventory;
++import org.oilmod.bukkit.inventory.custom.ClickExtraData;
+ 
+ /**
+  * Created by sirati97 on 26.06.2016 for spigot.
+diff --git a/src/main/java/org/oilmod/bukkit/inventory/custom/slot/SettableViewSlot.java b/src/main/java/org/oilmod/bukkit/inventory/custom/slot/SettableViewSlot.java
+index 5d0a924c..0092a3a0 100644
+--- a/src/main/java/org/oilmod/bukkit/inventory/custom/slot/SettableViewSlot.java
++++ b/src/main/java/org/oilmod/bukkit/inventory/custom/slot/SettableViewSlot.java
+@@ -1,8 +1,8 @@
+ package org.oilmod.bukkit.inventory.custom.slot;
+ 
+-import org.oilmod.api.userinterface.IInteractableUIElement;
+ import net.minecraft.server.EntityHuman;
+ import net.minecraft.server.ItemStack;
++import org.oilmod.api.userinterface.IInteractableUIElement;
+ 
+ /**
+  * Created by sirati97 on 14.06.2016 for spigot.
+diff --git a/src/main/java/org/oilmod/bukkit/inventory/custom/slot/SettableViewSlotBase.java b/src/main/java/org/oilmod/bukkit/inventory/custom/slot/SettableViewSlotBase.java
+index 3acde98c..da36da99 100644
+--- a/src/main/java/org/oilmod/bukkit/inventory/custom/slot/SettableViewSlotBase.java
++++ b/src/main/java/org/oilmod/bukkit/inventory/custom/slot/SettableViewSlotBase.java
+@@ -1,11 +1,10 @@
+ package org.oilmod.bukkit.inventory.custom.slot;
+ 
++import net.minecraft.server.EntityHuman;
++import net.minecraft.server.ItemStack;
+ import org.oilmod.api.rep.entity.EntityHumanRep;
+ import org.oilmod.api.rep.itemstack.ItemStackRep;
+ import org.oilmod.bukkit.util.OilSpigotUtil;
+-import net.minecraft.server.EntityHuman;
+-import net.minecraft.server.ItemStack;
+-import org.bukkit.entity.Player;
+ 
+ /**
+  * Created by sirati97 on 18.06.2016 for spigot.
+diff --git a/src/main/java/org/oilmod/bukkit/inventory/custom/slot/ViewSlotBase.java b/src/main/java/org/oilmod/bukkit/inventory/custom/slot/ViewSlotBase.java
+index 15ca308a..c604638c 100644
+--- a/src/main/java/org/oilmod/bukkit/inventory/custom/slot/ViewSlotBase.java
++++ b/src/main/java/org/oilmod/bukkit/inventory/custom/slot/ViewSlotBase.java
+@@ -1,5 +1,7 @@
+ package org.oilmod.bukkit.inventory.custom.slot;
+ 
++import net.minecraft.server.EntityHuman;
++import net.minecraft.server.InventoryClickType;
+ import org.oilmod.api.rep.entity.EntityHumanRep;
+ import org.oilmod.api.rep.itemstack.ItemStackRep;
+ import org.oilmod.api.userinterface.Click;
+@@ -7,9 +9,6 @@ import org.oilmod.api.userinterface.internal.NMSClickData;
+ import org.oilmod.api.userinterface.internal.NMSUIElement;
+ import org.oilmod.bukkit.inventory.custom.ClickExtraData;
+ import org.oilmod.bukkit.util.OilSpigotUtil;
+-import net.minecraft.server.EntityHuman;
+-import net.minecraft.server.InventoryClickType;
+-import org.bukkit.entity.Player;
+ 
+ /**
+  * Created by sirati97 on 02.04.2016.
+diff --git a/src/main/java/org/oilmod/bukkit/inventory/custom/slot/ViewSlotResult.java b/src/main/java/org/oilmod/bukkit/inventory/custom/slot/ViewSlotResult.java
+index 0d7f9810..3b53514d 100644
+--- a/src/main/java/org/oilmod/bukkit/inventory/custom/slot/ViewSlotResult.java
++++ b/src/main/java/org/oilmod/bukkit/inventory/custom/slot/ViewSlotResult.java
+@@ -1,12 +1,12 @@
+ package org.oilmod.bukkit.inventory.custom.slot;
+ 
++import net.minecraft.server.EntityHuman;
++import net.minecraft.server.ItemStack;
+ import org.oilmod.api.userinterface.IUIElement;
+ import org.oilmod.api.userinterface.UIElementResult;
+ import org.oilmod.api.userinterface.internal.NMSUIElement;
+ import org.oilmod.bukkit.inventory.custom.ISingleSlot;
+ import org.oilmod.bukkit.util.OilSpigotUtil;
+-import net.minecraft.server.EntityHuman;
+-import net.minecraft.server.ItemStack;
+ 
+ /**
+  * Created by sirati97 on 15.06.2016 for spigot.
+diff --git a/src/main/java/org/oilmod/bukkit/inventory/custom/view/HumanInventorySlotView.java b/src/main/java/org/oilmod/bukkit/inventory/custom/view/HumanInventorySlotView.java
+index c4222421..e083f526 100644
+--- a/src/main/java/org/oilmod/bukkit/inventory/custom/view/HumanInventorySlotView.java
++++ b/src/main/java/org/oilmod/bukkit/inventory/custom/view/HumanInventorySlotView.java
+@@ -1,13 +1,13 @@
+ package org.oilmod.bukkit.inventory.custom.view;
+ 
+-import org.oilmod.bukkit.inventory.custom.ClickExtraData;
+-import org.oilmod.bukkit.inventory.custom.slot.SettableViewSlotBase;
+-import org.oilmod.bukkit.inventory.custom.slot.ViewSlotResult;
+ import net.minecraft.server.EntityHuman;
+ import net.minecraft.server.EntityInsentient;
+ import net.minecraft.server.EnumItemSlot;
+ import net.minecraft.server.InventoryClickType;
+ import net.minecraft.server.ItemStack;
++import org.oilmod.bukkit.inventory.custom.ClickExtraData;
++import org.oilmod.bukkit.inventory.custom.slot.SettableViewSlotBase;
++import org.oilmod.bukkit.inventory.custom.slot.ViewSlotResult;
+ 
+ /**
+  * Created by sirati97 on 18.06.2016 for spigot.
+diff --git a/src/main/java/org/oilmod/bukkit/inventory/custom/view/ScrollableSlotView.java b/src/main/java/org/oilmod/bukkit/inventory/custom/view/ScrollableSlotView.java
+index 97436d7e..6caaf18a 100644
+--- a/src/main/java/org/oilmod/bukkit/inventory/custom/view/ScrollableSlotView.java
++++ b/src/main/java/org/oilmod/bukkit/inventory/custom/view/ScrollableSlotView.java
+@@ -1,14 +1,14 @@
+ package org.oilmod.bukkit.inventory.custom.view;
+ 
+-import org.oilmod.bukkit.inventory.custom.ClickExtraData;
+-import org.oilmod.bukkit.inventory.custom.slot.ViewSlotBase;
+-import org.oilmod.bukkit.inventory.custom.slot.ViewSlotResult;
+ import net.minecraft.server.EntityHuman;
+ import net.minecraft.server.InventoryClickType;
+ import net.minecraft.server.ItemStack;
+ import org.bukkit.Material;
+ import org.bukkit.craftbukkit.inventory.CraftItemStack;
+ import org.bukkit.inventory.meta.SkullMeta;
++import org.oilmod.bukkit.inventory.custom.ClickExtraData;
++import org.oilmod.bukkit.inventory.custom.slot.ViewSlotBase;
++import org.oilmod.bukkit.inventory.custom.slot.ViewSlotResult;
+ 
+ /**
+  * Created by sirati97 on 02.04.2016.
+diff --git a/src/main/java/org/oilmod/bukkit/items/ItemStackCreator.java b/src/main/java/org/oilmod/bukkit/items/ItemStackCreator.java
+index 76d41572..ad99c8ef 100644
+--- a/src/main/java/org/oilmod/bukkit/items/ItemStackCreator.java
++++ b/src/main/java/org/oilmod/bukkit/items/ItemStackCreator.java
+@@ -1,11 +1,11 @@
+ package org.oilmod.bukkit.items;
+ 
+ 
+-import org.oilmod.api.config.Compound;
+-import org.oilmod.bukkit.config.DeserializationMethod;
+ import net.minecraft.server.Item;
+ import net.minecraft.server.ItemStack;
+ import net.minecraft.server.NBTTagCompound;
++import org.oilmod.api.config.Compound;
++import org.oilmod.bukkit.config.DeserializationMethod;
+ 
+ import java.util.Map;
+ 
+diff --git a/src/main/java/org/oilmod/bukkit/items/RealItem.java b/src/main/java/org/oilmod/bukkit/items/RealItem.java
+index 35a2875d..9b8905b9 100644
+--- a/src/main/java/org/oilmod/bukkit/items/RealItem.java
++++ b/src/main/java/org/oilmod/bukkit/items/RealItem.java
+@@ -1,8 +1,24 @@
+ package org.oilmod.bukkit.items;
+ 
+ import com.google.common.collect.Multimap;
+-import net.minecraft.server.*;
+-import org.bukkit.entity.LivingEntity;
++import net.minecraft.server.AttributeModifier;
++import net.minecraft.server.BlockPosition;
++import net.minecraft.server.Enchantment;
++import net.minecraft.server.EntityHuman;
++import net.minecraft.server.EntityLiving;
++import net.minecraft.server.EnumDirection;
++import net.minecraft.server.EnumHand;
++import net.minecraft.server.EnumInteractionResult;
++import net.minecraft.server.EnumItemSlot;
++import net.minecraft.server.GenericAttributes;
++import net.minecraft.server.IBlockData;
++import net.minecraft.server.InteractionResultWrapper;
++import net.minecraft.server.Item;
++import net.minecraft.server.ItemStack;
++import net.minecraft.server.ItemSword;
++import net.minecraft.server.LocaleI18n;
++import net.minecraft.server.MinecraftKey;
++import net.minecraft.server.World;
+ import org.oilmod.api.items.ItemInteractionResult;
+ import org.oilmod.api.items.OilItem;
+ import org.oilmod.api.items.type.IDurable;
+@@ -12,8 +28,8 @@ import org.oilmod.bukkit.util.OilSpigotUtil;
+ import org.oilmod.rep.block.BlockStateBR;
+ import org.oilmod.rep.item.ItemBR;
+ 
+-import static org.oilmod.bukkit.util.OilSpigotUtil.toRep;
+ import static org.oilmod.bukkit.util.OilSpigotUtil.toNMS;
++import static org.oilmod.bukkit.util.OilSpigotUtil.toRep;
+ 
+ public class RealItem extends Item {
+     private final OilItem apiItem;
+diff --git a/src/main/java/org/oilmod/bukkit/items/RealItemFactory.java b/src/main/java/org/oilmod/bukkit/items/RealItemFactory.java
+index c79894e9..2d055da4 100644
+--- a/src/main/java/org/oilmod/bukkit/items/RealItemFactory.java
++++ b/src/main/java/org/oilmod/bukkit/items/RealItemFactory.java
+@@ -1,8 +1,5 @@
+ package org.oilmod.bukkit.items;
+ 
+-import org.bukkit.craftbukkit.inventory.CraftItemStack;
+-import org.bukkit.entity.Player;
+-import org.bukkit.inventory.ItemStack;
+ import org.oilmod.api.items.OilItem;
+ import org.oilmod.api.items.internal.ItemFactory;
+ import org.oilmod.api.rep.entity.EntityHumanRep;
+diff --git a/src/main/java/org/oilmod/bukkit/items/RealItemStack.java b/src/main/java/org/oilmod/bukkit/items/RealItemStack.java
+index 772fb53a..80829dbe 100644
+--- a/src/main/java/org/oilmod/bukkit/items/RealItemStack.java
++++ b/src/main/java/org/oilmod/bukkit/items/RealItemStack.java
+@@ -1,17 +1,18 @@
+ package org.oilmod.bukkit.items;
+ 
+ import de.sirati97.spigot.optimisation.ItemStackFreeze;
+-import net.minecraft.server.*;
++import net.minecraft.server.EntityHuman;
++import net.minecraft.server.EntityLiving;
++import net.minecraft.server.Item;
++import net.minecraft.server.ItemStack;
++import net.minecraft.server.NBTTagCompound;
+ import org.apache.commons.lang3.Validate;
+-import org.bukkit.entity.LivingEntity;
+ import org.oilmod.api.config.Compound;
+ import org.oilmod.api.data.IData;
+ import org.oilmod.api.items.NMSItemStack;
+ import org.oilmod.api.items.OilItem;
+ import org.oilmod.api.items.OilItemStack;
+ import org.oilmod.api.items.type.IDurable;
+-import org.oilmod.api.rep.entity.EntityLivingRep;
+-import org.oilmod.api.rep.itemstack.ItemStackRep;
+ import org.oilmod.bukkit.config.nbttag.NBTCompound;
+ import org.oilmod.bukkit.util.OilSpigotUtil;
+ import org.oilmod.rep.itemstack.ItemStackBR;
+@@ -38,7 +39,7 @@ public class RealItemStack extends ItemStack implements NMSItemStack {
+         super(item, count, data, false); //don't convert - this cannot go well as we aren't even initialised properly.  //TODO: add support in future version
+         setTag(tag);
+         initNormal();
+-        loadModData(mTag);
++        if (mTag != null)loadModData(mTag);
+     }
+ 
+     private RealItemStack(RealItemStack original) {
+diff --git a/src/main/java/org/oilmod/bukkit/items/RealItemTypeHelper.java b/src/main/java/org/oilmod/bukkit/items/RealItemTypeHelper.java
+index dcc400d6..d7f68d9a 100644
+--- a/src/main/java/org/oilmod/bukkit/items/RealItemTypeHelper.java
++++ b/src/main/java/org/oilmod/bukkit/items/RealItemTypeHelper.java
+@@ -1,20 +1,19 @@
+ package org.oilmod.bukkit.items;
+ 
+-import org.bukkit.craftbukkit.entity.CraftLivingEntity;
+-import org.bukkit.entity.LivingEntity;
+ import org.oilmod.api.items.OilItemStack;
+ import org.oilmod.api.items.type.ItemTypeHelper;
+ import org.oilmod.api.rep.entity.EntityLivingRep;
++import org.oilmod.rep.entity.EntityLivingBR;
+ 
+ public class RealItemTypeHelper extends ItemTypeHelper {
+     @Override
+     public boolean handleDamage(OilItemStack stack, int damage, EntityLivingRep entity) {
+-        return ((RealItemStack)stack.getNmsItemStack()).handleDamageVanilla(damage, ((CraftLivingEntity)entity).getHandle());
++        return ((RealItemStack)stack.getNmsItemStack()).handleDamageVanilla(damage, ((EntityLivingBR)entity).getNms());
+     }
+ 
+     @Override
+     public void damageItem(OilItemStack stack, int damage, EntityLivingRep entity) {
+-        ((RealItemStack)stack.getNmsItemStack()).damageVanilla(damage, ((CraftLivingEntity)entity).getHandle());
++        ((RealItemStack)stack.getNmsItemStack()).damageVanilla(damage, ((EntityLivingBR)entity).getNms());
+     }
+ 
+     @Override
+diff --git a/src/main/java/org/oilmod/bukkit/items/RealSpecificItemStackFactory.java b/src/main/java/org/oilmod/bukkit/items/RealSpecificItemStackFactory.java
+index cd19c2f0..e81ac0a0 100644
+--- a/src/main/java/org/oilmod/bukkit/items/RealSpecificItemStackFactory.java
++++ b/src/main/java/org/oilmod/bukkit/items/RealSpecificItemStackFactory.java
+@@ -1,9 +1,7 @@
+ package org.oilmod.bukkit.items;
+ 
+-import org.oilmod.api.items.OilItemStackFactory;
+ import net.minecraft.server.ItemStack;
+-import org.bukkit.craftbukkit.inventory.CraftItemStack;
+-import org.oilmod.api.rep.itemstack.ItemStackRep;
++import org.oilmod.api.items.OilItemStackFactory;
+ 
+ import static org.oilmod.bukkit.util.OilSpigotUtil.toNMS;
+ 
+diff --git a/src/main/java/org/oilmod/bukkit/items/itemstackimpl/internal/ItemStackDescription.java b/src/main/java/org/oilmod/bukkit/items/itemstackimpl/internal/ItemStackDescription.java
+index 457f82c3..bbf05f80 100644
+--- a/src/main/java/org/oilmod/bukkit/items/itemstackimpl/internal/ItemStackDescription.java
++++ b/src/main/java/org/oilmod/bukkit/items/itemstackimpl/internal/ItemStackDescription.java
+@@ -1,13 +1,13 @@
+ package org.oilmod.bukkit.items.itemstackimpl.internal;
+ 
+-import org.oilmod.api.config.Compound;
+-import org.oilmod.bukkit.config.DeserializationMethod;
+ import net.minecraft.server.Item;
+ import net.minecraft.server.NBTTagCompound;
+ import org.apache.commons.lang3.NotImplementedException;
+ import org.bukkit.Material;
+ import org.bukkit.craftbukkit.inventory.CraftItemStack;
+ import org.bukkit.inventory.meta.ItemMeta;
++import org.oilmod.api.config.Compound;
++import org.oilmod.bukkit.config.DeserializationMethod;
+ 
+ /**
+  * Created by sirati97 on 16.01.2016.
+diff --git a/src/main/java/org/oilmod/bukkit/items/itemstackimpl/internal/ModCraftItemStack.java b/src/main/java/org/oilmod/bukkit/items/itemstackimpl/internal/ModCraftItemStack.java
+index 98a91541..02b7c104 100644
+--- a/src/main/java/org/oilmod/bukkit/items/itemstackimpl/internal/ModCraftItemStack.java
++++ b/src/main/java/org/oilmod/bukkit/items/itemstackimpl/internal/ModCraftItemStack.java
+@@ -1,17 +1,5 @@
+ package org.oilmod.bukkit.items.itemstackimpl.internal;
+ 
+-import org.oilmod.bukkit.config.DeserializationMethod;
+-import org.oilmod.bukkit.config.yaml.YamlCompound;
+-import org.bukkit.Bukkit;
+-import org.bukkit.craftbukkit.inventory.CraftItemStack;
+-import org.bukkit.inventory.meta.ItemMeta;
+-import org.oilmod.bukkit.items.ItemStackCreator;
+-import org.oilmod.bukkit.items.ItemStackRegistry;
+-
+-import java.util.LinkedHashMap;
+-import java.util.Map;
+-
+-
+ //todo be adjusted and just in the future
+ 
+ /**
+diff --git a/src/main/java/org/oilmod/bukkit/items/itemtype/RealAxe.java b/src/main/java/org/oilmod/bukkit/items/itemtype/RealAxe.java
+index ab6ed052..7c804f27 100644
+--- a/src/main/java/org/oilmod/bukkit/items/itemtype/RealAxe.java
++++ b/src/main/java/org/oilmod/bukkit/items/itemtype/RealAxe.java
+@@ -3,12 +3,10 @@ package org.oilmod.bukkit.items.itemtype;
+ import net.minecraft.server.Block;
+ import net.minecraft.server.ItemAxe;
+ import net.minecraft.server.Material;
+-import org.bukkit.block.BlockState;
+ import org.oilmod.api.blocks.BlockType;
+ import org.oilmod.api.items.OilItemStack;
+ import org.oilmod.api.items.type.IToolBlockBreaking;
+ import org.oilmod.api.rep.block.BlockStateRep;
+-import org.oilmod.bukkit.util.OilSpigotUtil;
+ import org.oilmod.rep.block.BlockBR;
+ 
+ 
+diff --git a/src/main/java/org/oilmod/bukkit/items/itemtype/RealPickaxe.java b/src/main/java/org/oilmod/bukkit/items/itemtype/RealPickaxe.java
+index fe2e12bc..cf313603 100644
+--- a/src/main/java/org/oilmod/bukkit/items/itemtype/RealPickaxe.java
++++ b/src/main/java/org/oilmod/bukkit/items/itemtype/RealPickaxe.java
+@@ -3,14 +3,12 @@ package org.oilmod.bukkit.items.itemtype;
+ import net.minecraft.server.Block;
+ import net.minecraft.server.ItemPickaxe;
+ import net.minecraft.server.Material;
+-import org.bukkit.block.BlockState;
+ import org.oilmod.api.blocks.BlockType;
+ import org.oilmod.api.items.OilItemStack;
+ import org.oilmod.api.items.type.IPickaxe;
+ import org.oilmod.api.items.type.IToolBlockBreaking;
+ import org.oilmod.api.items.type.TBBType;
+ import org.oilmod.api.rep.block.BlockStateRep;
+-import org.oilmod.bukkit.util.OilSpigotUtil;
+ import org.oilmod.rep.block.BlockBR;
+ 
+ 
+diff --git a/src/main/java/org/oilmod/bukkit/items/itemtype/RealShears.java b/src/main/java/org/oilmod/bukkit/items/itemtype/RealShears.java
+index 2089041b..7c6e8e60 100644
+--- a/src/main/java/org/oilmod/bukkit/items/itemtype/RealShears.java
++++ b/src/main/java/org/oilmod/bukkit/items/itemtype/RealShears.java
+@@ -4,16 +4,12 @@ import net.minecraft.server.Block;
+ import net.minecraft.server.Blocks;
+ import net.minecraft.server.IBlockData;
+ import net.minecraft.server.Material;
+-import org.bukkit.Location;
+-import org.bukkit.block.BlockState;
+-import org.bukkit.entity.LivingEntity;
+ import org.oilmod.api.blocks.BlockType;
+ import org.oilmod.api.items.OilItemStack;
+ import org.oilmod.api.items.type.IToolBlockBreaking;
+ import org.oilmod.api.rep.block.BlockStateRep;
+ import org.oilmod.api.rep.entity.EntityLivingRep;
+ import org.oilmod.api.rep.world.LocationBlockRep;
+-import org.oilmod.bukkit.util.OilSpigotUtil;
+ import org.oilmod.rep.block.BlockBR;
+ import org.oilmod.rep.block.BlockStateBR;
+ 
+diff --git a/src/main/java/org/oilmod/bukkit/items/itemtype/RealShovel.java b/src/main/java/org/oilmod/bukkit/items/itemtype/RealShovel.java
+index 6a215c3b..cc833721 100644
+--- a/src/main/java/org/oilmod/bukkit/items/itemtype/RealShovel.java
++++ b/src/main/java/org/oilmod/bukkit/items/itemtype/RealShovel.java
+@@ -1,23 +1,26 @@
+ package org.oilmod.bukkit.items.itemtype;
+ 
+-import net.minecraft.server.*;
+-import org.bukkit.Location;
+-import org.bukkit.block.BlockFace;
+-import org.bukkit.block.BlockState;
+-import org.bukkit.craftbukkit.CraftWorld;
+-import org.bukkit.craftbukkit.entity.CraftHumanEntity;
+-import org.bukkit.entity.HumanEntity;
++import net.minecraft.server.Block;
++import net.minecraft.server.BlockPosition;
++import net.minecraft.server.Blocks;
++import net.minecraft.server.EntityHuman;
++import net.minecraft.server.EnumDirection;
++import net.minecraft.server.ItemSpade;
++import net.minecraft.server.ItemStack;
++import net.minecraft.server.Material;
++import net.minecraft.server.World;
+ import org.oilmod.api.blocks.BlockType;
+ import org.oilmod.api.items.OilItemStack;
+ import org.oilmod.api.items.type.IToolBlockBreaking;
+ import org.oilmod.api.rep.block.BlockFaceRep;
+ import org.oilmod.api.rep.block.BlockStateRep;
+-import org.oilmod.api.rep.entity.EntityHumanRep;
+ import org.oilmod.api.rep.entity.EntityLivingRep;
+ import org.oilmod.api.rep.world.LocationBlockRep;
+ import org.oilmod.api.util.InteractionResult;
+ import org.oilmod.bukkit.util.OilSpigotUtil;
+ import org.oilmod.rep.block.BlockBR;
++import org.oilmod.rep.entity.EntityHumanBR;
++import org.oilmod.rep.world.WorldBR;
+ 
+ 
+ //KEEPSYNC ItemSpade
+@@ -48,9 +51,9 @@ public class RealShovel extends RealTBBTool {
+ 
+     @Override
+     protected InteractionResult onItemUseOnBlock(IToolBlockBreaking item, OilItemStack stack, EntityLivingRep humanEntity, LocationBlockRep pos, boolean offhand, BlockFaceRep facing, float hitX, float hitY, float hitZ) {
+-        EntityHuman entityhuman = ((CraftHumanEntity)humanEntity).getHandle();
++        EntityHuman entityhuman = ((EntityHumanBR)humanEntity).getNms();
+         ItemStack itemstack = (ItemStack) stack.getNmsItemStack();
+-        World world = ((CraftWorld)pos.getWorld()).getHandle();
++        World world = ((WorldBR)pos.getWorld()).getNMS();
+         BlockPosition blockposition = new BlockPosition(pos.getX(), pos.getY(), pos.getZ());
+         EnumDirection enumdirection = OilSpigotUtil.toNMS(facing);
+         return OilSpigotUtil.toOil(ItemSpade.onItemUse(entityhuman, itemstack, world, blockposition, enumdirection));
+diff --git a/src/main/java/org/oilmod/bukkit/items/itemtype/RealSword.java b/src/main/java/org/oilmod/bukkit/items/itemtype/RealSword.java
+index ff72c958..d0f29d3d 100644
+--- a/src/main/java/org/oilmod/bukkit/items/itemtype/RealSword.java
++++ b/src/main/java/org/oilmod/bukkit/items/itemtype/RealSword.java
+@@ -3,14 +3,11 @@ package org.oilmod.bukkit.items.itemtype;
+ import net.minecraft.server.Block;
+ import net.minecraft.server.Blocks;
+ import net.minecraft.server.Material;
+-import org.bukkit.block.BlockState;
+ import org.oilmod.api.blocks.BlockType;
+ import org.oilmod.api.items.OilItemStack;
+ import org.oilmod.api.items.type.IToolBlockBreaking;
+ import org.oilmod.api.rep.block.BlockStateRep;
+-import org.oilmod.bukkit.util.OilSpigotUtil;
+ import org.oilmod.rep.block.BlockBR;
+-import org.oilmod.rep.block.BlockStateBR;
+ 
+ 
+ //KEEPSYNC ItemSword
+diff --git a/src/main/java/org/oilmod/bukkit/items/itemtype/RealTBBHelper.java b/src/main/java/org/oilmod/bukkit/items/itemtype/RealTBBHelper.java
+index 5278bad0..2263a303 100644
+--- a/src/main/java/org/oilmod/bukkit/items/itemtype/RealTBBHelper.java
++++ b/src/main/java/org/oilmod/bukkit/items/itemtype/RealTBBHelper.java
+@@ -1,7 +1,7 @@
+ package org.oilmod.bukkit.items.itemtype;
+ 
+-import org.oilmod.api.items.type.TBBType.TBBEnum;
+ import org.oilmod.api.items.type.TBBType;
++import org.oilmod.api.items.type.TBBType.TBBEnum;
+ 
+ public class RealTBBHelper extends TBBType.TBBHelper {
+     @Override
+diff --git a/src/main/java/org/oilmod/bukkit/items/itemtype/RealTBBTool.java b/src/main/java/org/oilmod/bukkit/items/itemtype/RealTBBTool.java
+index f8aaefd7..942faae5 100644
+--- a/src/main/java/org/oilmod/bukkit/items/itemtype/RealTBBTool.java
++++ b/src/main/java/org/oilmod/bukkit/items/itemtype/RealTBBTool.java
+@@ -1,10 +1,5 @@
+ package org.oilmod.bukkit.items.itemtype;
+ 
+-import org.bukkit.Location;
+-import org.bukkit.block.BlockFace;
+-import org.bukkit.craftbukkit.CraftWorld;
+-import org.bukkit.entity.HumanEntity;
+-import org.bukkit.entity.LivingEntity;
+ import org.oilmod.api.items.OilItemStack;
+ import org.oilmod.api.items.type.IDurable;
+ import org.oilmod.api.items.type.IToolBlockBreaking;
+@@ -12,10 +7,10 @@ import org.oilmod.api.items.type.ImplementationProvider;
+ import org.oilmod.api.items.type.TBBType;
+ import org.oilmod.api.rep.block.BlockFaceRep;
+ import org.oilmod.api.rep.block.BlockStateRep;
+-import org.oilmod.api.rep.entity.EntityHumanRep;
+ import org.oilmod.api.rep.entity.EntityLivingRep;
+ import org.oilmod.api.rep.world.LocationBlockRep;
+ import org.oilmod.api.util.InteractionResult;
++import org.oilmod.rep.world.WorldBR;
+ 
+ 
+ //KEEPSYNC ItemTool
+@@ -41,7 +36,7 @@ public abstract class RealTBBTool extends TBBType{
+ 
+     @Override
+     protected boolean onBlockDestroyed(IToolBlockBreaking item, OilItemStack stack, BlockStateRep blockState, LocationBlockRep pos, EntityLivingRep entityLiving) {
+-        net.minecraft.server.World world = ((CraftWorld)pos.getWorld()).getHandle();
++        net.minecraft.server.World world = ((WorldBR)pos.getWorld()).getNMS();
+ 
+         if (!world.isClientSide &&  item instanceof IDurable && blockState.getBlockHardness(pos) != 0) {
+             IDurable durable = (IDurable) item;
+diff --git a/src/main/java/org/oilmod/bukkit/ui/UIManager.java b/src/main/java/org/oilmod/bukkit/ui/UIManager.java
+index 06f57f73..71c06e30 100644
+--- a/src/main/java/org/oilmod/bukkit/ui/UIManager.java
++++ b/src/main/java/org/oilmod/bukkit/ui/UIManager.java
+@@ -1,7 +1,6 @@
+ package org.oilmod.bukkit.ui;
+ 
+ import org.apache.commons.lang3.NotImplementedException;
+-import org.bukkit.inventory.Inventory;
+ import org.oilmod.api.inventory.ItemFilter;
+ import org.oilmod.api.rep.inventory.InventoryRep;
+ import org.oilmod.api.ui.ISlotInteraction;
+diff --git a/src/main/java/org/oilmod/bukkit/util/OilSpigotUtil.java b/src/main/java/org/oilmod/bukkit/util/OilSpigotUtil.java
+index 5ddddd05..47517772 100644
+--- a/src/main/java/org/oilmod/bukkit/util/OilSpigotUtil.java
++++ b/src/main/java/org/oilmod/bukkit/util/OilSpigotUtil.java
+@@ -1,10 +1,22 @@
+ package org.oilmod.bukkit.util;
+ 
+-import net.minecraft.server.*;
++import net.minecraft.server.Block;
++import net.minecraft.server.BlockPosition;
++import net.minecraft.server.EntityPlayer;
++import net.minecraft.server.EnumDirection;
++import net.minecraft.server.IBlockData;
++import net.minecraft.server.InventoryClickType;
++import net.minecraft.server.Item;
++import net.minecraft.server.ItemStack;
++import net.minecraft.server.World;
+ import org.apache.commons.lang3.NotImplementedException;
+ import org.bukkit.Location;
+ import org.bukkit.Material;
++import org.bukkit.craftbukkit.CraftWorld;
++import org.bukkit.craftbukkit.entity.CraftPlayer;
++import org.bukkit.craftbukkit.inventory.CraftItemStack;
+ import org.bukkit.craftbukkit.util.CraftMagicNumbers;
++import org.bukkit.entity.Player;
+ import org.oilmod.api.rep.block.BlockFaceRep;
+ import org.oilmod.api.rep.block.BlockRep;
+ import org.oilmod.api.rep.block.BlockStateRep;
+@@ -28,10 +40,6 @@ import org.oilmod.bukkit.inventory.custom.api.WrappedPanel;
+ import org.oilmod.bukkit.inventory.custom.nms.ViewContainer;
+ import org.oilmod.bukkit.inventory.custom.slot.IViewSlot;
+ import org.oilmod.bukkit.inventory.custom.view.ISlotView;
+-import org.bukkit.craftbukkit.CraftWorld;
+-import org.bukkit.craftbukkit.entity.CraftPlayer;
+-import org.bukkit.craftbukkit.inventory.CraftItemStack;
+-import org.bukkit.entity.Player;
+ import org.oilmod.rep.block.BlockBR;
+ import org.oilmod.rep.block.BlockStateBR;
+ import org.oilmod.rep.entity.EntityHumanBR;
+diff --git a/src/main/java/org/oilmod/bukkit/util/RealOilUtil.java b/src/main/java/org/oilmod/bukkit/util/RealOilUtil.java
+index dac8af5a..19c8a5a7 100644
+--- a/src/main/java/org/oilmod/bukkit/util/RealOilUtil.java
++++ b/src/main/java/org/oilmod/bukkit/util/RealOilUtil.java
+@@ -1,23 +1,29 @@
+ package org.oilmod.bukkit.util;
+ 
+ import com.google.common.base.Predicate;
++import gnu.trove.map.hash.THashMap;
++import net.minecraft.server.*;
+ import org.apache.commons.lang3.NotImplementedException;
+ import org.bukkit.Bukkit;
+-import org.bukkit.craftbukkit.CraftChunk;
+-import org.bukkit.craftbukkit.block.CraftBlock;
+-import org.bukkit.craftbukkit.block.CraftBlockState;
+-import org.bukkit.craftbukkit.entity.CraftHumanEntity;
+-import org.bukkit.craftbukkit.entity.CraftLivingEntity;
+ import org.bukkit.craftbukkit.inventory.CraftItemStack;
+-import org.bukkit.craftbukkit.util.CraftMagicNumbers;
++import org.bukkit.entity.Entity;
++import org.bukkit.entity.*;
++import org.bukkit.entity.minecart.CommandMinecart;
++import org.bukkit.entity.minecart.ExplosiveMinecart;
++import org.bukkit.entity.minecart.HopperMinecart;
++import org.bukkit.entity.minecart.PoweredMinecart;
++import org.bukkit.entity.minecart.RideableMinecart;
++import org.bukkit.entity.minecart.SpawnerMinecart;
++import org.bukkit.entity.minecart.StorageMinecart;
++import org.bukkit.event.block.BlockBreakEvent;
++import org.bukkit.event.block.BlockMultiPlaceEvent;
++import org.bukkit.event.block.BlockPlaceEvent;
+ import org.oilmod.api.OilMod;
+ import org.oilmod.api.entity.NMSEntity;
+-import org.oilmod.api.rep.block.BlockRep;
+ import org.oilmod.api.rep.block.BlockStateRep;
+ import org.oilmod.api.rep.entity.EntityHumanRep;
+ import org.oilmod.api.rep.entity.EntityLivingRep;
+ import org.oilmod.api.rep.entity.EntityRep;
+-import org.oilmod.api.rep.item.BlockItemRep;
+ import org.oilmod.api.rep.item.ItemRep;
+ import org.oilmod.api.rep.itemstack.ItemStackRep;
+ import org.oilmod.api.rep.world.LocationBlockRep;
+@@ -27,26 +33,12 @@ import org.oilmod.api.util.ITicker;
+ import org.oilmod.api.util.NMSKey;
+ import org.oilmod.api.util.OilKey;
+ import org.oilmod.api.util.OilUtil;
+-import gnu.trove.map.hash.THashMap;
+-import net.minecraft.server.*;
+-import net.minecraft.server.Item;
+-import org.bukkit.entity.*;
+-import org.bukkit.entity.Entity;
+-import org.bukkit.entity.minecart.CommandMinecart;
+-import org.bukkit.entity.minecart.ExplosiveMinecart;
+-import org.bukkit.entity.minecart.HopperMinecart;
+-import org.bukkit.entity.minecart.PoweredMinecart;
+-import org.bukkit.entity.minecart.RideableMinecart;
+-import org.bukkit.entity.minecart.SpawnerMinecart;
+-import org.bukkit.entity.minecart.StorageMinecart;
+-import org.bukkit.event.block.BlockBreakEvent;
+-import org.bukkit.event.block.BlockMultiPlaceEvent;
+-import org.bukkit.event.block.BlockPlaceEvent;
+ import org.oilmod.bukkit.bukkit.stubs.OilBlockStub;
+ import org.oilmod.rep.block.BlockBR;
+ import org.oilmod.rep.block.BlockStateBR;
++import org.oilmod.rep.entity.EntityHumanBR;
++import org.oilmod.rep.entity.EntityLivingBR;
+ import org.oilmod.rep.item.BlockItemBR;
+-import org.oilmod.rep.itemstack.ItemStackBR;
+ import org.oilmod.rep.itemstack.RealItemStackFactory;
+ import org.oilmod.rep.world.WorldBR;
+ 
+@@ -57,7 +49,6 @@ import java.util.Random;
+ import java.util.stream.Collectors;
+ 
+ import static org.oilmod.bukkit.util.OilSpigotUtil.toBukkit;
+-import static org.oilmod.bukkit.util.OilSpigotUtil.toBukkitStub;
+ import static org.oilmod.bukkit.util.OilSpigotUtil.toNMS;
+ 
+ /**
+@@ -100,7 +91,7 @@ public class RealOilUtil extends OilUtil.UtilImpl {
+         Block block = item.getBlock();
+         BlockStateList stateList = block.s();
+         int newData = block.getDropData(stateList.a().get(random.nextInt(stateList.a().size())));
+-        return RealItemStackFactory.INSTANCE.create(ItemStack.createStackVanilla(item, 1, newData, null)); //todo use new system of states, move to rep api
++        return RealItemStackFactory.INSTANCE.create(ItemStack.createStack(item, 1, newData, null)); //todo use new system of states, move to rep api
+     }
+ 
+     @Override
+@@ -152,12 +143,12 @@ public class RealOilUtil extends OilUtil.UtilImpl {
+     protected boolean damageEntity(EntityLivingRep entity, double amount, EntityLivingRep source) {
+         DamageSource reason = DamageSource.GENERIC;
+ 
+-        if (source instanceof HumanEntity) {
+-            reason = DamageSource.playerAttack(((CraftHumanEntity) source).getHandle());//todo this is not correct
++        if (source instanceof EntityHumanRep) {
++            reason = DamageSource.playerAttack(((EntityHumanBR) source).getNms());//todo this is not correct, maybe fixed dunno
+         } else if (source != null) {
+-            reason = DamageSource.mobAttack(((CraftLivingEntity) source).getHandle());
++            reason = DamageSource.mobAttack(((EntityLivingBR) source).getNms());
+         }
+-        return ((CraftLivingEntity) entity).getHandle().damageEntity(reason, (float) amount);
++        return ((EntityLivingBR) entity).getNms().damageEntity(reason, (float) amount);
+     }
+ 
+     @Override
+diff --git a/src/main/java/org/oilmod/bukkit/util/enummagic/EnumBuster.java b/src/main/java/org/oilmod/bukkit/util/enummagic/EnumBuster.java
+index 2a0f175e..d3008fed 100644
+--- a/src/main/java/org/oilmod/bukkit/util/enummagic/EnumBuster.java
++++ b/src/main/java/org/oilmod/bukkit/util/enummagic/EnumBuster.java
+@@ -1,9 +1,17 @@
+ package org.oilmod.bukkit.util.enummagic;
+ 
+-import sun.reflect.*;
+-
+-import java.lang.reflect.*;
+-import java.util.*;
++import sun.reflect.ConstructorAccessor;
++import sun.reflect.ReflectionFactory;
++
++import java.lang.reflect.Constructor;
++import java.lang.reflect.Field;
++import java.util.ArrayList;
++import java.util.Arrays;
++import java.util.Collection;
++import java.util.Deque;
++import java.util.HashMap;
++import java.util.LinkedList;
++import java.util.Map;
+ 
+ public class EnumBuster<E extends Enum<E>> {
+     private static final Class[] EMPTY_CLASS_ARRAY =
+diff --git a/src/main/java/org/oilmod/bukkit/util/enummagic/ReflectionHelper.java b/src/main/java/org/oilmod/bukkit/util/enummagic/ReflectionHelper.java
+index f7804aea..39a66643 100644
+--- a/src/main/java/org/oilmod/bukkit/util/enummagic/ReflectionHelper.java
++++ b/src/main/java/org/oilmod/bukkit/util/enummagic/ReflectionHelper.java
+@@ -1,6 +1,10 @@
+ package org.oilmod.bukkit.util.enummagic;
+-import sun.reflect.*;
+-import java.lang.reflect.*;
++
++import sun.reflect.FieldAccessor;
++import sun.reflect.ReflectionFactory;
++
++import java.lang.reflect.Field;
++import java.lang.reflect.Modifier;
+ 
+ public class ReflectionHelper {
+     private static final String MODIFIERS_FIELD = "modifiers";
+diff --git a/src/main/java/org/oilmod/rep/block/BlockBR.java b/src/main/java/org/oilmod/rep/block/BlockBR.java
+index a309a66a..0c70a0b1 100644
+--- a/src/main/java/org/oilmod/rep/block/BlockBR.java
++++ b/src/main/java/org/oilmod/rep/block/BlockBR.java
+@@ -5,9 +5,7 @@ import net.minecraft.server.Item;
+ import net.minecraft.server.ItemBlock;
+ import net.minecraft.server.Items;
+ import org.oilmod.api.rep.block.BlockRep;
+-import org.oilmod.api.rep.block.BlockStateRep;
+ import org.oilmod.api.rep.item.BlockItemRep;
+-import org.oilmod.api.rep.item.ItemRep;
+ 
+ public class BlockBR implements BlockRep {
+     private final Block NMS;
+diff --git a/src/main/java/org/oilmod/rep/block/BlockStateBR.java b/src/main/java/org/oilmod/rep/block/BlockStateBR.java
+index a7825514..f324d62b 100644
+--- a/src/main/java/org/oilmod/rep/block/BlockStateBR.java
++++ b/src/main/java/org/oilmod/rep/block/BlockStateBR.java
+@@ -1,11 +1,6 @@
+ package org.oilmod.rep.block;
+ 
+-import net.minecraft.server.BlockPosition;
+ import net.minecraft.server.IBlockData;
+-import org.oilmod.api.rep.block.BlockRep;
+-import org.oilmod.api.rep.block.BlockStateRep;
+-import org.oilmod.api.rep.world.LocationBlockRep;
+-import org.oilmod.rep.world.WorldBR;
+ 
+ public class BlockStateBR extends BlockStateBase {
+     private final IBlockData NMS;
+diff --git a/src/main/java/org/oilmod/rep/block/StandardBlockStateBR.java b/src/main/java/org/oilmod/rep/block/StandardBlockStateBR.java
+index 85a1048b..98f4a298 100644
+--- a/src/main/java/org/oilmod/rep/block/StandardBlockStateBR.java
++++ b/src/main/java/org/oilmod/rep/block/StandardBlockStateBR.java
+@@ -1,12 +1,7 @@
+ package org.oilmod.rep.block;
+ 
+ import net.minecraft.server.Block;
+-import net.minecraft.server.BlockPosition;
+ import net.minecraft.server.IBlockData;
+-import org.oilmod.api.rep.block.BlockRep;
+-import org.oilmod.api.rep.block.BlockStateRep;
+-import org.oilmod.api.rep.world.LocationBlockRep;
+-import org.oilmod.rep.world.WorldBR;
+ 
+ public class StandardBlockStateBR extends BlockStateBase {
+     private final Block block;
+diff --git a/src/main/java/org/oilmod/rep/enchantment/EnchantmentBR.java b/src/main/java/org/oilmod/rep/enchantment/EnchantmentBR.java
+index 1d57f063..5979ec2a 100644
+--- a/src/main/java/org/oilmod/rep/enchantment/EnchantmentBR.java
++++ b/src/main/java/org/oilmod/rep/enchantment/EnchantmentBR.java
+@@ -1,7 +1,6 @@
+ package org.oilmod.rep.enchantment;
+ 
+ import net.minecraft.server.Enchantment;
+-import net.minecraft.server.Item;
+ import org.oilmod.api.rep.IKey;
+ import org.oilmod.api.rep.enchant.EnchantmentRep;
+ import org.oilmod.api.rep.item.ItemRep;
+diff --git a/src/main/java/org/oilmod/rep/entity/EntityHumanBR.java b/src/main/java/org/oilmod/rep/entity/EntityHumanBR.java
+index 925f3479..8b4b9e14 100644
+--- a/src/main/java/org/oilmod/rep/entity/EntityHumanBR.java
++++ b/src/main/java/org/oilmod/rep/entity/EntityHumanBR.java
+@@ -1,8 +1,6 @@
+ package org.oilmod.rep.entity;
+ 
+ import net.minecraft.server.EntityHuman;
+-import net.minecraft.server.EntityLiving;
+-import net.minecraft.server.TileEntityDispenser;
+ import org.oilmod.api.rep.entity.EntityHumanRep;
+ import org.oilmod.api.rep.inventory.InventoryRep;
+ import org.oilmod.api.rep.inventory.InventoryUIRep;
+diff --git a/src/main/java/org/oilmod/rep/entity/EntityLivingBR.java b/src/main/java/org/oilmod/rep/entity/EntityLivingBR.java
+index 54383faa..9847ae7e 100644
+--- a/src/main/java/org/oilmod/rep/entity/EntityLivingBR.java
++++ b/src/main/java/org/oilmod/rep/entity/EntityLivingBR.java
+@@ -1,6 +1,5 @@
+ package org.oilmod.rep.entity;
+ 
+-import net.minecraft.server.Entity;
+ import net.minecraft.server.EntityInsentient;
+ import net.minecraft.server.EntityLiving;
+ import org.oilmod.api.rep.entity.EntityLivingRep;
+diff --git a/src/main/java/org/oilmod/rep/inventory/InventoryBR.java b/src/main/java/org/oilmod/rep/inventory/InventoryBR.java
+index 844ae33a..ea5acf52 100644
+--- a/src/main/java/org/oilmod/rep/inventory/InventoryBR.java
++++ b/src/main/java/org/oilmod/rep/inventory/InventoryBR.java
+@@ -1,6 +1,5 @@
+ package org.oilmod.rep.inventory;
+ 
+-import net.minecraft.server.Block;
+ import net.minecraft.server.IInventory;
+ import org.apache.commons.lang3.NotImplementedException;
+ import org.oilmod.api.rep.inventory.InventoryRep;
+diff --git a/src/main/java/org/oilmod/rep/item/BlockItemBR.java b/src/main/java/org/oilmod/rep/item/BlockItemBR.java
+index 6b5ee5a1..da041077 100644
+--- a/src/main/java/org/oilmod/rep/item/BlockItemBR.java
++++ b/src/main/java/org/oilmod/rep/item/BlockItemBR.java
+@@ -1,11 +1,9 @@
+ package org.oilmod.rep.item;
+ 
+-import net.minecraft.server.Item;
+ import net.minecraft.server.ItemBlock;
+ import org.oilmod.api.rep.block.BlockRep;
+ import org.oilmod.api.rep.item.BlockItemRep;
+ import org.oilmod.api.rep.item.BlockItemStateRep;
+-import org.oilmod.api.rep.item.ItemStateRep;
+ 
+ public class BlockItemBR extends ItemBR implements BlockItemRep {
+     public BlockItemBR(ItemBlock nms) {
+diff --git a/src/main/java/org/oilmod/rep/item/ItemBR.java b/src/main/java/org/oilmod/rep/item/ItemBR.java
+index 3a3484cf..e06c1340 100644
+--- a/src/main/java/org/oilmod/rep/item/ItemBR.java
++++ b/src/main/java/org/oilmod/rep/item/ItemBR.java
+@@ -1,7 +1,6 @@
+ package org.oilmod.rep.item;
+ 
+ import net.minecraft.server.Item;
+-import org.apache.commons.lang3.NotImplementedException;
+ import org.oilmod.api.rep.item.ItemRep;
+ import org.oilmod.api.rep.item.ItemStateRep;
+ 
+diff --git a/src/main/java/org/oilmod/rep/itemstack/ItemStackBR.java b/src/main/java/org/oilmod/rep/itemstack/ItemStackBR.java
+index e5dc1576..25ad6059 100644
+--- a/src/main/java/org/oilmod/rep/itemstack/ItemStackBR.java
++++ b/src/main/java/org/oilmod/rep/itemstack/ItemStackBR.java
+@@ -4,12 +4,18 @@ import net.minecraft.server.ItemStack;
+ import org.oilmod.api.rep.item.ItemRep;
+ import org.oilmod.api.rep.itemstack.ItemStackRep;
+ import org.oilmod.api.rep.itemstack.state.ItemStackStateRep;
++import org.oilmod.rep.item.ItemBR;
+ 
+ public class ItemStackBR implements ItemStackRep {
+ 
+     private final ItemStack NMS;
+     private final ItemStackStateBR state;
+ 
++    protected ItemStackBR(ItemBR item, ItemStackStateBR state, int amount) {
++        NMS = ItemStack.createStack(item.getNMS(), amount);
++        if (state != null)state.applyTo(this);
++        this.state = new ItemStackStateBR(NMS);
++    }
+     protected ItemStackBR(ItemStack nms) {
+         NMS = nms;
+         state = new ItemStackStateBR(nms);
+diff --git a/src/main/java/org/oilmod/rep/itemstack/ItemStackStateBR.java b/src/main/java/org/oilmod/rep/itemstack/ItemStackStateBR.java
+index e764f9ef..9a55d5b7 100644
+--- a/src/main/java/org/oilmod/rep/itemstack/ItemStackStateBR.java
++++ b/src/main/java/org/oilmod/rep/itemstack/ItemStackStateBR.java
+@@ -8,14 +8,11 @@ import net.minecraft.server.NBTTagList;
+ import org.apache.commons.lang3.NotImplementedException;
+ import org.oilmod.api.rep.enchant.EnchantmentRep;
+ import org.oilmod.api.rep.item.ItemStateRep;
+-import org.oilmod.api.rep.itemstack.ItemStackRep;
+ import org.oilmod.api.rep.itemstack.state.ItemStackStateRep;
+ import org.oilmod.api.util.ConvertedReadSet;
+ import org.oilmod.api.util.ReadSet;
+ import org.oilmod.rep.enchantment.EnchantmentBR;
+ 
+-import java.util.Set;
+-
+ public class ItemStackStateBR implements ItemStackStateRep {
+     private final ItemStack stack;
+ 
+diff --git a/src/main/java/org/oilmod/rep/itemstack/OilModItemStackBR.java b/src/main/java/org/oilmod/rep/itemstack/OilModItemStackBR.java
+index 71c5cde3..ff2d4efc 100644
+--- a/src/main/java/org/oilmod/rep/itemstack/OilModItemStackBR.java
++++ b/src/main/java/org/oilmod/rep/itemstack/OilModItemStackBR.java
+@@ -1,6 +1,5 @@
+ package org.oilmod.rep.itemstack;
+ 
+-import net.minecraft.server.ItemStack;
+ import org.oilmod.api.items.OilBukkitItemStack;
+ import org.oilmod.api.items.OilItemStack;
+ import org.oilmod.bukkit.items.RealItemStack;
+diff --git a/src/main/java/org/oilmod/rep/itemstack/RealItemStackFactory.java b/src/main/java/org/oilmod/rep/itemstack/RealItemStackFactory.java
+index f5d31446..bc52a617 100644
+--- a/src/main/java/org/oilmod/rep/itemstack/RealItemStackFactory.java
++++ b/src/main/java/org/oilmod/rep/itemstack/RealItemStackFactory.java
+@@ -1,6 +1,7 @@
+ package org.oilmod.rep.itemstack;
+ 
+ import net.minecraft.server.ItemStack;
++import org.apache.commons.lang3.NotImplementedException;
+ import org.oilmod.api.rep.block.BlockStateRep;
+ import org.oilmod.api.rep.item.BlockItemRep;
+ import org.oilmod.api.rep.item.ItemRep;
+@@ -9,6 +10,7 @@ import org.oilmod.api.rep.itemstack.ItemStackFactory;
+ import org.oilmod.api.rep.itemstack.ItemStackRep;
+ import org.oilmod.api.rep.itemstack.state.ItemStackStateRep;
+ import org.oilmod.bukkit.items.RealItemStack;
++import org.oilmod.rep.item.ItemBR;
+ 
+ public class RealItemStackFactory extends ItemStackFactory {
+     public static RealItemStackFactory INSTANCE;
+@@ -16,7 +18,7 @@ public class RealItemStackFactory extends ItemStackFactory {
+ 
+     @Override
+     public ItemStackBR create(ItemRep item, ItemStackStateRep state, int amount) {
+-        return null;
++        return new ItemStackBR((ItemBR)item, (ItemStackStateBR) state, amount);
+     }
+ 
+ 
+@@ -31,11 +33,11 @@ public class RealItemStackFactory extends ItemStackFactory {
+ 
+     @Override
+     public ItemStackStateRep createStackState(ItemRep item, ItemStateRep itemState) {
+-        return null;
++        return null;//throw new NotImplementedException("todo"); //todo
+     }
+ 
+     @Override
+     public ItemStackStateRep createStackState(BlockItemRep item, BlockStateRep itemState) {
+-        return null;
++        throw new NotImplementedException("todo"); //todo
+     }
+ }
+diff --git a/src/main/java/org/oilmod/rep/providers/minecraft/MC112BlockProvider.java b/src/main/java/org/oilmod/rep/providers/minecraft/MC112BlockProvider.java
+index 4249d81d..ad70cabe 100644
+--- a/src/main/java/org/oilmod/rep/providers/minecraft/MC112BlockProvider.java
++++ b/src/main/java/org/oilmod/rep/providers/minecraft/MC112BlockProvider.java
+@@ -16,11 +16,6 @@ import org.oilmod.api.rep.variant.Substitute;
+ import org.oilmod.rep.block.BlockBR;
+ import org.oilmod.rep.block.BlockStateBR;
+ 
+-import java.util.ArrayList;
+-import java.util.HashSet;
+-import java.util.List;
+-import java.util.Set;
+-
+ public class MC112BlockProvider extends MinecraftBlockProvider {
+     @Override
+     protected Substitute<BlockStateRep> getBlock(MinecraftBlock block) {
+@@ -55,8 +50,8 @@ public class MC112BlockProvider extends MinecraftBlockProvider {
+     }
+ 
+     private MinecraftKey getKey(MC112BlockReq req) {
+-        if (req.hasSameKey()) {
+-            MinecraftBlock parent = req.getSameKey();
++        if (req.hasDependentKey()) {
++            MinecraftBlock parent = req.getKeyParent();
+             if (parent.getInitState().isInitialised()) {
+                 Validate.notNull(parent.get(), "Parent {%s->%s} was not set correctly, got null", parent, getKey(parent.getMc112()));
+                 return Block.REGISTRY.b(((BlockBR)parent.get().getBlock()).getNMS());
+diff --git a/src/main/java/org/oilmod/rep/providers/minecraft/MC112ItemProvider.java b/src/main/java/org/oilmod/rep/providers/minecraft/MC112ItemProvider.java
+index 26797cec..0a8c94cd 100644
+--- a/src/main/java/org/oilmod/rep/providers/minecraft/MC112ItemProvider.java
++++ b/src/main/java/org/oilmod/rep/providers/minecraft/MC112ItemProvider.java
+@@ -1,26 +1,16 @@
+ package org.oilmod.rep.providers.minecraft;
+ 
+-import com.google.common.base.Optional;
+-import net.minecraft.server.Block;
+-import net.minecraft.server.BlockStateList;
+-import net.minecraft.server.IBlockData;
+-import net.minecraft.server.IBlockState;
+ import net.minecraft.server.Item;
+ import net.minecraft.server.ItemBlock;
+ import net.minecraft.server.MinecraftKey;
+ import org.apache.commons.lang3.Validate;
+-import org.oilmod.api.rep.block.BlockStateRep;
+ import org.oilmod.api.rep.item.ItemStateRep;
+-import org.oilmod.api.rep.providers.minecraft.MC112BlockReq;
+ import org.oilmod.api.rep.providers.minecraft.MC112ItemReq;
+-import org.oilmod.api.rep.providers.minecraft.MinecraftBlock;
+-import org.oilmod.api.rep.providers.minecraft.MinecraftBlockProvider;
+ import org.oilmod.api.rep.providers.minecraft.MinecraftItem;
+ import org.oilmod.api.rep.providers.minecraft.MinecraftItemProvider;
+ import org.oilmod.api.rep.variant.Availability;
+ import org.oilmod.api.rep.variant.Substitute;
+-import org.oilmod.rep.block.BlockBR;
+-import org.oilmod.rep.block.BlockStateBR;
++import org.oilmod.rep.item.ItemBR;
+ import org.oilmod.rep.item.ItemStateBR;
+ 
+ public class MC112ItemProvider extends MinecraftItemProvider {
+@@ -35,12 +25,13 @@ public class MC112ItemProvider extends MinecraftItemProvider {
+                 return new Substitute<>(Availability.min(sub.getAvailability(), req.getAvailability()), sub.get());
+             }
+ 
+-            MinecraftKey key = new MinecraftKey(req.getKey());
++            MinecraftKey key = getKey(req);
++
+             Item i = Item.REGISTRY.get(key);
+             Validate.notNull(i, "No item with name {%s} found", key);
+             MinecraftKey mcKey = Item.REGISTRY.b(i);
+             Validate.isTrue(mcKey.equals(key), "No item with name {%s} found, got {%s} instead", key, mcKey);
+-            Validate.isTrue(!(i instanceof ItemBlock), "Cannot request block {%s}", mcKey);
++            Validate.isTrue(!(i instanceof ItemBlock), "Cannot request block for pure item {%s}", mcKey);
+ 
+             return new Substitute<>(req.getAvailability(), new ItemStateBR(i.getItemRep(), (short) req.getData()));
+         } catch (Exception e) {
+@@ -49,4 +40,18 @@ public class MC112ItemProvider extends MinecraftItemProvider {
+         }
+ 
+     }
++
++
++    private MinecraftKey getKey(MC112ItemReq req) {
++        if (req.hasDependentKey()) {
++            MinecraftItem parent = req.getKeyParent();
++            if (parent.getInitState().isInitialised()) {
++                Validate.notNull(parent.get(), "Parent {%s->%s} was not set correctly, got null", parent, getKey(parent.getMc112()));
++                return Item.REGISTRY.b(((ItemBR)parent.get().getItem()).getNMS());
++            } else {
++                return getKey(parent.getMc112()); //hopefully does never start looping
++            }
++        }
++        return new MinecraftKey(req.getKey());
++    }
+ }
+diff --git a/src/main/java/org/oilmod/rep/world/WorldBR.java b/src/main/java/org/oilmod/rep/world/WorldBR.java
+index 8cfc369f..d971cd7a 100644
+--- a/src/main/java/org/oilmod/rep/world/WorldBR.java
++++ b/src/main/java/org/oilmod/rep/world/WorldBR.java
+@@ -1,6 +1,5 @@
+ package org.oilmod.rep.world;
+ 
+-import net.minecraft.server.Block;
+ import net.minecraft.server.World;
+ import org.oilmod.api.rep.world.WorldRep;
+ 
+-- 
+2.21.0.windows.1
+
