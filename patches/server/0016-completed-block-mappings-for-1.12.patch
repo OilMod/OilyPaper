@@ -1,0 +1,95 @@
+From e4c56db33200a68fdfdb7c7636f4839e76fe1e31 Mon Sep 17 00:00:00 2001
+From: sirati97 <TheSirati97@gmail.com>
+Date: Wed, 20 Mar 2019 17:28:37 +0100
+Subject: [PATCH] completed block mappings for 1.12
+
+---
+ .../minecraft/MC112BlockProvider.java         | 36 ++++++++++++-------
+ 1 file changed, 24 insertions(+), 12 deletions(-)
+
+diff --git a/src/main/java/org/oilmod/rep/providers/minecraft/MC112BlockProvider.java b/src/main/java/org/oilmod/rep/providers/minecraft/MC112BlockProvider.java
+index be193496..88c24116 100644
+--- a/src/main/java/org/oilmod/rep/providers/minecraft/MC112BlockProvider.java
++++ b/src/main/java/org/oilmod/rep/providers/minecraft/MC112BlockProvider.java
+@@ -16,23 +16,35 @@ import org.oilmod.api.rep.variant.Substitute;
+ import org.oilmod.rep.block.BlockBR;
+ import org.oilmod.rep.block.BlockStateBR;
+ 
++import java.util.ArrayList;
++import java.util.HashSet;
++import java.util.List;
++import java.util.Set;
++
+ public class MC112BlockProvider extends MinecraftBlockProvider {
+-    private StringBuilder sb;
+-    private boolean hadError;
++    private List<Exception> exceptions;
+ 
+     @Override
+     protected void apiInit() {
+-        sb = new StringBuilder();
++        exceptions = new ArrayList<>();
+     }
+ 
+     @Override
+     protected void apiPostInit() {
+ 
+-        if (hadError) {
+-            sb.insert(0, "Some blocks were not correctly mapped to the provider:");
+-            throw new IllegalStateException(sb.toString());
++        if (exceptions.size() > 0) {
++            StringBuilder sb = new StringBuilder("Some blocks were not correctly mapped to the provider:");
++            for (Exception e:exceptions) {
++                sb.append('\n');
++                sb.append(e.getMessage());
++            }
++            IllegalStateException ex = new IllegalStateException(sb.toString());
++            for (Exception e:exceptions) {
++                ex.addSuppressed(e);
++            }
++            throw ex;
+         }
+-        sb = null;
++        exceptions = null;
+     }
+ 
+     @Override
+@@ -54,13 +66,14 @@ public class MC112BlockProvider extends MinecraftBlockProvider {
+             IBlockData data = states.getBlockData();
+             for (MC112BlockReq.Property p:req.getProperties()) {
+                 IBlockState state = states.a(p.name);
++                Validate.notNull(state, "Missing property {%s} for block {%s}", p.name, Block.REGISTRY.b(b));
+                 Optional<Comparable> opt = state.b(p.value);
+                 Validate.isTrue(opt.isPresent(), "Missing value {%s} for property {%s} for block {%s}", p.value, p.name, Block.REGISTRY.b(b));
+                 data = data.set(state, opt.get());
+             }
+             return new Substitute<>(req.getAvailability(), new BlockStateBR(data));
+         } catch (Exception e) {
+-            reportError(e.getMessage());
++            reportError(e);
+             return new Substitute<>(Availability.Unavailable, null);
+         }
+ 
+@@ -70,6 +83,7 @@ public class MC112BlockProvider extends MinecraftBlockProvider {
+         if (req.hasSameKey()) {
+             MinecraftBlock parent = req.getSameKey();
+             if (parent.getInitState().isInitialised()) {
++                Validate.notNull(parent.get(), "Parent {%s->%s} was not set correctly, got null", parent, getKey(parent.getMc112()));
+                 return Block.REGISTRY.b(((BlockBR)parent.get().getBlock()).getNMS());
+             } else {
+                 return getKey(parent.getMc112()); //hopefully does never start looping
+@@ -78,9 +92,7 @@ public class MC112BlockProvider extends MinecraftBlockProvider {
+         return new MinecraftKey(req.getKey());
+     }
+ 
+-    private void reportError(String message) {
+-        sb.append('\n');
+-        sb.append(message);
+-        hadError = true;
++    private void reportError(Exception e) {
++        exceptions.add(e);
+     }
+ }
+-- 
+2.21.0.windows.1
+

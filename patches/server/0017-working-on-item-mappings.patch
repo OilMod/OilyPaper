@@ -1,0 +1,237 @@
+From 0f66d9c5580618087f052d13f8827f7ba4521a01 Mon Sep 17 00:00:00 2001
+From: sirati97 <TheSirati97@gmail.com>
+Date: Thu, 21 Mar 2019 10:22:54 +0100
+Subject: [PATCH] working on item mappings
+
+---
+ src/main/java/org/oilmod/rep/RepAPIImpl.java  |  3 +-
+ src/main/java/org/oilmod/rep/item/ItemBR.java |  2 +-
+ .../java/org/oilmod/rep/item/ItemStateBR.java | 19 +++++++
+ .../org/oilmod/rep/item/ItemStateBase.java    | 24 +++++++++
+ .../oilmod/rep/item/StandardItemStateBR.java  | 17 ++++++
+ .../minecraft/MC112BlockProvider.java         | 29 -----------
+ .../minecraft/MC112ItemProvider.java          | 52 +++++++++++++++++++
+ 7 files changed, 115 insertions(+), 31 deletions(-)
+ create mode 100644 src/main/java/org/oilmod/rep/item/ItemStateBR.java
+ create mode 100644 src/main/java/org/oilmod/rep/item/ItemStateBase.java
+ create mode 100644 src/main/java/org/oilmod/rep/item/StandardItemStateBR.java
+ create mode 100644 src/main/java/org/oilmod/rep/providers/minecraft/MC112ItemProvider.java
+
+diff --git a/src/main/java/org/oilmod/rep/RepAPIImpl.java b/src/main/java/org/oilmod/rep/RepAPIImpl.java
+index 2814be5c..27da4267 100644
+--- a/src/main/java/org/oilmod/rep/RepAPIImpl.java
++++ b/src/main/java/org/oilmod/rep/RepAPIImpl.java
+@@ -6,6 +6,7 @@ import org.oilmod.api.rep.providers.minecraft.MinecraftBlockProvider;
+ import org.oilmod.api.rep.providers.minecraft.MinecraftItemProvider;
+ import org.oilmod.rep.itemstack.RealItemStackFactory;
+ import org.oilmod.rep.providers.minecraft.MC112BlockProvider;
++import org.oilmod.rep.providers.minecraft.MC112ItemProvider;
+ 
+ public class RepAPIImpl extends RepAPI {
+     @Override
+@@ -20,7 +21,7 @@ public class RepAPIImpl extends RepAPI {
+ 
+     @Override
+     protected MinecraftItemProvider createMCItemProvider() {
+-        return null;
++        return new MC112ItemProvider();
+     }
+ 
+     @Override
+diff --git a/src/main/java/org/oilmod/rep/item/ItemBR.java b/src/main/java/org/oilmod/rep/item/ItemBR.java
+index f280c530..3a3484cf 100644
+--- a/src/main/java/org/oilmod/rep/item/ItemBR.java
++++ b/src/main/java/org/oilmod/rep/item/ItemBR.java
+@@ -18,7 +18,7 @@ public class ItemBR implements ItemRep {
+ 
+     @Override
+     public ItemStateRep getStandardState() {
+-        throw new NotImplementedException("todo"); //todo
++        return new StandardItemStateBR(this);
+     }
+ 
+     @Override
+diff --git a/src/main/java/org/oilmod/rep/item/ItemStateBR.java b/src/main/java/org/oilmod/rep/item/ItemStateBR.java
+new file mode 100644
+index 00000000..c21dd0ca
+--- /dev/null
++++ b/src/main/java/org/oilmod/rep/item/ItemStateBR.java
+@@ -0,0 +1,19 @@
++package org.oilmod.rep.item;
++
++public class ItemStateBR extends ItemStateBase {
++    public ItemStateBR(ItemBR item, short state) {
++        super(item);
++        this.state = state;
++    }
++    private short state;
++
++    @Override
++    public boolean isReadOnly() {
++        return false;
++    }
++
++    @Override
++    public short getNMS() {
++        return state;
++    }
++}
+diff --git a/src/main/java/org/oilmod/rep/item/ItemStateBase.java b/src/main/java/org/oilmod/rep/item/ItemStateBase.java
+new file mode 100644
+index 00000000..8707bfe5
+--- /dev/null
++++ b/src/main/java/org/oilmod/rep/item/ItemStateBase.java
+@@ -0,0 +1,24 @@
++package org.oilmod.rep.item;
++
++import org.oilmod.api.rep.item.ItemRep;
++import org.oilmod.api.rep.item.ItemStateRep;
++
++public abstract class ItemStateBase implements ItemStateRep {
++    protected ItemStateBase(ItemBR item) {
++        this.item = item;
++    }
++
++    public abstract short getNMS();
++
++    private final ItemBR item;
++
++    @Override
++    public ItemStateRep copy() {
++        return new ItemStateBR(item, getNMS());
++    }
++
++    @Override
++    public ItemRep getItem() {
++        return item;
++    }
++}
+diff --git a/src/main/java/org/oilmod/rep/item/StandardItemStateBR.java b/src/main/java/org/oilmod/rep/item/StandardItemStateBR.java
+new file mode 100644
+index 00000000..13b6b4c6
+--- /dev/null
++++ b/src/main/java/org/oilmod/rep/item/StandardItemStateBR.java
+@@ -0,0 +1,17 @@
++package org.oilmod.rep.item;
++
++public class StandardItemStateBR extends ItemStateBase {
++    public StandardItemStateBR(ItemBR item) {
++        super(item);
++    }
++
++    @Override
++    public short getNMS() {
++        return 0;
++    }
++
++    @Override
++    public boolean isReadOnly() {
++        return true;
++    }
++}
+diff --git a/src/main/java/org/oilmod/rep/providers/minecraft/MC112BlockProvider.java b/src/main/java/org/oilmod/rep/providers/minecraft/MC112BlockProvider.java
+index 88c24116..4249d81d 100644
+--- a/src/main/java/org/oilmod/rep/providers/minecraft/MC112BlockProvider.java
++++ b/src/main/java/org/oilmod/rep/providers/minecraft/MC112BlockProvider.java
+@@ -22,31 +22,6 @@ import java.util.List;
+ import java.util.Set;
+ 
+ public class MC112BlockProvider extends MinecraftBlockProvider {
+-    private List<Exception> exceptions;
+-
+-    @Override
+-    protected void apiInit() {
+-        exceptions = new ArrayList<>();
+-    }
+-
+-    @Override
+-    protected void apiPostInit() {
+-
+-        if (exceptions.size() > 0) {
+-            StringBuilder sb = new StringBuilder("Some blocks were not correctly mapped to the provider:");
+-            for (Exception e:exceptions) {
+-                sb.append('\n');
+-                sb.append(e.getMessage());
+-            }
+-            IllegalStateException ex = new IllegalStateException(sb.toString());
+-            for (Exception e:exceptions) {
+-                ex.addSuppressed(e);
+-            }
+-            throw ex;
+-        }
+-        exceptions = null;
+-    }
+-
+     @Override
+     protected Substitute<BlockStateRep> getBlock(MinecraftBlock block) {
+         try {
+@@ -91,8 +66,4 @@ public class MC112BlockProvider extends MinecraftBlockProvider {
+         }
+         return new MinecraftKey(req.getKey());
+     }
+-
+-    private void reportError(Exception e) {
+-        exceptions.add(e);
+-    }
+ }
+diff --git a/src/main/java/org/oilmod/rep/providers/minecraft/MC112ItemProvider.java b/src/main/java/org/oilmod/rep/providers/minecraft/MC112ItemProvider.java
+new file mode 100644
+index 00000000..26797cec
+--- /dev/null
++++ b/src/main/java/org/oilmod/rep/providers/minecraft/MC112ItemProvider.java
+@@ -0,0 +1,52 @@
++package org.oilmod.rep.providers.minecraft;
++
++import com.google.common.base.Optional;
++import net.minecraft.server.Block;
++import net.minecraft.server.BlockStateList;
++import net.minecraft.server.IBlockData;
++import net.minecraft.server.IBlockState;
++import net.minecraft.server.Item;
++import net.minecraft.server.ItemBlock;
++import net.minecraft.server.MinecraftKey;
++import org.apache.commons.lang3.Validate;
++import org.oilmod.api.rep.block.BlockStateRep;
++import org.oilmod.api.rep.item.ItemStateRep;
++import org.oilmod.api.rep.providers.minecraft.MC112BlockReq;
++import org.oilmod.api.rep.providers.minecraft.MC112ItemReq;
++import org.oilmod.api.rep.providers.minecraft.MinecraftBlock;
++import org.oilmod.api.rep.providers.minecraft.MinecraftBlockProvider;
++import org.oilmod.api.rep.providers.minecraft.MinecraftItem;
++import org.oilmod.api.rep.providers.minecraft.MinecraftItemProvider;
++import org.oilmod.api.rep.variant.Availability;
++import org.oilmod.api.rep.variant.Substitute;
++import org.oilmod.rep.block.BlockBR;
++import org.oilmod.rep.block.BlockStateBR;
++import org.oilmod.rep.item.ItemStateBR;
++
++public class MC112ItemProvider extends MinecraftItemProvider {
++
++    @Override
++    protected Substitute<ItemStateRep> getItem(MinecraftItem item) {
++        try {
++            MC112ItemReq req = item.getMc112();
++
++            if (req.isSubstituted()) {
++                MinecraftItem sub = req.getSubstitute();
++                return new Substitute<>(Availability.min(sub.getAvailability(), req.getAvailability()), sub.get());
++            }
++
++            MinecraftKey key = new MinecraftKey(req.getKey());
++            Item i = Item.REGISTRY.get(key);
++            Validate.notNull(i, "No item with name {%s} found", key);
++            MinecraftKey mcKey = Item.REGISTRY.b(i);
++            Validate.isTrue(mcKey.equals(key), "No item with name {%s} found, got {%s} instead", key, mcKey);
++            Validate.isTrue(!(i instanceof ItemBlock), "Cannot request block {%s}", mcKey);
++
++            return new Substitute<>(req.getAvailability(), new ItemStateBR(i.getItemRep(), (short) req.getData()));
++        } catch (Exception e) {
++            reportError(e);
++            return new Substitute<>(Availability.Unavailable, null);
++        }
++
++    }
++}
+-- 
+2.21.0.windows.1
+

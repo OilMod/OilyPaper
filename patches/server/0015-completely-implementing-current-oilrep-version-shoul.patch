@@ -1,4 +1,4 @@
-From 67a93e363742b19d4179194855eee15fc0b654ec Mon Sep 17 00:00:00 2001
+From 2f77c985bf22f35be5d6325034a42b688a58863f Mon Sep 17 00:00:00 2001
 From: sirati97 <TheSirati97@gmail.com>
 Date: Fri, 15 Mar 2019 08:00:44 +0000
 Subject: [PATCH] completely implementing current oilrep version should
@@ -2389,5 +2389,5 @@ index 60cdd17f..0a03e7f2 100644
  
      //TODO test for sword and shears
 -- 
-2.20.1.windows.1
+2.21.0.windows.1
 
