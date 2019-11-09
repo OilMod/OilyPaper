@@ -1,0 +1,294 @@
+From f2461dca010162b795cedddd2f179af9edb1766a Mon Sep 17 00:00:00 2001
+From: sirati97 <me@sirati97.de>
+Date: Sun, 10 Nov 2019 01:41:52 +0900
+Subject: [PATCH] implemented most of currently available rep api
+
+---
+ .../org/bukkit/craftbukkit/CraftWorld.java    |  7 ++++++
+ src/main/java/org/oilmod/bukkit/OilMain.java  |  3 +++
+ .../org/oilmod/bukkit/items/RealItem.java     |  4 +--
+ .../org/oilmod/rep/block/BlockStateBR.java    |  7 ++++++
+ .../org/oilmod/rep/block/BlockStateBase.java  | 21 +++++++++++++++-
+ .../java/org/oilmod/rep/entity/EntityBR.java  |  4 +--
+ .../java/org/oilmod/rep/item/ItemStateBR.java | 25 +++++++++++++------
+ .../org/oilmod/rep/world/LocFactoryBR.java    | 14 +++++++++++
+ .../org/oilmod/rep/world/LocationBlockBR.java |  2 +-
+ .../java/org/oilmod/rep/world/WorldBR.java    | 18 +++++++++++++
+ 10 files changed, 92 insertions(+), 13 deletions(-)
+ create mode 100644 src/main/java/org/oilmod/rep/world/LocFactoryBR.java
+
+diff --git a/src/main/java/org/bukkit/craftbukkit/CraftWorld.java b/src/main/java/org/bukkit/craftbukkit/CraftWorld.java
+index afb141c6..9bb0770b 100644
+--- a/src/main/java/org/bukkit/craftbukkit/CraftWorld.java
++++ b/src/main/java/org/bukkit/craftbukkit/CraftWorld.java
+@@ -60,6 +60,8 @@ import org.bukkit.potion.PotionData;
+ import org.bukkit.potion.PotionType;
+ import org.bukkit.util.Consumer;
+ import org.bukkit.util.Vector;
++import org.oilmod.api.rep.world.WorldRep;
++import org.oilmod.rep.world.WorldBR;
+ 
+ public class CraftWorld implements World {
+     public static final int CUSTOM_DIMENSION_OFFSET = 10;
+@@ -1733,5 +1735,10 @@ public class CraftWorld implements World {
+     {
+         return spigot;
+     }
++
++    @Override
++    public WorldBR getWorldRep() {
++        return world.getWorldRep();
++    }
+     // Spigot end
+ }
+diff --git a/src/main/java/org/oilmod/bukkit/OilMain.java b/src/main/java/org/oilmod/bukkit/OilMain.java
+index eb0a32f5..7e544483 100644
+--- a/src/main/java/org/oilmod/bukkit/OilMain.java
++++ b/src/main/java/org/oilmod/bukkit/OilMain.java
+@@ -18,6 +18,7 @@ import org.oilmod.api.items.internal.ItemFactory;
+ import org.oilmod.api.items.type.ItemTypeHelper;
+ import org.oilmod.api.items.type.TBBType;
+ import org.oilmod.api.rep.RepAPI;
++import org.oilmod.api.rep.stdimpl.world.LocFactoryImpl;
+ import org.oilmod.api.userinterface.internal.UIHelper;
+ import org.oilmod.api.util.OilUtil;
+ import org.oilmod.bukkit.block.RealBlockTypeHelper;
+@@ -35,6 +36,7 @@ import org.oilmod.bukkit.items.RealItemTypeHelper;
+ import org.oilmod.bukkit.items.itemtype.RealTBBHelper;
+ import org.oilmod.bukkit.util.RealOilUtil;
+ import org.oilmod.rep.RepAPIImpl;
++import org.oilmod.rep.world.LocFactoryBR;
+ import org.spigotmc.Metrics;
+ 
+ import java.io.IOException;
+@@ -47,6 +49,7 @@ public class OilMain {
+     public static OilMod ModOilMod;
+ 
+     public static void init() {
++        LocFactoryImpl.setInstance(new LocFactoryBR());
+         RepAPI.installImplementation(new RepAPIImpl());
+         //todo do same for oilmod
+ 
+diff --git a/src/main/java/org/oilmod/bukkit/items/RealItem.java b/src/main/java/org/oilmod/bukkit/items/RealItem.java
+index 9b8905b9..1eb07603 100644
+--- a/src/main/java/org/oilmod/bukkit/items/RealItem.java
++++ b/src/main/java/org/oilmod/bukkit/items/RealItem.java
+@@ -88,7 +88,7 @@ public class RealItem extends Item {
+ 
+     public final EnumInteractionResult onItemLeftClick(World w, EntityHuman human, EnumHand hand) {
+         RealItemStack itemstack = (RealItemStack) human.b(hand);
+-        return toNMS(apiItem.onItemLeftClick(itemstack.getOilItemStack(), w.getWorld(), human.getEntityRep(), hand==EnumHand.OFF_HAND).getInteractionResult());
++        return toNMS(apiItem.onItemLeftClick(itemstack.getOilItemStack(), w.getWorldRep(), human.getEntityRep(), hand==EnumHand.OFF_HAND).getInteractionResult());
+     }
+ 
+ 
+@@ -168,7 +168,7 @@ public class RealItem extends Item {
+ 
+     public final InteractionResultWrapper<ItemStack> onItemRightClick(World w, EntityHuman human, EnumHand hand) {
+         RealItemStack itemstack = (RealItemStack) human.b(hand);
+-        ItemInteractionResult result = apiItem.onItemRightClick(itemstack.getOilItemStack(), w.getWorld(), human.getEntityRep(), hand==EnumHand.OFF_HAND);
++        ItemInteractionResult result = apiItem.onItemRightClick(itemstack.getOilItemStack(), w.getWorldRep(), human.getEntityRep(), hand==EnumHand.OFF_HAND);
+ 
+         return new InteractionResultWrapper<>(toNMS(result.getInteractionResult()), toNMS(result.getItemStack()));
+     }
+diff --git a/src/main/java/org/oilmod/rep/block/BlockStateBR.java b/src/main/java/org/oilmod/rep/block/BlockStateBR.java
+index f324d62b..c5020fea 100644
+--- a/src/main/java/org/oilmod/rep/block/BlockStateBR.java
++++ b/src/main/java/org/oilmod/rep/block/BlockStateBR.java
+@@ -1,6 +1,11 @@
+ package org.oilmod.rep.block;
+ 
++import gnu.trove.set.hash.THashSet;
+ import net.minecraft.server.IBlockData;
++import net.minecraft.server.IBlockState;
++import org.oilmod.api.rep.providers.BlockStateProvider;
++
++import java.util.Collections;
+ 
+ public class BlockStateBR extends BlockStateBase {
+     private final IBlockData NMS;
+@@ -17,4 +22,6 @@ public class BlockStateBR extends BlockStateBase {
+     public boolean isReadOnly() {
+         return false;
+     }
++
++
+ }
+diff --git a/src/main/java/org/oilmod/rep/block/BlockStateBase.java b/src/main/java/org/oilmod/rep/block/BlockStateBase.java
+index 8c9380e3..c291c00d 100644
+--- a/src/main/java/org/oilmod/rep/block/BlockStateBase.java
++++ b/src/main/java/org/oilmod/rep/block/BlockStateBase.java
+@@ -1,10 +1,14 @@
+ package org.oilmod.rep.block;
+ 
++import gnu.trove.set.hash.THashSet;
+ import net.minecraft.server.BlockPosition;
+ import net.minecraft.server.IBlockData;
++import net.minecraft.server.IBlockState;
+ import org.oilmod.api.rep.block.BlockRep;
+ import org.oilmod.api.rep.block.BlockStateRep;
++import org.oilmod.api.rep.providers.BlockStateProvider;
+ import org.oilmod.api.rep.world.LocationBlockRep;
++import org.oilmod.rep.world.LocationBlockBR;
+ import org.oilmod.rep.world.WorldBR;
+ 
+ public abstract class BlockStateBase implements BlockStateRep {
+@@ -27,7 +31,22 @@ public abstract class BlockStateBase implements BlockStateRep {
+ 
+     @Override
+     public float getBlockHardness(LocationBlockRep loc) {
+-        return getNMS().b(((WorldBR)loc.getWorld()).getNMS(), new BlockPosition(loc.getBlockX(), loc.getBlockY(), loc.getBlockZ()));
++        LocationBlockBR locFR = (LocationBlockBR)loc;
++        return getNMS().b(locFR.getWorld().getNMS(), locFR.getPos());
++    }
++
++    @Override
++    public boolean isSame(BlockStateProvider other) {
++        BlockStateBase otherBS = (BlockStateBase)other.getProvidedBlockState();
++        IBlockData nms1 = getNMS();
++        IBlockData nms2 = otherBS.getNMS();
++        //might be bad performace
++
++        THashSet<IBlockState> s1 = new THashSet<>(nms1.s());
++        THashSet<IBlockState> s2 = new THashSet<>(nms2.s());
++
++        //is this even correct?
++        return nms1.getBlock() == nms2.getBlock() && s1.equals(s2);
+     }
+ 
+     /*@Override
+diff --git a/src/main/java/org/oilmod/rep/entity/EntityBR.java b/src/main/java/org/oilmod/rep/entity/EntityBR.java
+index a246f14f..3894c7e3 100644
+--- a/src/main/java/org/oilmod/rep/entity/EntityBR.java
++++ b/src/main/java/org/oilmod/rep/entity/EntityBR.java
+@@ -25,7 +25,7 @@ public class EntityBR implements EntityRep {
+ 
+     @Override
+     public LocationEntityRep getLocationRep() {
+-        return LocFactoryImpl.INSTANCE.createEntityLocation(nms.locX, nms.locY, nms.locZ, nms.yaw, nms.pitch, getWorld());
++        return LocFactoryImpl.getInstance().createEntityLocation(nms.locX, nms.locY, nms.locZ, nms.yaw, nms.pitch, getWorld());
+     }
+ 
+     @Override
+@@ -37,7 +37,7 @@ public class EntityBR implements EntityRep {
+ 
+     @Override
+     public VectorRep getVelocityRep() {
+-        return LocFactoryImpl.INSTANCE.createVector(nms.motX, nms.motY, nms.motZ);
++        return LocFactoryImpl.getInstance().createVector(nms.motX, nms.motY, nms.motZ);
+     }
+ 
+     @Override
+diff --git a/src/main/java/org/oilmod/rep/item/ItemStateBR.java b/src/main/java/org/oilmod/rep/item/ItemStateBR.java
+index c21dd0ca..6f5441ba 100644
+--- a/src/main/java/org/oilmod/rep/item/ItemStateBR.java
++++ b/src/main/java/org/oilmod/rep/item/ItemStateBR.java
+@@ -1,11 +1,17 @@
+ package org.oilmod.rep.item;
+ 
+-public class ItemStateBR extends ItemStateBase {
+-    public ItemStateBR(ItemBR item, short state) {
+-        super(item);
+-        this.state = state;
++import org.oilmod.api.rep.item.ItemRep;
++import org.oilmod.api.rep.item.ItemStateRep;
++
++public class ItemStateBR implements ItemStateRep {
++    private ItemBR item;
++    private short data;
++
++
++    public ItemStateBR(ItemBR item, short data) {
++        this.item = item;
++        this.data = data;
+     }
+-    private short state;
+ 
+     @Override
+     public boolean isReadOnly() {
+@@ -13,7 +19,12 @@ public class ItemStateBR extends ItemStateBase {
+     }
+ 
+     @Override
+-    public short getNMS() {
+-        return state;
++    public ItemStateBR copy() {
++        return new ItemStateBR(item, data);
++    }
++
++    @Override
++    public ItemBR getItem() {
++        return item;
+     }
+ }
+diff --git a/src/main/java/org/oilmod/rep/world/LocFactoryBR.java b/src/main/java/org/oilmod/rep/world/LocFactoryBR.java
+new file mode 100644
+index 00000000..040fca95
+--- /dev/null
++++ b/src/main/java/org/oilmod/rep/world/LocFactoryBR.java
+@@ -0,0 +1,14 @@
++package org.oilmod.rep.world;
++
++import net.minecraft.server.BlockPosition;
++import org.oilmod.api.rep.stdimpl.world.LocFactoryImpl;
++import org.oilmod.api.rep.world.LocationBlockRep;
++import org.oilmod.api.rep.world.WorldRep;
++
++public class LocFactoryBR extends LocFactoryImpl {
++
++    @Override
++    public LocationBlockRep createBlockLocation(int x, int y, int z, WorldRep w) {
++        return new LocationBlockBR(((WorldBR)w).getNMS(), new BlockPosition(x, y, z));
++    }
++}
+diff --git a/src/main/java/org/oilmod/rep/world/LocationBlockBR.java b/src/main/java/org/oilmod/rep/world/LocationBlockBR.java
+index 1dd0ad40..4486bea7 100644
+--- a/src/main/java/org/oilmod/rep/world/LocationBlockBR.java
++++ b/src/main/java/org/oilmod/rep/world/LocationBlockBR.java
+@@ -38,7 +38,7 @@ public class LocationBlockBR implements LocationBlockRep {
+     }
+ 
+     @Override
+-    public WorldRep getWorld() {
++    public WorldBR getWorld() {
+         return getWorldNMS().getWorldRep();
+     }
+ }
+diff --git a/src/main/java/org/oilmod/rep/world/WorldBR.java b/src/main/java/org/oilmod/rep/world/WorldBR.java
+index d971cd7a..b7854c1b 100644
+--- a/src/main/java/org/oilmod/rep/world/WorldBR.java
++++ b/src/main/java/org/oilmod/rep/world/WorldBR.java
+@@ -1,7 +1,11 @@
+ package org.oilmod.rep.world;
+ 
+ import net.minecraft.server.World;
++import org.oilmod.api.rep.block.BlockStateRep;
++import org.oilmod.api.rep.providers.BlockStateProvider;
++import org.oilmod.api.rep.world.LocationBlockRep;
+ import org.oilmod.api.rep.world.WorldRep;
++import org.oilmod.rep.block.BlockStateBR;
+ 
+ public class WorldBR implements WorldRep {
+     private final World NMS;
+@@ -13,4 +17,18 @@ public class WorldBR implements WorldRep {
+     public World getNMS() {
+         return NMS;
+     }
++
++    @Override
++    public BlockStateRep getBlockAt(LocationBlockRep loc) {
++        net.minecraft.server.Chunk c = this.NMS.getChunkAt(loc.getBlockX() >> 4, loc.getBlockZ() >> 4);
++        return new BlockStateBR(c.getBlockData(loc.getBlockX(), loc.getBlockY(), loc.getBlockZ()));
++    }
++
++    @Override
++    public void setBlockAt(LocationBlockRep loc, BlockStateProvider blockStateP) {
++        //todo test yet to load chunks
++        BlockStateBR blockState = (BlockStateBR)blockStateP.getProvidedBlockState();
++
++        NMS.setTypeAndData(((LocationBlockBR) loc).getPos(), blockState.getNMS(), 3); //3 do physics, 18 = no physics no notify
++    }
+ }
+-- 
+2.20.1.windows.1
+

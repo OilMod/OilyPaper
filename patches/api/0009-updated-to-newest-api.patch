@@ -1,0 +1,66 @@
+From 8b3ade474abca6a7bde267e05f49ad9a1e45680e Mon Sep 17 00:00:00 2001
+From: sirati97 <me@sirati97.de>
+Date: Sun, 10 Nov 2019 01:41:52 +0900
+Subject: [PATCH] updated to newest api use providers for more convenience
+
+---
+ src/main/java/org/bukkit/World.java                  |  6 +++++-
+ .../java/org/oilmod/api/rep/bukkit/util/LocUtil.java | 12 ++++++++----
+ 2 files changed, 13 insertions(+), 5 deletions(-)
+
+diff --git a/src/main/java/org/bukkit/World.java b/src/main/java/org/bukkit/World.java
+index 81ab08ac..4b6ff068 100644
+--- a/src/main/java/org/bukkit/World.java
++++ b/src/main/java/org/bukkit/World.java
+@@ -26,7 +26,7 @@ import org.oilmod.api.rep.world.WorldRep;
+ /**
+  * Represents a world, which may contain entities, chunks and blocks
+  */
+-public interface World extends PluginMessageRecipient, Metadatable, WorldRep {
++public interface World extends PluginMessageRecipient, Metadatable {
+ 
+     // Paper start
+     /**
+@@ -2165,4 +2165,8 @@ public interface World extends PluginMessageRecipient, Metadatable, WorldRep {
+             }
+         }
+     }
++
++    //OilMod start
++    WorldRep getWorldRep();
++    //OilMod end
+ }
+diff --git a/src/main/java/org/oilmod/api/rep/bukkit/util/LocUtil.java b/src/main/java/org/oilmod/api/rep/bukkit/util/LocUtil.java
+index 7e5a8bee..d51ef4d1 100644
+--- a/src/main/java/org/oilmod/api/rep/bukkit/util/LocUtil.java
++++ b/src/main/java/org/oilmod/api/rep/bukkit/util/LocUtil.java
+@@ -30,18 +30,22 @@ public final class LocUtil {
+     }
+ 
+     public static LocationEntityRep toOilEntity(Location loc) {
+-        return LocFactoryImpl.INSTANCE.createEntityLocation(loc.getX(), loc.getY(), loc.getZ(), loc.getYaw(), loc.getPitch(), loc.getWorld());
++        return LocFactoryImpl.getInstance().createEntityLocation(loc.getX(), loc.getY(), loc.getZ(), loc.getYaw(), loc.getPitch(), toOil(loc.getWorld()));
+     }
+ 
+     public static LocationRep toOil(Location loc) {
+-        return LocFactoryImpl.INSTANCE.createLocation(loc.getX(), loc.getY(), loc.getZ(), loc.getWorld());
++        return LocFactoryImpl.getInstance().createLocation(loc.getX(), loc.getY(), loc.getZ(), toOil(loc.getWorld()));
+     }
+ 
+     public static VectorRep toOil(Vector loc) {
+-        return LocFactoryImpl.INSTANCE.createVector(loc.getX(), loc.getY(), loc.getZ());
++        return LocFactoryImpl.getInstance().createVector(loc.getX(), loc.getY(), loc.getZ());
+     }
+ 
+     public static LocationBlockRep toOilBlock(Location loc) {
+-        return LocFactoryImpl.INSTANCE.createBlockLocation(loc.getBlockX(), loc.getBlockY(), loc.getBlockZ(), loc.getWorld());
++        return LocFactoryImpl.getInstance().createBlockLocation(loc.getBlockX(), loc.getBlockY(), loc.getBlockZ(), toOil(loc.getWorld()));
++    }
++
++    public static WorldRep toOil(World bukkit) {
++        return bukkit.getWorldRep();
+     }
+ }
+-- 
+2.20.1.windows.1
+
