@@ -722,7 +722,7 @@ index 00000000..1cadf083
 +
 +    @Override
 +    public LocationEntityRep getLocationRep() {
-+        return LocFactoryImpl.INSTANCE.createEntityLocation(nms.locX, nms.locY, nms.locZ, nms.yaw, nms.pitch, getWorld());
++        return LocFactoryImpl.getInstance().createEntityLocation(nms.locX, nms.locY, nms.locZ, nms.yaw, nms.pitch, getWorld());
 +    }
 +
 +    @Override
@@ -734,7 +734,7 @@ index 00000000..1cadf083
 +
 +    @Override
 +    public VectorRep getVelocityRep() {
-+        return LocFactoryImpl.INSTANCE.createVector(nms.motX, nms.motY, nms.motZ);
++        return LocFactoryImpl.getInstance().createVector(nms.motX, nms.motY, nms.motZ);
 +    }
 +
 +    @Override
