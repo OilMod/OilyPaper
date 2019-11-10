@@ -1,4 +1,4 @@
-From eb2a34c73eb6ce928a50cd8bb32699967accac00 Mon Sep 17 00:00:00 2001
+From cdc82212e25e1c50ecfd1c79f7e675cd6f4b2097 Mon Sep 17 00:00:00 2001
 From: sirati97 <TheSirati97@gmail.com>
 Date: Wed, 13 Mar 2019 09:49:27 +0000
 Subject: [PATCH] added readonly set, bug fixes, working on impl
@@ -722,7 +722,7 @@ index 00000000..1cadf083
 +
 +    @Override
 +    public LocationEntityRep getLocationRep() {
-+        return LocFactoryImpl.getInstance().createEntityLocation(nms.locX, nms.locY, nms.locZ, nms.yaw, nms.pitch, getWorld());
++        return LocFactoryImpl.INSTANCE.createEntityLocation(nms.locX, nms.locY, nms.locZ, nms.yaw, nms.pitch, getWorld());
 +    }
 +
 +    @Override
@@ -734,7 +734,7 @@ index 00000000..1cadf083
 +
 +    @Override
 +    public VectorRep getVelocityRep() {
-+        return LocFactoryImpl.getInstance().createVector(nms.motX, nms.motY, nms.motZ);
++        return LocFactoryImpl.INSTANCE.createVector(nms.motX, nms.motY, nms.motZ);
 +    }
 +
 +    @Override

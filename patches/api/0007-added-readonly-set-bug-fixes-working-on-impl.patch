@@ -1,4 +1,4 @@
-From 7ef30d47b5e649945bd7818c45d4e9625b329693 Mon Sep 17 00:00:00 2001
+From 283457fdfde224e2ecca96374696df7b1ccceabf Mon Sep 17 00:00:00 2001
 From: sirati97 <TheSirati97@gmail.com>
 Date: Wed, 13 Mar 2019 09:49:30 +0000
 Subject: [PATCH] added readonly set, bug fixes, working on impl
@@ -197,13 +197,13 @@ index 5d6fd698..7e5a8bee 100644
      }
  
      public static LocationEntityRep toOilEntity(Location loc) {
--        return LocFactoryImpl.getInstance().createEntityLocation(loc.getX(), loc.getY(), loc.getZ(), loc.getYaw(), loc.getPitch(), loc.getWorld().OilRep());
-+        return LocFactoryImpl.getInstance().createEntityLocation(loc.getX(), loc.getY(), loc.getZ(), loc.getYaw(), loc.getPitch(), loc.getWorld());
+-        return LocFactoryImpl.INSTANCE.createEntityLocation(loc.getX(), loc.getY(), loc.getZ(), loc.getYaw(), loc.getPitch(), loc.getWorld().OilRep());
++        return LocFactoryImpl.INSTANCE.createEntityLocation(loc.getX(), loc.getY(), loc.getZ(), loc.getYaw(), loc.getPitch(), loc.getWorld());
      }
  
      public static LocationRep toOil(Location loc) {
--        return LocFactoryImpl.getInstance().createLocation(loc.getX(), loc.getY(), loc.getZ(), loc.getWorld().OilRep());
-+        return LocFactoryImpl.getInstance().createLocation(loc.getX(), loc.getY(), loc.getZ(), loc.getWorld());
+-        return LocFactoryImpl.INSTANCE.createLocation(loc.getX(), loc.getY(), loc.getZ(), loc.getWorld().OilRep());
++        return LocFactoryImpl.INSTANCE.createLocation(loc.getX(), loc.getY(), loc.getZ(), loc.getWorld());
      }
  
      public static VectorRep toOil(Vector loc) {
@@ -211,8 +211,8 @@ index 5d6fd698..7e5a8bee 100644
      }
  
      public static LocationBlockRep toOilBlock(Location loc) {
--        return LocFactoryImpl.getInstance().createBlockLocation(loc.getBlockX(), loc.getBlockY(), loc.getBlockZ(), loc.getWorld().OilRep());
-+        return LocFactoryImpl.getInstance().createBlockLocation(loc.getBlockX(), loc.getBlockY(), loc.getBlockZ(), loc.getWorld());
+-        return LocFactoryImpl.INSTANCE.createBlockLocation(loc.getBlockX(), loc.getBlockY(), loc.getBlockZ(), loc.getWorld().OilRep());
++        return LocFactoryImpl.INSTANCE.createBlockLocation(loc.getBlockX(), loc.getBlockY(), loc.getBlockZ(), loc.getWorld());
      }
  }
 -- 

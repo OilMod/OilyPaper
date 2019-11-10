@@ -1,4 +1,4 @@
-From e4e01a4b34e740a540ebeb1bcae0d8deb8fa38bb Mon Sep 17 00:00:00 2001
+From 58c648911ad9ddfe207b2d34a3ae5181d642edfd Mon Sep 17 00:00:00 2001
 From: sirati97 <me@sirati97.de>
 Date: Sat, 9 Feb 2019 07:55:23 +0000
 Subject: [PATCH] added rudimentary representation api. not usable for modding
@@ -620,19 +620,19 @@ index 00000000..5d6fd698
 +    }
 +
 +    public static LocationEntityRep toOilEntity(Location loc) {
-+        return LocFactoryImpl.getInstance().createEntityLocation(loc.getX(), loc.getY(), loc.getZ(), loc.getYaw(), loc.getPitch(), loc.getWorld().OilRep());
++        return LocFactoryImpl.INSTANCE.createEntityLocation(loc.getX(), loc.getY(), loc.getZ(), loc.getYaw(), loc.getPitch(), loc.getWorld().OilRep());
 +    }
 +
 +    public static LocationRep toOil(Location loc) {
-+        return LocFactoryImpl.getInstance().createLocation(loc.getX(), loc.getY(), loc.getZ(), loc.getWorld().OilRep());
++        return LocFactoryImpl.INSTANCE.createLocation(loc.getX(), loc.getY(), loc.getZ(), loc.getWorld().OilRep());
 +    }
 +
 +    public static VectorRep toOil(Vector loc) {
-+        return LocFactoryImpl.getInstance().createVector(loc.getX(), loc.getY(), loc.getZ());
++        return LocFactoryImpl.INSTANCE.createVector(loc.getX(), loc.getY(), loc.getZ());
 +    }
 +
 +    public static LocationBlockRep toOilBlock(Location loc) {
-+        return LocFactoryImpl.getInstance().createBlockLocation(loc.getBlockX(), loc.getBlockY(), loc.getBlockZ(), loc.getWorld().OilRep());
++        return LocFactoryImpl.INSTANCE.createBlockLocation(loc.getBlockX(), loc.getBlockY(), loc.getBlockZ(), loc.getWorld().OilRep());
 +    }
 +}
 -- 
