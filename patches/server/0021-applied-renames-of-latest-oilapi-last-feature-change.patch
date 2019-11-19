@@ -1,0 +1,83 @@
+From ccffa6bebd0c973484e2cc16ac6ee911eb3847a3 Mon Sep 17 00:00:00 2001
+From: sirati97 <me@sirati97.de>
+Date: Tue, 19 Nov 2019 11:24:28 +0900
+Subject: [PATCH] applied renames of latest oilapi, last feature changes not
+ yet implemented
+
+---
+ src/main/java/net/minecraft/server/EnchantmentSlotType.java | 1 +
+ src/main/java/org/oilmod/bukkit/block/RealBlockType.java    | 4 ++--
+ src/main/java/org/oilmod/bukkit/block/RealNMSMaterial.java  | 4 ++--
+ src/main/java/org/oilmod/bukkit/crafting/OilRecipe.java     | 1 +
+ 4 files changed, 6 insertions(+), 4 deletions(-)
+
+diff --git a/src/main/java/net/minecraft/server/EnchantmentSlotType.java b/src/main/java/net/minecraft/server/EnchantmentSlotType.java
+index 07876f98..b7928c84 100644
+--- a/src/main/java/net/minecraft/server/EnchantmentSlotType.java
++++ b/src/main/java/net/minecraft/server/EnchantmentSlotType.java
+@@ -3,6 +3,7 @@ package net.minecraft.server;
+ import org.oilmod.api.items.EnchantmentType;
+ import org.oilmod.api.items.NMSItem;
+ import org.oilmod.api.items.nms.NMSEnchantmentType;
++import org.oilmod.api.rep.item.ItemStateRep;
+ import org.oilmod.bukkit.items.RealItem;
+ 
+ 
+diff --git a/src/main/java/org/oilmod/bukkit/block/RealBlockType.java b/src/main/java/org/oilmod/bukkit/block/RealBlockType.java
+index 8ce8051d..2b8b391d 100644
+--- a/src/main/java/org/oilmod/bukkit/block/RealBlockType.java
++++ b/src/main/java/org/oilmod/bukkit/block/RealBlockType.java
+@@ -31,7 +31,7 @@ public class RealBlockType extends BlockType {
+     }
+ 
+     @Override
+-    public boolean blocksLight() {
++    public boolean isOpaque() {
+         return getNmsBlockType().blocksLight();
+     }
+ 
+@@ -41,7 +41,7 @@ public class RealBlockType extends BlockType {
+     }
+ 
+     @Override
+-    public boolean isBurnable() {
++    public boolean isFlammable() {
+         return getNmsBlockType().isBurnable();
+     }
+ 
+diff --git a/src/main/java/org/oilmod/bukkit/block/RealNMSMaterial.java b/src/main/java/org/oilmod/bukkit/block/RealNMSMaterial.java
+index f3d94933..ba223436 100644
+--- a/src/main/java/org/oilmod/bukkit/block/RealNMSMaterial.java
++++ b/src/main/java/org/oilmod/bukkit/block/RealNMSMaterial.java
+@@ -23,7 +23,7 @@ public class RealNMSMaterial extends Material {
+ 
+     @Override
+     public boolean isBurnable() {
+-        return getOilBlockType().isBurnable();
++        return getOilBlockType().isFlammable();
+     }
+ 
+     @Override
+@@ -48,6 +48,6 @@ public class RealNMSMaterial extends Material {
+ 
+     @Override
+     public boolean blocksLight() {
+-        return getOilBlockType().blocksLight();
++        return getOilBlockType().isOpaque();
+     }
+ }
+diff --git a/src/main/java/org/oilmod/bukkit/crafting/OilRecipe.java b/src/main/java/org/oilmod/bukkit/crafting/OilRecipe.java
+index c33dd205..f1e3210e 100644
+--- a/src/main/java/org/oilmod/bukkit/crafting/OilRecipe.java
++++ b/src/main/java/org/oilmod/bukkit/crafting/OilRecipe.java
+@@ -72,6 +72,7 @@ public abstract class OilRecipe implements IRecipe {
+         return nonnulllist;
+     }
+ 
++    //todo why is that not used> does crafting that needs this method work?
+     public abstract void onCrafted(IInventoryCrafting inventoryCrafting, EntityHuman human, ItemStack result);
+ 
+     @Override
+-- 
+2.20.1.windows.1
+
